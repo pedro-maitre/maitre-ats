@@ -43,6 +43,8 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
 
     try {
       const data = new FormData();
+      data.append("jobId", jobId);
+      data.append("companySlug", companySlug);
       data.append("firstName", formData.firstName);
       data.append("lastName", formData.lastName);
       data.append("email", formData.email);
@@ -56,7 +58,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
         data.append("resumeFile", file);
       }
 
-      await submitApplication(jobId, companySlug, data);
+      await submitApplication(data);
       setSuccess(true);
     } catch (err: any) {
       setError(err.message);

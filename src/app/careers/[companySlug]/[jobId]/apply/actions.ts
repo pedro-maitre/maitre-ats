@@ -4,7 +4,9 @@
 import { prisma } from "@/lib/prisma";
 import { supabase } from "@/lib/supabase";
 
-export async function submitApplication(jobId: string, orgSlug: string, formData: FormData) {
+export async function submitApplication(formData: FormData) {
+  const jobId = formData.get("jobId") as string;
+  const orgSlug = formData.get("companySlug") as string;
   const firstName = formData.get("firstName") as string;
   const lastName = formData.get("lastName") as string;
   const email = formData.get("email") as string;
