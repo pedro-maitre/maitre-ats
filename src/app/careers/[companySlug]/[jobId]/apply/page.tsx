@@ -54,9 +54,31 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
       data.append("linkedinUrl", formData.linkedinUrl);
       data.append("tags", formData.tags);
       
+      let resumeUrl = "";
+
       if (file) {
-        data.append("resumeFile", file);
+        // Upload directly via client to avoid Next.js / Vercel body limits
+        const { supabase } = await import("@/lib/supabase");
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${companySlug}/${fileName}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("resumes")
+          .upload(filePath, file, {
+            contentType: file.type,
+            upsert: false
+          });
+
+        if (uploadError) {
+          throw new Error("Erro ao salvar currículo no banco de dados: " + uploadError.message);
+        }
+
+        const { data: urlData } = supabase.storage.from("resumes").getPublicUrl(filePath);
+        resumeUrl = urlData.publicUrl;
       }
+
+      data.append("resumeUrl", resumeUrl);
 
       await submitApplication(data);
       setSuccess(true);

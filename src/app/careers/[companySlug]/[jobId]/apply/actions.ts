@@ -16,7 +16,7 @@ export async function submitApplication(formData: FormData) {
   const tags = formData.get("tags") as string;
   const source = formData.get("source") as string || "Site de Carreiras";
   const salaryExpectation = formData.get("salaryExpectation") as string;
-  const resumeFile = formData.get("resumeFile") as File | null;
+  const resumeUrl = formData.get("resumeUrl") as string;
 
   const expectationNum = salaryExpectation ? parseFloat(salaryExpectation) : null;
 
@@ -25,28 +25,6 @@ export async function submitApplication(formData: FormData) {
   if (tags) {
     const tagsArray = tags.split(",").map((t: string) => t.trim()).filter((t: string) => t);
     tagsJson = JSON.stringify(tagsArray);
-  }
-
-  // Upload Resume to Supabase Storage
-  let resumeUrl = null;
-  if (resumeFile && resumeFile.size > 0 && process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    const fileExt = resumeFile.name.split(".").pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-    const filePath = `${orgSlug}/${fileName}`;
-
-    const arrayBuffer = await resumeFile.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const { data, error } = await supabase.storage
-      .from("resumes")
-      .upload(filePath, buffer, {
-        contentType: resumeFile.type,
-      });
-
-    if (!error && data) {
-      const { data: urlData } = supabase.storage.from("resumes").getPublicUrl(filePath);
-      resumeUrl = urlData.publicUrl;
-    }
   }
 
   const org = await prisma.organization.findUnique({
