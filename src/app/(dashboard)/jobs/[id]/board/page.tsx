@@ -27,8 +27,14 @@ export default async function JobBoardPage({ params }: { params: Promise<{ id: s
     name: stage.name,
     candidates: stage.applications.map((app) => ({
       id: app.id,
+      candidateId: app.candidate.id,
       name: `${app.candidate.firstName} ${app.candidate.lastName}`,
       score: app.matchScore || 0,
+      priority: app.priority,
+      fitCategory: app.fitCategory,
+      enteredStageAt: app.enteredStageAt,
+      source: app.candidate.source,
+      tags: app.candidate.tags,
     })),
   }));
 

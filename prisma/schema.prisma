@@ -111,6 +111,9 @@ model Application {
   stage            Stage        @relation(fields: [stageId], references: [id])
   
   matchScore       Float?       // Percentage 0-100
+  priority         String       @default("NORMAL") // PRIORIZADO, NORMAL, DUVIDA
+  fitCategory      String?      // ALTO_FIT, MEDIO_FIT, BAIXO_FIT
+  enteredStageAt   DateTime     @default(now())
   
   evaluations      Evaluation[]
   activities       Activity[]
