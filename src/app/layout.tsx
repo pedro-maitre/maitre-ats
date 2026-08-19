@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description: "Enterprise Applicant Tracking System by Maître Consultoria",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: {
