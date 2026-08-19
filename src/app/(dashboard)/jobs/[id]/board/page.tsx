@@ -41,9 +41,15 @@ export default async function JobBoardPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{job.title}</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">Fluxo de Recrutamento</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{job.title}</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-2">
+            Fluxo de Recrutamento 
+            <span className="text-slate-300 dark:text-slate-600">&bull;</span> 
+            Aberta em {new Date(job.createdAt).toLocaleDateString("pt-BR")}
+          </p>
+        </div>
       </div>
       <KanbanBoard initialStages={stages} />
     </div>

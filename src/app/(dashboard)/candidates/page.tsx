@@ -13,7 +13,8 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
         { firstName: { contains: query } },
         { lastName: { contains: query } },
         { email: { contains: query } },
-        { profileSummary: { contains: query } }
+        { profileSummary: { contains: query } },
+        { tags: { contains: query } }
       ]
     } : undefined,
     orderBy: { createdAt: 'desc' }
@@ -26,6 +27,9 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Banco de Talentos</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2">Explore e pesquise candidatos na base.</p>
         </div>
+        <Link href="/candidates/new" className="bg-[#c89650] hover:bg-[#b08040] text-white px-5 py-2.5 rounded-lg font-semibold shadow-md transition-all active:scale-95 flex items-center gap-2">
+          Cadastrar Candidato
+        </Link>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6 p-4 flex gap-4">

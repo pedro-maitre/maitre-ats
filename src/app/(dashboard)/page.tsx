@@ -100,7 +100,11 @@ export default async function DashboardHomePage() {
                   <Link href={`/jobs/${job.id}/board`} key={job.id} className="flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all group">
                     <div>
                       <div className="font-semibold text-slate-900 dark:text-white group-hover:text-[#c89650] transition-colors">{job.title}</div>
-                      <div className="text-sm text-slate-500 mt-1">{job.department || "Geral"} &bull; {job.location || "Remoto"}</div>
+                      <div className="text-sm text-slate-500 mt-1 flex items-center gap-2">
+                        {job.department || "Geral"} &bull; {job.location || "Remoto"}
+                        <span className="text-slate-300 dark:text-slate-600">&bull;</span>
+                        Aberta em {new Date(job.createdAt).toLocaleDateString("pt-BR")}
+                      </div>
                     </div>
                     <div className="text-right">
                       <div className="inline-flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium px-3 py-1 rounded-full text-sm">
