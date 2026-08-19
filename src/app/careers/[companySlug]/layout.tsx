@@ -22,10 +22,10 @@ export default async function CareersLayout({
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col">
-      <header className="bg-[#1d1e20] text-white py-6 shadow-md border-b-[4px] border-[#c89650] shrink-0">
+      <header className="bg-[#1d1e20] text-white py-6 shadow-md border-b-[4px] border-maitre-gold shrink-0">
         <div className="max-w-5xl mx-auto px-6 flex items-center gap-3">
           <div className="bg-white/10 p-2 rounded-lg">
-            <Building2 size={24} className="text-[#c89650]" />
+            <Building2 size={24} className="text-maitre-gold" />
           </div>
           <Link href={`/careers/${org.slug}`} className="text-2xl font-bold tracking-tight hover:text-[#f2d291] transition-colors">
             {org.name} <span className="text-slate-400 font-normal">| Carreiras</span>

@@ -70,7 +70,7 @@ export default function OrgForm({
               disabled={!isAdmin}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-[#c89650] outline-none transition-shadow disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-shadow disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
           <div>
@@ -85,7 +85,7 @@ export default function OrgForm({
                 const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/\s+/g, '-');
                 setFormData({ ...formData, slug: val });
               }}
-              className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-[#c89650] outline-none transition-shadow disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-shadow disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <p className="text-xs text-slate-500 mt-2 flex flex-wrap items-center gap-2">
               Sua página pública de carreiras será: 
@@ -104,7 +104,7 @@ export default function OrgForm({
             <button
               type="submit"
               disabled={isLoading || (formData.name === initialData.name && formData.slug === initialData.slug)}
-              className="flex items-center gap-2 bg-[#c89650] hover:bg-[#b08040] disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold transition-all"
+              className="flex items-center gap-2 bg-maitre-gold hover:bg-maitre-gold-hover disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold transition-all"
             >
               {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
               {isLoading ? "Salvando..." : "Salvar Alterações"}

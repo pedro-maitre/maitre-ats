@@ -40,11 +40,11 @@ export default function SettingsNav() {
             className={clsx(
               "flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200",
               isActive
-                ? "bg-[#c89650]/10 text-[#c89650] dark:bg-[#c89650]/20 dark:text-[#c89650]"
+                ? "bg-maitre-gold/10 text-maitre-gold dark:bg-maitre-gold/20 dark:text-maitre-gold"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
             )}
           >
-            <Icon size={18} className={clsx(isActive ? "text-[#c89650]" : "text-slate-400 dark:text-slate-500")} />
+            <Icon size={18} className={clsx(isActive ? "text-maitre-gold" : "text-slate-400 dark:text-slate-500")} />
             {link.label}
           </Link>
         );

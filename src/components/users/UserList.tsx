@@ -58,7 +58,7 @@ export default function UserList({ initialUsers }: { initialUsers: UserData[] })
                   <td className="p-4 text-right">
                     <button
                       onClick={() => setEditingUser(user)}
-                      className="p-2 text-slate-400 hover:text-[#c89650] hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                      className="p-2 text-slate-400 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                       title="Editar"
                     >
                       <Edit2 size={18} />

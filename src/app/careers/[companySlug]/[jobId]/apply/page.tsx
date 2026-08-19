@@ -98,7 +98,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
           <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
             Seu currículo foi enviado com sucesso. Em breve a equipe entrará em contato com os próximos passos.
           </p>
-          <Link href={`/careers/${companySlug}`} className="inline-block border border-[#c89650] text-[#c89650] hover:bg-[#c89650] hover:text-white transition-colors px-6 py-2.5 rounded-lg font-semibold">
+          <Link href={`/careers/${companySlug}`} className="inline-block border border-maitre-gold text-maitre-gold hover:bg-maitre-gold hover:text-white transition-colors px-6 py-2.5 rounded-lg font-semibold">
             Voltar para vagas
           </Link>
         </div>
@@ -122,7 +122,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
           {/* Upload Area */}
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all mb-8 ${file ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10' : 'border-slate-300 dark:border-slate-700 hover:border-[#c89650] dark:hover:border-[#c89650] hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all mb-8 ${file ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/10' : 'border-slate-300 dark:border-slate-700 hover:border-maitre-gold dark:hover:border-maitre-gold hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
           >
             <input 
               type="file" 
@@ -132,7 +132,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
               onChange={handleFileChange}
             />
             {isParsing ? (
-              <div className="flex flex-col items-center text-[#c89650]">
+              <div className="flex flex-col items-center text-maitre-gold">
                 <Loader2 size={40} className="animate-spin mb-4" />
                 <p className="font-medium">Extraindo dados com IA...</p>
               </div>
@@ -161,7 +161,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
                 <input
                   type="text"
                   required
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-shadow"
                   value={formData.firstName}
                   onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                 />
@@ -171,7 +171,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
                 <input
                   type="text"
                   required
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-shadow"
                   value={formData.lastName}
                   onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                 />
@@ -184,7 +184,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
                 <input
                   type="email"
                   required
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-shadow"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                 />
@@ -193,7 +193,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Telefone</label>
                 <input
                   type="tel"
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-shadow"
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 />
@@ -207,7 +207,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
                   type="number"
                   required
                   placeholder="ex: 5000"
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-shadow"
                   value={formData.salaryExpectation}
                   onChange={(e) => setFormData({...formData, salaryExpectation: e.target.value})}
                 />
@@ -217,7 +217,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
                 <input
                   type="url"
                   placeholder="https://linkedin.com/in/..."
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-shadow"
                   value={formData.linkedinUrl}
                   onChange={(e) => setFormData({...formData, linkedinUrl: e.target.value})}
                 />
@@ -230,7 +230,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
                 <input
                   type="text"
                   placeholder="Ex: Liderança, React, Gestão de Projetos"
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-shadow"
                   value={formData.tags}
                   onChange={(e) => setFormData({...formData, tags: e.target.value})}
                 />
@@ -239,7 +239,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Resumo Profissional</label>
                 <textarea
                   rows={4}
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow resize-y"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-shadow resize-y"
                   value={formData.profileSummary}
                   onChange={(e) => setFormData({...formData, profileSummary: e.target.value})}
                 />
@@ -249,7 +249,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
             <button
               type="submit"
               disabled={isSubmitting || !formData.email}
-              className="w-full bg-[#c89650] hover:bg-[#b08040] disabled:opacity-50 text-white p-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 mt-4 active:scale-[0.98] shadow-md"
+              className="w-full bg-maitre-gold hover:bg-maitre-gold-hover disabled:opacity-50 text-white p-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2 mt-4 active:scale-[0.98] shadow-md"
             >
               {isSubmitting && <Loader2 className="animate-spin" size={20} />}
               {isSubmitting ? "Enviando..." : "Confirmar Inscrição"}

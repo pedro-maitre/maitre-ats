@@ -92,7 +92,7 @@ export default async function EditCandidatePage({ params }: { params: Promise<{ 
             
             <div className="space-y-2">
               <label htmlFor="phone" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Phone size={16} className="text-[#c89650]" />
+                <Phone size={16} className="text-maitre-gold" />
                 Telefone
               </label>
               <input 
@@ -100,7 +100,7 @@ export default async function EditCandidatePage({ params }: { params: Promise<{ 
                 id="phone" 
                 name="phone"
                 defaultValue={candidate.phone || ""} 
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-[#c89650] focus:ring-1 focus:ring-[#c89650] outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-maitre-gold focus:ring-1 focus:ring-maitre-gold outline-none transition-all"
               />
             </div>
           </div>

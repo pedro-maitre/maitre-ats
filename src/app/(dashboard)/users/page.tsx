@@ -28,7 +28,7 @@ export default async function UsersPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <UserCog className="text-[#c89650]" />
+            <UserCog className="text-maitre-gold" />
             Gestão de Usuários
           </h1>
           <p className="text-slate-500 mt-1">

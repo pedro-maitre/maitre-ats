@@ -37,7 +37,7 @@ export default async function JobDetailsPage({ params }: { params: Promise<{ com
               {job.organization.name}
             </span>
             <span className="flex items-center gap-2">
-              <Briefcase size={16} className="text-[#c89650]" />
+              <Briefcase size={16} className="text-maitre-gold" />
               {job.department || "Geral"}
             </span>
             <span className="flex items-center gap-2">
@@ -61,7 +61,7 @@ export default async function JobDetailsPage({ params }: { params: Promise<{ com
           <p className="text-slate-500 dark:text-slate-400 mb-6">Deixe seu currículo com a gente e venha construir o futuro.</p>
           <Link 
             href={`/careers/${companySlug}/${job.id}/apply`}
-            className="inline-block bg-[#c89650] hover:bg-[#b08040] text-white px-10 py-3 rounded-xl font-bold text-lg transition-transform active:scale-95 shadow-md"
+            className="inline-block bg-maitre-gold hover:bg-maitre-gold-hover text-white px-10 py-3 rounded-xl font-bold text-lg transition-transform active:scale-95 shadow-md"
           >
             Candidatar-se agora
           </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { updateUser } from "@/app/actions/user";
 import { X, Loader2, Save } from "lucide-react";
 
@@ -21,6 +21,14 @@ export default function EditUserModal({ user, onClose }: EditUserModalProps) {
   const [role, setRole] = useState(user.role);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +93,7 @@ export default function EditUserModal({ user, onClose }: EditUserModalProps) {
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: João da Silva"
               required
-              className="w-full p-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#c89650] focus:border-transparent outline-none transition-all text-slate-900 dark:text-white"
+              className="w-full p-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-maitre-gold focus:border-transparent outline-none transition-all text-slate-900 dark:text-white"
             />
           </div>
 
@@ -96,7 +104,7 @@ export default function EditUserModal({ user, onClose }: EditUserModalProps) {
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full p-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-[#c89650] focus:border-transparent outline-none transition-all text-slate-900 dark:text-white"
+              className="w-full p-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-maitre-gold focus:border-transparent outline-none transition-all text-slate-900 dark:text-white"
             >
               <option value="SUPER_ADMIN">Administrador (SUPER_ADMIN)</option>
               <option value="RECRUITER">Recrutador (RECRUITER)</option>
@@ -116,7 +124,7 @@ export default function EditUserModal({ user, onClose }: EditUserModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-[#c89650] hover:bg-[#b08040] text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-maitre-gold hover:bg-maitre-gold-hover text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
             >
               {loading ? (
                 <Loader2 size={18} className="animate-spin" />

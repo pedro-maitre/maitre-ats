@@ -31,7 +31,7 @@ export default async function CompanyCareersPage({ params }: { params: Promise<{
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
           <h2 className="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            <Briefcase size={20} className="text-[#c89650]"/> 
+            <Briefcase size={20} className="text-maitre-gold"/> 
             Vagas Disponíveis ({jobs.length})
           </h2>
         </div>
@@ -52,7 +52,7 @@ export default async function CompanyCareersPage({ params }: { params: Promise<{
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-[#c89650] transition-colors mb-2">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-maitre-gold transition-colors mb-2">
                       {job.title}
                     </h3>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
@@ -67,7 +67,7 @@ export default async function CompanyCareersPage({ params }: { params: Promise<{
                     </div>
                   </div>
                   <div className="sm:text-right">
-                    <span className="inline-block bg-[#1d1e20] text-white px-5 py-2 rounded-lg font-medium group-hover:bg-[#c89650] transition-colors text-sm">
+                    <span className="inline-block bg-[#1d1e20] text-white px-5 py-2 rounded-lg font-medium group-hover:bg-maitre-gold transition-colors text-sm">
                       Ver detalhes
                     </span>
                   </div>

@@ -89,35 +89,35 @@ export default async function CandidateProfilePage({ params }: { params: Promise
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Contato</h2>
             <div className="space-y-4">
-              <a href={`mailto:${candidate.email}`} className="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-[#c89650] dark:hover:text-[#c89650] transition-colors group">
-                <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-[#c89650]/10">
-                  <Mail size={18} className="group-hover:text-[#c89650]" />
+              <a href={`mailto:${candidate.email}`} className="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-maitre-gold dark:hover:text-maitre-gold transition-colors group">
+                <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-maitre-gold/10">
+                  <Mail size={18} className="group-hover:text-maitre-gold" />
                 </div>
                 <span className="truncate">{candidate.email}</span>
               </a>
               
               {candidate.phone && (
-                <a href={`https://wa.me/${candidate.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-[#c89650] dark:hover:text-[#c89650] transition-colors group">
-                  <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-[#c89650]/10">
-                    <Phone size={18} className="group-hover:text-[#c89650]" />
+                <a href={`https://wa.me/${candidate.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-maitre-gold dark:hover:text-maitre-gold transition-colors group">
+                  <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-maitre-gold/10">
+                    <Phone size={18} className="group-hover:text-maitre-gold" />
                   </div>
                   <span>{candidate.phone}</span>
                 </a>
               )}
 
               {candidate.linkedinUrl && (
-                <a href={candidate.linkedinUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-[#c89650] dark:hover:text-[#c89650] transition-colors group">
-                  <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-[#c89650]/10">
-                    <Globe size={18} className="group-hover:text-[#c89650]" />
+                <a href={candidate.linkedinUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-maitre-gold dark:hover:text-maitre-gold transition-colors group">
+                  <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-maitre-gold/10">
+                    <Globe size={18} className="group-hover:text-maitre-gold" />
                   </div>
                   <span className="truncate">Perfil no LinkedIn</span>
                 </a>
               )}
 
               {candidate.resumeUrl && (
-                <a href={candidate.resumeUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-[#c89650] dark:hover:text-[#c89650] transition-colors group">
-                  <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-[#c89650]/10">
-                    <FileText size={18} className="group-hover:text-[#c89650]" />
+                <a href={candidate.resumeUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-maitre-gold dark:hover:text-maitre-gold transition-colors group">
+                  <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg group-hover:bg-maitre-gold/10">
+                    <FileText size={18} className="group-hover:text-maitre-gold" />
                   </div>
                   <span>Ver Currículo</span>
                 </a>
@@ -155,7 +155,7 @@ export default async function CandidateProfilePage({ params }: { params: Promise
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Briefcase size={20} className="text-[#c89650]" />
+                  <Briefcase size={20} className="text-maitre-gold" />
                   Processos Seletivos
                 </h2>
                 <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-3 py-1 rounded-full text-xs font-bold">
@@ -177,7 +177,7 @@ export default async function CandidateProfilePage({ params }: { params: Promise
                       <h3 className="font-bold text-lg text-slate-900 dark:text-white">
                         {app.job.title}
                       </h3>
-                      <span className="px-3 py-1 bg-[#c89650]/10 text-[#c89650] rounded-lg text-sm font-semibold border border-[#c89650]/20">
+                      <span className="px-3 py-1 bg-maitre-gold/10 text-maitre-gold rounded-lg text-sm font-semibold border border-maitre-gold/20">
                         {app.stage.name}
                       </span>
                     </div>

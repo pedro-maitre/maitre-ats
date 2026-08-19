@@ -14,7 +14,7 @@ export default async function Sidebar() {
   return (
     <div className="w-64 h-screen bg-slate-900 text-slate-300 flex flex-col fixed left-0 top-0 border-r border-slate-800">
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-white tracking-tight">Maître<span className="text-[#c89650]">ATS</span></h1>
+        <h1 className="text-2xl font-bold text-white tracking-tight">Maître<span className="text-maitre-gold">ATS</span></h1>
       </div>
       
       <nav className="flex-1 px-4 space-y-2 mt-4">
@@ -47,7 +47,7 @@ export default async function Sidebar() {
           href="https://talentosmaitre.vercel.app/careers/maitre" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-[#c89650] hover:bg-[#c89650]/10 transition-colors mt-4 border border-slate-800/60"
+          className="flex items-center gap-3 px-4 py-3 rounded-lg text-maitre-gold hover:bg-maitre-gold/10 transition-colors mt-4 border border-slate-800/60"
         >
           <ExternalLink size={20} />
           <span>Página de Carreiras</span>

@@ -42,7 +42,7 @@ export default function ProfileForm({
   return (
     <div className="max-w-2xl">
       <div className="flex items-center gap-6 mb-8">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#c89650] to-[#b08040] flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-maitre-gold to-maitre-gold-hover flex items-center justify-center text-white text-2xl font-bold shadow-lg">
           {getInitials(formData.name || initialData.email)}
         </div>
         <div>
@@ -75,7 +75,7 @@ export default function ProfileForm({
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-[#c89650] outline-none transition-shadow"
+              className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-shadow"
             />
           </div>
           <div>
@@ -85,7 +85,7 @@ export default function ProfileForm({
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-[#c89650] outline-none transition-shadow"
+              className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-shadow"
             />
           </div>
         </div>
@@ -94,7 +94,7 @@ export default function ProfileForm({
           <button
             type="submit"
             disabled={isLoading || (formData.name === initialData.name && formData.email === initialData.email)}
-            className="flex items-center gap-2 bg-[#c89650] hover:bg-[#b08040] disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold transition-all"
+            className="flex items-center gap-2 bg-maitre-gold hover:bg-maitre-gold-hover disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-bold transition-all"
           >
             {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
             {isLoading ? "Salvando..." : "Salvar Alterações"}

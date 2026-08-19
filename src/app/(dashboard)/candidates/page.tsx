@@ -27,12 +27,12 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Banco de Talentos</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2">Explore e pesquise candidatos na base.</p>
         </div>
-        <Link href="/candidates/new" className="bg-[#c89650] hover:bg-[#b08040] text-white px-5 py-2.5 rounded-lg font-semibold shadow-md transition-all active:scale-95 flex items-center gap-2">
+        <Link href="/candidates/new" className="bg-maitre-gold hover:bg-maitre-gold-hover text-white px-5 py-2.5 rounded-lg font-semibold shadow-md transition-all active:scale-95 flex items-center gap-2">
           Cadastrar Candidato
         </Link>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6 p-4 flex gap-4">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm ring-1 ring-slate-900/5 dark:ring-white/5 mb-6 p-4 flex gap-4">
         <form className="flex-1 relative" action={async (formData) => {
           "use server";
           const q = formData.get("q") as string;
@@ -44,7 +44,7 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
             name="q"
             defaultValue={query}
             placeholder="Pesquisar por nome, email ou competência..." 
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:border-[#c89650] focus:ring-1 focus:ring-[#c89650] transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:border-maitre-gold focus:ring-1 focus:ring-maitre-gold transition-all"
           />
         </form>
         <button className="flex items-center gap-2 px-6 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-slate-700 dark:text-slate-300 transition-colors">
@@ -53,10 +53,10 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
         </button>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm ring-1 ring-slate-900/5 dark:ring-white/5 overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-600 dark:text-slate-400">
+            <tr className="bg-slate-50/50 dark:bg-slate-950/50 border-b border-slate-100 dark:border-slate-800 text-sm font-semibold text-slate-500 dark:text-slate-400">
               <th className="p-4 pl-6">Candidato</th>
               <th className="p-4">Origem</th>
               <th className="p-4">Data de Cadastro</th>
@@ -67,7 +67,7 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
             {candidates.map((c) => (
               <tr key={c.id} className="border-b border-slate-100 dark:border-slate-800/50 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
                 <td className="p-4 pl-6">
-                  <div className="font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-[#c89650] transition-colors">
+                  <div className="font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-maitre-gold transition-colors">
                     {c.firstName} {c.lastName}
                   </div>
                   <div className="flex items-center gap-4 text-sm text-slate-500">
@@ -84,7 +84,7 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
                   {new Date(c.createdAt).toLocaleDateString("pt-BR")}
                 </td>
                 <td className="p-4 text-right pr-6">
-                  <Link href={`/candidates/${c.id}`} className="text-[#c89650] hover:text-[#b08040] font-medium text-sm flex items-center gap-1 justify-end w-full transition-colors">
+                  <Link href={`/candidates/${c.id}`} className="text-maitre-gold hover:text-maitre-gold-hover font-medium text-sm flex items-center gap-1 justify-end w-full transition-colors">
                     Ver Perfil <ExternalLink size={16} />
                   </Link>
                 </td>

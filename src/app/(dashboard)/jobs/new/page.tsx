@@ -20,7 +20,7 @@ export default function NewJobPage() {
           
           <div className="space-y-2">
             <label htmlFor="title" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-              <Briefcase size={16} className="text-[#c89650]" />
+              <Briefcase size={16} className="text-maitre-gold" />
               Título da Vaga *
             </label>
             <input 
@@ -29,7 +29,7 @@ export default function NewJobPage() {
               name="title" 
               required
               placeholder="ex: Engenheiro de Software Pleno" 
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-[#c89650] focus:ring-1 focus:ring-[#c89650] outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-maitre-gold focus:ring-1 focus:ring-maitre-gold outline-none transition-all"
             />
           </div>
 
@@ -73,7 +73,7 @@ export default function NewJobPage() {
                 id="salaryMin" 
                 name="salaryMin" 
                 placeholder="ex: 5000" 
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-[#c89650] focus:ring-1 focus:ring-[#c89650] outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-maitre-gold focus:ring-1 focus:ring-maitre-gold outline-none transition-all"
               />
             </div>
             
@@ -86,7 +86,7 @@ export default function NewJobPage() {
                 id="salaryMax" 
                 name="salaryMax" 
                 placeholder="ex: 8000" 
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-[#c89650] focus:ring-1 focus:ring-[#c89650] outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-maitre-gold focus:ring-1 focus:ring-maitre-gold outline-none transition-all"
               />
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function NewJobPage() {
           <Link href="/jobs" className="px-6 py-2.5 rounded-lg font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
             Cancelar
           </Link>
-          <button type="submit" className="bg-[#c89650] hover:bg-[#b08040] text-white px-8 py-2.5 rounded-lg font-semibold shadow-md transition-all active:scale-95">
+          <button type="submit" className="bg-maitre-gold hover:bg-maitre-gold-hover text-white px-8 py-2.5 rounded-lg font-semibold shadow-md transition-all active:scale-95">
             Publicar Vaga
           </button>
         </div>

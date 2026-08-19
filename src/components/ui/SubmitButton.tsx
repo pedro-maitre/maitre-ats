@@ -16,7 +16,7 @@ export function SubmitButton({
     <button 
       type="submit" 
       disabled={pending}
-      className="bg-[#c89650] hover:bg-[#b08040] disabled:opacity-70 disabled:cursor-not-allowed text-white px-8 py-2.5 rounded-lg font-semibold shadow-md transition-all active:scale-95 flex items-center justify-center min-w-[160px]"
+      className="bg-maitre-gold hover:bg-maitre-gold-hover disabled:opacity-70 disabled:cursor-not-allowed text-white px-8 py-2.5 rounded-lg font-semibold shadow-md transition-all active:scale-95 flex items-center justify-center min-w-[160px]"
     >
       {pending ? (
         <>

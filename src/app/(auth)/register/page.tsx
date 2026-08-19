@@ -46,7 +46,7 @@ export default function RegisterPage() {
       <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl border dark:border-slate-800 p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Criar Conta</h1>
-          <p className="text-sm font-semibold text-[#c89650] mb-2 uppercase tracking-widest">TalentFlow by Maître</p>
+          <p className="text-sm font-semibold text-maitre-gold mb-2 uppercase tracking-widest">TalentFlow by Maître</p>
           <p className="text-slate-500 dark:text-slate-400">Junte-se à nossa plataforma.</p>
         </div>
 
@@ -62,7 +62,7 @@ export default function RegisterPage() {
             <input
               type="text"
               required
-              className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650]"
+              className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="João da Silva"
@@ -73,7 +73,7 @@ export default function RegisterPage() {
             <input
               type="email"
               required
-              className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650]"
+              className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
@@ -84,7 +84,7 @@ export default function RegisterPage() {
             <input
               type="password"
               required
-              className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650]"
+              className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
@@ -93,7 +93,7 @@ export default function RegisterPage() {
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tipo de Conta</label>
             <select
-              className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650]"
+              className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold"
               value={role}
               onChange={(e) => setRole(e.target.value)}
             >
@@ -114,7 +114,7 @@ export default function RegisterPage() {
 
         <div className="mt-6 text-center text-sm text-slate-500">
           Já possui uma conta?{" "}
-          <Link href="/login" className="text-[#c89650] hover:underline font-semibold">
+          <Link href="/login" className="text-maitre-gold hover:underline font-semibold">
             Entrar
           </Link>
         </div>

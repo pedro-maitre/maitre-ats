@@ -94,7 +94,7 @@ export default function ApplyPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4">
       <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-xl border dark:border-slate-800 overflow-hidden">
-        <div className="bg-[#1d1e20] p-8 text-center border-b-[4px] border-[#c89650]">
+        <div className="bg-[#1d1e20] p-8 text-center border-b-[4px] border-maitre-gold">
           <h1 className="text-3xl font-bold text-white mb-2">Banco de Talentos</h1>
           <p className="text-slate-300">Envie seu currículo e a Maître preencherá seus dados.</p>
         </div>
@@ -103,7 +103,7 @@ export default function ApplyPage() {
           {/* Upload Area */}
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 text-center cursor-pointer hover:border-[#c89650] dark:hover:border-[#c89650] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all mb-8"
+            className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 text-center cursor-pointer hover:border-maitre-gold dark:hover:border-maitre-gold hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all mb-8"
           >
             <input 
               type="file" 
@@ -113,7 +113,7 @@ export default function ApplyPage() {
               onChange={handleFileChange}
             />
             {isParsing ? (
-              <div className="flex flex-col items-center text-[#c89650]">
+              <div className="flex flex-col items-center text-maitre-gold">
                 <Loader2 size={40} className="animate-spin mb-4" />
                 <p className="font-medium">Lendo currículo usando IA...</p>
               </div>
@@ -141,7 +141,7 @@ export default function ApplyPage() {
                 <input
                   type="text"
                   required
-                  className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650]"
+                  className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold"
                   value={formData.firstName}
                   onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                 />
@@ -151,7 +151,7 @@ export default function ApplyPage() {
                 <input
                   type="text"
                   required
-                  className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650]"
+                  className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold"
                   value={formData.lastName}
                   onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                 />
@@ -164,7 +164,7 @@ export default function ApplyPage() {
                 <input
                   type="email"
                   required
-                  className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650]"
+                  className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                 />
@@ -173,7 +173,7 @@ export default function ApplyPage() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Telefone</label>
                 <input
                   type="tel"
-                  className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650]"
+                  className="w-full p-3 rounded-lg border dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold"
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 />

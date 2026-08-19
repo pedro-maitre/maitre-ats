@@ -18,14 +18,14 @@ export default async function JobsPage() {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Vagas Abertas</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2">Gerencie os processos seletivos ativos.</p>
         </div>
-        <Link href="/jobs/new" className="bg-[#c89650] hover:bg-[#b08040] text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm block text-center">
+        <Link href="/jobs/new" className="bg-maitre-gold hover:bg-maitre-gold-hover text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm block text-center">
           Nova Vaga
         </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {jobs.map(job => (
-          <Link href={`/jobs/${job.id}/board`} key={job.id} className="bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-xl p-6 hover:shadow-lg transition-all group block">
+          <Link href={`/jobs/${job.id}/board`} key={job.id} className="bg-white dark:bg-slate-900 ring-1 ring-slate-900/5 dark:ring-white/5 shadow-sm rounded-xl p-6 hover:shadow-lg transition-all group block">
             <div className="flex justify-between items-start mb-4">
               <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-3 rounded-lg">
                 <Briefcase size={24} />
@@ -35,7 +35,7 @@ export default async function JobsPage() {
               </span>
             </div>
             
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2 group-hover:text-[#c89650] dark:group-hover:text-[#f2d291] transition-colors">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2 group-hover:text-maitre-gold dark:group-hover:text-[#f2d291] transition-colors">
               {job.title}
             </h3>
             
@@ -50,7 +50,7 @@ export default async function JobsPage() {
               </div>
             </div>
             
-            <div className="mt-6 pt-4 border-t dark:border-slate-800 flex justify-between items-center text-sm font-semibold text-blue-600 dark:text-blue-400 group-hover:text-[#c89650]">
+            <div className="mt-6 pt-4 border-t dark:border-slate-800 flex justify-between items-center text-sm font-semibold text-blue-600 dark:text-blue-400 group-hover:text-maitre-gold">
               Ver Pipeline
               <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </div>

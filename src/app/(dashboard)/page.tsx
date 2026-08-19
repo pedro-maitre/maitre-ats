@@ -81,7 +81,7 @@ export default async function DashboardHomePage() {
         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col">
           <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <BarChart3 size={20} className="text-[#c89650]" />
+              <BarChart3 size={20} className="text-maitre-gold" />
               Vagas em Destaque
             </h2>
             <Link href="/jobs" className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium flex items-center gap-1 group">
@@ -99,7 +99,7 @@ export default async function DashboardHomePage() {
                 {recentJobs.map(job => (
                   <Link href={`/jobs/${job.id}/board`} key={job.id} className="flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all group">
                     <div>
-                      <div className="font-semibold text-slate-900 dark:text-white group-hover:text-[#c89650] transition-colors">{job.title}</div>
+                      <div className="font-semibold text-slate-900 dark:text-white group-hover:text-maitre-gold transition-colors">{job.title}</div>
                       <div className="text-sm text-slate-500 mt-1 flex items-center gap-2">
                         {job.department || "Geral"} &bull; {job.location || "Remoto"}
                         <span className="text-slate-300 dark:text-slate-600">&bull;</span>
@@ -170,7 +170,7 @@ export default async function DashboardHomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {funnelArray.map(([stageName, count]) => (
               <div key={stageName} className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 p-4 rounded-xl flex flex-col items-center text-center justify-center">
-                <span className="text-3xl font-black text-[#c89650] mb-1">{count}</span>
+                <span className="text-3xl font-black text-maitre-gold mb-1">{count}</span>
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">{stageName}</span>
               </div>
             ))}

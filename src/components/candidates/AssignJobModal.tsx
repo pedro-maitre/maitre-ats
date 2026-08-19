@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Briefcase, Plus } from "lucide-react";
 import { assignCandidateToJob } from "@/app/(dashboard)/candidates/[id]/actions";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,16 @@ export default function AssignJobModal({ candidateId, activeJobs }: { candidateI
   const [selectedJob, setSelectedJob] = useState<string>("");
   const [error, setError] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   const handleAssign = async () => {
     if (!selectedJob) return;
@@ -39,7 +49,7 @@ export default function AssignJobModal({ candidateId, activeJobs }: { candidateI
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className="text-sm font-medium text-[#c89650] hover:text-[#b08040] flex items-center gap-1.5 transition-colors"
+        className="text-sm font-medium text-maitre-gold hover:text-maitre-gold-hover flex items-center gap-1.5 transition-colors"
       >
         <Plus size={16} />
         Adicionar a Vaga
@@ -50,7 +60,7 @@ export default function AssignJobModal({ candidateId, activeJobs }: { candidateI
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md border border-slate-200 dark:border-slate-800 overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Briefcase size={20} className="text-[#c89650]" />
+                <Briefcase size={20} className="text-maitre-gold" />
                 Alocar em Vaga
               </h3>
               <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
@@ -70,7 +80,7 @@ export default function AssignJobModal({ candidateId, activeJobs }: { candidateI
                   Selecione a Vaga Ativa
                 </label>
                 <select 
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-shadow"
                   value={selectedJob}
                   onChange={(e) => setSelectedJob(e.target.value)}
                 >
@@ -94,7 +104,7 @@ export default function AssignJobModal({ candidateId, activeJobs }: { candidateI
               <button 
                 onClick={handleAssign}
                 disabled={!selectedJob || isSubmitting}
-                className="px-6 py-2 bg-[#c89650] hover:bg-[#b08040] disabled:opacity-50 text-white font-medium rounded-lg shadow-sm transition-all"
+                className="px-6 py-2 bg-maitre-gold hover:bg-maitre-gold-hover disabled:opacity-50 text-white font-medium rounded-lg shadow-sm transition-all"
               >
                 {isSubmitting ? "Alocando..." : "Confirmar"}
               </button>

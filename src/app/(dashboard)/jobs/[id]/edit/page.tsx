@@ -36,7 +36,7 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
           
           <div className="space-y-2">
             <label htmlFor="title" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-              <Briefcase size={16} className="text-[#c89650]" />
+              <Briefcase size={16} className="text-maitre-gold" />
               Título da Vaga *
             </label>
             <input 
@@ -46,7 +46,7 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
               required
               defaultValue={job.title}
               placeholder="ex: Engenheiro de Software Pleno" 
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-[#c89650] focus:ring-1 focus:ring-[#c89650] outline-none transition-all"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-maitre-gold focus:ring-1 focus:ring-maitre-gold outline-none transition-all"
             />
           </div>
 
@@ -93,7 +93,7 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
                 name="salaryMin" 
                 defaultValue={job.salaryMin || ""}
                 placeholder="ex: 5000" 
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-[#c89650] focus:ring-1 focus:ring-[#c89650] outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-maitre-gold focus:ring-1 focus:ring-maitre-gold outline-none transition-all"
               />
             </div>
             
@@ -107,7 +107,7 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
                 name="salaryMax" 
                 defaultValue={job.salaryMax || ""}
                 placeholder="ex: 8000" 
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-[#c89650] focus:ring-1 focus:ring-[#c89650] outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-maitre-gold focus:ring-1 focus:ring-maitre-gold outline-none transition-all"
               />
             </div>
           </div>

@@ -36,8 +36,19 @@ export default function CandidateModal({
       }
     }
     loadData();
-    return () => { active = false; };
-  }, [isOpen, candidate]);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    
+    return () => { 
+      active = false; 
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, candidate, onClose]);
 
   const handleSave = async () => {
     if (!feedback.trim()) return;
@@ -95,7 +106,7 @@ export default function CandidateModal({
               <button 
                 onClick={handleSave}
                 disabled={saving || !feedback.trim()}
-                className="mt-3 w-full bg-[#c89650] hover:bg-[#b08040] disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white font-semibold py-2.5 rounded-xl transition-all shadow-sm active:scale-95"
+                className="mt-3 w-full bg-maitre-gold hover:bg-maitre-gold-hover disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white font-semibold py-2.5 rounded-xl transition-all shadow-sm active:scale-95"
               >
                 {saving ? "Salvando..." : "Salvar Anotação"}
               </button>
@@ -140,7 +151,7 @@ export default function CandidateModal({
           <div className="flex-1 p-6 overflow-y-auto">
             {loading ? (
               <div className="h-full flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-slate-200 border-t-[#c89650] rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-slate-200 border-t-maitre-gold rounded-full animate-spin"></div>
               </div>
             ) : activeTab === "resume" ? (
               <div className="h-full border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-400 bg-white dark:bg-slate-950 shadow-sm">
@@ -156,7 +167,7 @@ export default function CandidateModal({
             ) : (
               <div className="bg-white dark:bg-slate-950 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm h-full">
                 <h3 className="text-lg font-bold mb-4 text-slate-800 dark:text-white flex items-center gap-2">
-                  <User size={20} className="text-[#c89650]" />
+                  <User size={20} className="text-maitre-gold" />
                   Resumo Profissional
                 </h3>
                 <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
