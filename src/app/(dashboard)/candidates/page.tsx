@@ -80,9 +80,9 @@ export default async function CandidatesPage({ searchParams }: { searchParams: P
                   {new Date(c.createdAt).toLocaleDateString("pt-BR")}
                 </td>
                 <td className="p-4 text-right pr-6">
-                  <button className="text-[#c89650] hover:text-[#b08040] font-medium text-sm flex items-center gap-1 justify-end w-full transition-colors">
+                  <Link href={`/candidates/${c.id}`} className="text-[#c89650] hover:text-[#b08040] font-medium text-sm flex items-center gap-1 justify-end w-full transition-colors">
                     Ver Perfil <ExternalLink size={16} />
-                  </button>
+                  </Link>
                 </td>
               </tr>
             ))}
