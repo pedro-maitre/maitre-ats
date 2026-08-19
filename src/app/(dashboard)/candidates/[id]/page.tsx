@@ -2,27 +2,34 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { 
   ArrowLeft, Mail, Phone, FileText, Globe, 
-  Briefcase, MapPin, Calendar, Clock, Star
+  Briefcase, MapPin, Calendar, Clock, Star, Edit
 } from "lucide-react";
 import Link from "next/link";
+import AssignJobModal from "@/components/candidates/AssignJobModal";
 
 export default async function CandidateProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const candidate = await prisma.candidate.findUnique({
-    where: { id },
-    include: {
-      applications: {
-        include: {
-          job: true,
-          stage: true
-        },
-        orderBy: {
-          createdAt: "desc"
+  const [candidate, activeJobs] = await Promise.all([
+    prisma.candidate.findUnique({
+      where: { id },
+      include: {
+        applications: {
+          include: {
+            job: true,
+            stage: true
+          },
+          orderBy: {
+            createdAt: "desc"
+          }
         }
       }
-    }
-  });
+    }),
+    prisma.job.findMany({
+      where: { status: "OPEN" },
+      select: { id: true, title: true, department: true }
+    })
+  ]);
 
   if (!candidate) {
     redirect("/candidates");
@@ -61,8 +68,15 @@ export default async function CandidateProfilePage({ params }: { params: Promise
           </p>
         </div>
       </div>
+      
+      <div className="flex justify-end -mt-16 relative z-10">
+        <Link href={`/candidates/${candidate.id}/edit`} className="bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg font-medium shadow-sm border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-2">
+          <Edit size={16} />
+          Editar Perfil
+        </Link>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
         
         {/* Left Column: Contact & Basic Info */}
         <div className="space-y-6">
@@ -133,13 +147,16 @@ export default async function CandidateProfilePage({ params }: { params: Promise
 
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Briefcase size={20} className="text-[#c89650]" />
-                Processos Seletivos
-              </h2>
-              <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-3 py-1 rounded-full text-xs font-bold">
-                {candidate.applications.length}
-              </span>
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Briefcase size={20} className="text-[#c89650]" />
+                  Processos Seletivos
+                </h2>
+                <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-3 py-1 rounded-full text-xs font-bold">
+                  {candidate.applications.length}
+                </span>
+              </div>
+              <AssignJobModal candidateId={candidate.id} activeJobs={activeJobs} />
             </div>
 
             <div className="divide-y divide-slate-100 dark:divide-slate-800">

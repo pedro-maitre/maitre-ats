@@ -1,5 +1,6 @@
 import KanbanBoard from "@/components/kanban/KanbanBoard";
 import { prisma } from "@/lib/prisma";
+import { ArrowLeft, Building2, MapPin, Users, Calendar, UserPlus, Edit } from "lucide-react";
 
 export default async function JobBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
