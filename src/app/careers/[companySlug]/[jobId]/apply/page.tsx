@@ -28,44 +28,11 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
     profileSummary: ""
   });
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
-      await parseResume(selectedFile);
-    }
-  };
-
-  const parseResume = async (file: File) => {
-    setIsParsing(true);
-    setError("");
-    const data = new FormData();
-    data.append("resume", file);
-
-    try {
-      const res = await fetch("/api/parse-resume", {
-        method: "POST",
-        body: data,
-      });
-      const parsed = await res.json();
-      
-      if (!res.ok) throw new Error(parsed.error || "Erro na leitura do PDF");
-
-      const names = parsed.name ? parsed.name.split(" ") : [""];
-      setFormData((prev) => ({
-        ...prev,
-        firstName: names[0] || "",
-        lastName: names.slice(1).join(" ") || "",
-        email: parsed.email || "",
-        phone: parsed.phone || "",
-        linkedinUrl: parsed.linkedinUrl || "",
-        tags: parsed.tags || "",
-        profileSummary: parsed.rawText || ""
-      }));
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsParsing(false);
+      setError("");
     }
   };
 
@@ -124,7 +91,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="bg-slate-50 dark:bg-slate-950 p-8 border-b border-slate-200 dark:border-slate-800 text-center">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Envie sua Candidatura</h1>
-          <p className="text-slate-500 dark:text-slate-400">Faça o upload do seu currículo para preenchimento automático.</p>
+          <p className="text-slate-500 dark:text-slate-400">Faça o upload do seu currículo em PDF e preencha seus dados abaixo.</p>
         </div>
 
         <div className="p-8">
@@ -155,7 +122,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
               <div className="flex flex-col items-center text-slate-400">
                 <UploadCloud size={48} className="mb-4 opacity-50" />
                 <p className="font-semibold text-slate-600 dark:text-slate-300 mb-1">Clique para enviar seu currículo (PDF)</p>
-                <p className="text-sm">Nossos sistemas vão preencher o formulário para você.</p>
+                <p className="text-sm">O arquivo será anexado ao seu perfil.</p>
               </div>
             )}
           </div>
@@ -235,7 +202,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
 
             <div className="grid grid-cols-1 gap-5">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Principais Competências (Tags extraídas)</label>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Principais Competências (Separe por vírgula)</label>
                 <input
                   type="text"
                   placeholder="Ex: Liderança, React, Gestão de Projetos"
@@ -245,7 +212,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Resumo Profissional (Extraído)</label>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Resumo Profissional</label>
                 <textarea
                   rows={4}
                   className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow resize-y"
