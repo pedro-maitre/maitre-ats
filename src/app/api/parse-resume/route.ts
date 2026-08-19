@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 export async function POST(req: NextRequest) {
   try {
     const pdfParse = require("pdf-parse");
@@ -17,25 +23,47 @@ export async function POST(req: NextRequest) {
     const pdfData = await pdfParse(buffer);
     const text = pdfData.text;
 
-    // Simple Regex Heuristics
-    const emailMatch = text.match(/[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/);
-    const phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\d{4}|\d{4})[-.\s]?\d{4}/);
+    // Use OpenAI to parse the text
+    const completion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: `Você é um assistente especialista em recrutamento. 
+Extraia as seguintes informações do currículo fornecido e retorne APENAS um JSON válido com esta estrutura exata:
+{
+  "name": "Nome Completo (ou apenas o primeiro e último nome)",
+  "email": "E-mail do candidato",
+  "phone": "Telefone do candidato no formato numérico",
+  "linkedinUrl": "URL do LinkedIn (se houver)",
+  "tags": ["Tag1", "Tag2", "Tag3"], // Máximo de 8 competências chave (hard skills e ferramentas)
+  "profileSummary": "Um resumo profissional coeso de no máximo 4 linhas criado a partir do currículo"
+}
+Se uma informação não existir, retorne string vazia "". Se tags não existirem, retorne [].`
+        },
+        {
+          role: "user",
+          content: text.substring(0, 10000) // Limit size to avoid excessive tokens
+        }
+      ],
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
+    });
+
+    const aiResponse = completion.choices[0].message.content;
     
-    // Naive name extraction: grab first few lines, find the first one that looks like a name
-    const lines = String(text).split("\n").map((l: string) => l.trim()).filter((l: string) => l.length > 0);
-    let name = "";
-    for (const line of lines.slice(0, 5)) {
-      if (line.split(" ").length >= 2 && !line.includes("@") && line.length < 50) {
-        name = line;
-        break;
-      }
+    if (!aiResponse) {
+      throw new Error("Resposta vazia da IA");
     }
 
+    const parsedData = JSON.parse(aiResponse);
+
     return NextResponse.json({
-      name: name,
-      email: emailMatch ? emailMatch[0] : "",
-      phone: phoneMatch ? phoneMatch[0] : "",
-      rawText: text.substring(0, 1000) + "..." // For debugging or profile summary
+      name: parsedData.name || "",
+      email: parsedData.email || "",
+      phone: parsedData.phone || "",
+      linkedinUrl: parsedData.linkedinUrl || "",
+      rawText: parsedData.profileSummary || "",
+      tags: parsedData.tags ? parsedData.tags.join(", ") : ""
     });
   } catch (error) {
     console.error("Parse Error:", error);

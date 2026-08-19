@@ -2,10 +2,50 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
-export async function submitApplication(jobId: string, orgSlug: string, candidateData: any) {
-  const { firstName, lastName, email, phone, profileSummary, source, salaryExpectation } = candidateData;
+export async function submitApplication(jobId: string, orgSlug: string, formData: FormData) {
+  const firstName = formData.get("firstName") as string;
+  const lastName = formData.get("lastName") as string;
+  const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
+  const profileSummary = formData.get("profileSummary") as string;
+  const linkedinUrl = formData.get("linkedinUrl") as string;
+  const tags = formData.get("tags") as string;
+  const source = formData.get("source") as string || "Site de Carreiras";
+  const salaryExpectation = formData.get("salaryExpectation") as string;
+  const resumeFile = formData.get("resumeFile") as File | null;
+
   const expectationNum = salaryExpectation ? parseFloat(salaryExpectation) : null;
+
+  // Parse tags
+  let tagsJson = "[]";
+  if (tags) {
+    const tagsArray = tags.split(",").map((t: string) => t.trim()).filter((t: string) => t);
+    tagsJson = JSON.stringify(tagsArray);
+  }
+
+  // Upload Resume to Supabase Storage
+  let resumeUrl = null;
+  if (resumeFile && resumeFile.size > 0 && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    const fileExt = resumeFile.name.split(".").pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${orgSlug}/${fileName}`;
+
+    const arrayBuffer = await resumeFile.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { data, error } = await supabase.storage
+      .from("resumes")
+      .upload(filePath, buffer, {
+        contentType: resumeFile.type,
+      });
+
+    if (!error && data) {
+      const { data: urlData } = supabase.storage.from("resumes").getPublicUrl(filePath);
+      resumeUrl = urlData.publicUrl;
+    }
+  }
 
   const org = await prisma.organization.findUnique({
     where: { slug: orgSlug }
@@ -30,7 +70,10 @@ export async function submitApplication(jobId: string, orgSlug: string, candidat
       firstName,
       lastName,
       phone,
+      linkedinUrl,
+      tags: tagsJson,
       profileSummary,
+      resumeUrl: resumeUrl || undefined,
       source: source || "Site de Carreiras",
     },
     create: {
@@ -38,7 +81,10 @@ export async function submitApplication(jobId: string, orgSlug: string, candidat
       lastName,
       email,
       phone,
+      linkedinUrl,
+      tags: tagsJson,
       profileSummary,
+      resumeUrl,
       source: source || "Site de Carreiras",
       organizationId: org.id,
     },

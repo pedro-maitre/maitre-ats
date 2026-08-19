@@ -69,7 +69,13 @@ export default async function CandidateProfilePage({ params }: { params: Promise
         </div>
       </div>
       
-      <div className="flex justify-end -mt-16 relative z-10">
+      <div className="flex justify-end -mt-16 relative z-10 gap-3">
+        {candidate.resumeUrl && (
+          <a href={candidate.resumeUrl} target="_blank" rel="noopener noreferrer" className="bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 px-4 py-2 rounded-lg font-medium shadow-sm border border-emerald-200 dark:border-emerald-800 transition-colors flex items-center gap-2">
+            <FileText size={16} />
+            Baixar Currículo
+          </a>
+        )}
         <Link href={`/candidates/${candidate.id}/edit`} className="bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg font-medium shadow-sm border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-2">
           <Edit size={16} />
           Editar Perfil

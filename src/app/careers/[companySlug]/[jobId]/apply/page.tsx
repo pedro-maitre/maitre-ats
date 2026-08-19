@@ -22,6 +22,8 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
     lastName: "",
     email: "",
     phone: "",
+    linkedinUrl: "",
+    tags: "",
     salaryExpectation: "",
     profileSummary: ""
   });
@@ -56,6 +58,8 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
         lastName: names.slice(1).join(" ") || "",
         email: parsed.email || "",
         phone: parsed.phone || "",
+        linkedinUrl: parsed.linkedinUrl || "",
+        tags: parsed.tags || "",
         profileSummary: parsed.rawText || ""
       }));
     } catch (err: any) {
@@ -71,7 +75,21 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
     setError("");
 
     try {
-      await submitApplication(jobId, companySlug, formData);
+      const data = new FormData();
+      data.append("firstName", formData.firstName);
+      data.append("lastName", formData.lastName);
+      data.append("email", formData.email);
+      data.append("phone", formData.phone);
+      data.append("salaryExpectation", formData.salaryExpectation);
+      data.append("profileSummary", formData.profileSummary);
+      data.append("linkedinUrl", formData.linkedinUrl);
+      data.append("tags", formData.tags);
+      
+      if (file) {
+        data.append("resumeFile", file);
+      }
+
+      await submitApplication(jobId, companySlug, data);
       setSuccess(true);
     } catch (err: any) {
       setError(err.message);
@@ -201,6 +219,38 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
                   className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
                   value={formData.salaryExpectation}
                   onChange={(e) => setFormData({...formData, salaryExpectation: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">LinkedIn URL</label>
+                <input
+                  type="url"
+                  placeholder="https://linkedin.com/in/..."
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
+                  value={formData.linkedinUrl}
+                  onChange={(e) => setFormData({...formData, linkedinUrl: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Principais Competências (Tags extraídas)</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Liderança, React, Gestão de Projetos"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
+                  value={formData.tags}
+                  onChange={(e) => setFormData({...formData, tags: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Resumo Profissional (Extraído)</label>
+                <textarea
+                  rows={4}
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow resize-y"
+                  value={formData.profileSummary}
+                  onChange={(e) => setFormData({...formData, profileSummary: e.target.value})}
                 />
               </div>
             </div>
