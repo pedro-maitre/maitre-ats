@@ -4,7 +4,8 @@
 import { prisma } from "@/lib/prisma";
 
 export async function submitApplication(jobId: string, orgSlug: string, candidateData: any) {
-  const { firstName, lastName, email, phone, profileSummary, source } = candidateData;
+  const { firstName, lastName, email, phone, profileSummary, source, salaryExpectation } = candidateData;
+  const expectationNum = salaryExpectation ? parseFloat(salaryExpectation) : null;
 
   const org = await prisma.organization.findUnique({
     where: { slug: orgSlug }
@@ -55,13 +56,25 @@ export async function submitApplication(jobId: string, orgSlug: string, candidat
     throw new Error("Você já se candidatou para esta vaga.");
   }
 
+  // KNOCKOUT RULE: Check if salary expectation exceeds job budget
+  let fitCategory = "ALTO_FIT";
+  let priority = "NORMAL";
+  
+  if (job.salaryMax && expectationNum && expectationNum > job.salaryMax) {
+    fitCategory = "BAIXO_FIT";
+    priority = "DUVIDA";
+  }
+
   // Create Application
   await prisma.application.create({
     data: {
       candidateId: candidate.id,
       jobId: job.id,
       stageId: firstStage.id,
-      matchScore: Math.floor(Math.random() * 41) + 60 // Mock score between 60-100
+      matchScore: Math.floor(Math.random() * 41) + 60, // Mock score between 60-100
+      salaryExpectation: expectationNum,
+      fitCategory,
+      priority
     }
   });
 

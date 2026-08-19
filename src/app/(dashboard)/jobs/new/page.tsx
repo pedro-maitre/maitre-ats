@@ -63,6 +63,34 @@ export default function NewJobPage() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label htmlFor="salaryMin" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                Salário Mínimo (R$)
+              </label>
+              <input 
+                type="number" 
+                id="salaryMin" 
+                name="salaryMin" 
+                placeholder="ex: 5000" 
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-[#c89650] focus:ring-1 focus:ring-[#c89650] outline-none transition-all"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="salaryMax" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                Salário Máximo (R$)
+              </label>
+              <input 
+                type="number" 
+                id="salaryMax" 
+                name="salaryMax" 
+                placeholder="ex: 8000" 
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-[#c89650] focus:ring-1 focus:ring-[#c89650] outline-none transition-all"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label htmlFor="description" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
               <AlignLeft size={16} className="text-purple-500" />

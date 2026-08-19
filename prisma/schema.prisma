@@ -46,6 +46,8 @@ model Job {
   description      String
   department       String?
   location         String?      // e.g., "Remote", "São Paulo, SP"
+  salaryMin        Float?
+  salaryMax        Float?
   status           String       @default("DRAFT")
   organizationId   String
   organization     Organization @relation(fields: [organizationId], references: [id])
@@ -113,6 +115,7 @@ model Application {
   matchScore       Float?       // Percentage 0-100
   priority         String       @default("NORMAL") // PRIORIZADO, NORMAL, DUVIDA
   fitCategory      String?      // ALTO_FIT, MEDIO_FIT, BAIXO_FIT
+  salaryExpectation Float?
   enteredStageAt   DateTime     @default(now())
   
   evaluations      Evaluation[]

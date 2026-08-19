@@ -3,7 +3,7 @@ import { Briefcase, Users, UserPlus, ArrowRight, BarChart3, Clock } from "lucide
 import Link from "next/link";
 
 export default async function DashboardHomePage() {
-  const [totalJobs, totalCandidates, recentJobs, recentApplications] = await Promise.all([
+  const [totalJobs, totalCandidates, recentJobs, recentApplications, stagesData] = await Promise.all([
     prisma.job.count(),
     prisma.candidate.count(),
     prisma.job.findMany({
@@ -21,8 +21,22 @@ export default async function DashboardHomePage() {
         job: true,
         stage: true
       }
+    }),
+    prisma.stage.findMany({
+      select: {
+        name: true,
+        _count: { select: { applications: true } }
+      }
     })
   ]);
+
+  const funnelMap = stagesData.reduce((acc, stage) => {
+    acc[stage.name] = (acc[stage.name] || 0) + stage._count.applications;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  // Sort by name roughly to approximate funnel or just count
+  const funnelArray = Object.entries(funnelMap).sort((a, b) => b[1] - a[1]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -135,6 +149,29 @@ export default async function DashboardHomePage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Funil de Recrutamento Global */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col p-6 mt-8">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-6">
+          <BarChart3 size={20} className="text-emerald-500" />
+          Funil Global de Recrutamento
+        </h2>
+        
+        {funnelArray.length === 0 ? (
+          <div className="flex justify-center items-center py-8 text-slate-400">
+            Nenhum dado no funil ainda.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {funnelArray.map(([stageName, count]) => (
+              <div key={stageName} className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 p-4 rounded-xl flex flex-col items-center text-center justify-center">
+                <span className="text-3xl font-black text-[#c89650] mb-1">{count}</span>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">{stageName}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

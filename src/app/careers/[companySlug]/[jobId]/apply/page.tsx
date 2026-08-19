@@ -22,6 +22,7 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
     lastName: "",
     email: "",
     phone: "",
+    salaryExpectation: "",
     profileSummary: ""
   });
 
@@ -49,13 +50,14 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
       if (!res.ok) throw new Error(parsed.error || "Erro na leitura do PDF");
 
       const names = parsed.name ? parsed.name.split(" ") : [""];
-      setFormData({
+      setFormData((prev) => ({
+        ...prev,
         firstName: names[0] || "",
         lastName: names.slice(1).join(" ") || "",
         email: parsed.email || "",
         phone: parsed.phone || "",
         profileSummary: parsed.rawText || ""
-      });
+      }));
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -185,6 +187,20 @@ export default function JobApplyPage({ params }: { params: Promise<{ companySlug
                   className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Pretensão Salarial (R$)</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="ex: 5000"
+                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-[#c89650] transition-shadow"
+                  value={formData.salaryExpectation}
+                  onChange={(e) => setFormData({...formData, salaryExpectation: e.target.value})}
                 />
               </div>
             </div>

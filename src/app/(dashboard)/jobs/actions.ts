@@ -9,6 +9,8 @@ export async function createJob(formData: FormData) {
   const department = formData.get("department") as string;
   const location = formData.get("location") as string;
   const description = formData.get("description") as string;
+  const salaryMin = formData.get("salaryMin") ? parseFloat(formData.get("salaryMin") as string) : null;
+  const salaryMax = formData.get("salaryMax") ? parseFloat(formData.get("salaryMax") as string) : null;
 
   if (!title || !description) {
     throw new Error("Título e descrição são obrigatórios");
@@ -29,6 +31,8 @@ export async function createJob(formData: FormData) {
       department,
       location,
       description,
+      salaryMin,
+      salaryMax,
       status: "OPEN",
       organizationId: org.id,
       stages: {
