@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       User[]
+  jobs        Job[]
+  stages      Stage[]  // Global or org-level stages
+  candidates  Candidate[]
+}
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  password       String?
+  name           String?
+  role           String       @default("CANDIDATE")
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  
+  // Relations
+  jobsManaged    Job[]        @relation("HiringManager")
+  jobsRecruited  Job[]        @relation("Recruiter")
+  evaluations    Evaluation[]
+  activities     Activity[]
+
+  candidate      Candidate?   // Link user to candidate profile
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Job {
+  id               String       @id @default(cuid())
+  title            String
+  description      String
+  department       String?
+  location         String?      // e.g., "Remote", "São Paulo, SP"
+  status           String       @default("DRAFT")
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  
+  hiringManagerId  String?
+  hiringManager    User?        @relation("HiringManager", fields: [hiringManagerId], references: [id])
+  recruiterId      String?
+  recruiter        User?        @relation("Recruiter", fields: [recruiterId], references: [id])
+
+  applications     Application[]
+  stages           Stage[]      // Custom stages per job
+
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model Candidate {
+  id               String       @id @default(cuid())
+  firstName        String
+  lastName         String
+  email            String       @unique
+  phone            String?
+  resumeUrl        String?
+  linkedinUrl      String?
+  source           String?
+  profileSummary   String?
+  tags             String?      // JSON string or comma separated
+  
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id])
+
+  userId           String?      @unique
+  user             User?        @relation(fields: [userId], references: [id])
+
+  applications     Application[]
+
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model Stage {
+  id               String       @id @default(cuid())
+  name             String       // e.g., "Triagem", "Entrevista RH"
+  order            Int
+  jobId            String?
+  job              Job?         @relation(fields: [jobId], references: [id])
+  organizationId   String?
+  organization     Organization? @relation(fields: [organizationId], references: [id])
+
+  applications     Application[]
+
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model Application {
+  id               String       @id @default(cuid())
+  candidateId      String
+  candidate        Candidate    @relation(fields: [candidateId], references: [id])
+  jobId            String
+  job              Job          @relation(fields: [jobId], references: [id])
+  stageId          String
+  stage            Stage        @relation(fields: [stageId], references: [id])
+  
+  matchScore       Float?       // Percentage 0-100
+  
+  evaluations      Evaluation[]
+  activities       Activity[]
+
+  createdAt        DateTime     @default(now()) // apply date
+  updatedAt        DateTime     @updatedAt
+}
+
+model Evaluation {
+  id               String       @id @default(cuid())
+  applicationId    String
+  application      Application  @relation(fields: [applicationId], references: [id])
+  evaluatorId      String
+  evaluator        User         @relation(fields: [evaluatorId], references: [id])
+  
+  rating           Int          // 1 to 5
+  feedback         String
+  structuredData   String?      // JSON string
+
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model Activity {
+  id               String       @id @default(cuid())
+  applicationId    String
+  application      Application  @relation(fields: [applicationId], references: [id])
+  actorId          String?
+  actor            User?        @relation(fields: [actorId], references: [id])
+  
+  type             String       // e.g., "STAGE_CHANGE", "NOTE_ADDED"
+  description      String
+  metadata         String?      // JSON string
+
+  createdAt        DateTime     @default(now())
+}
