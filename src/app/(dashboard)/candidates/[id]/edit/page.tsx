@@ -1,15 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import { updateCandidate } from "./actions";
-import { User, Mail, Phone, Globe, Tag, AlignLeft, ArrowLeft, Target } from "lucide-react";
+import { User, Mail, Phone, Globe, Tag, AlignLeft, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
-export default async function EditCandidatePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EditCandidatePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
-  
+
   const candidate = await prisma.candidate.findUnique({
-    where: { id }
+    where: { id },
   });
 
   if (!candidate) {
@@ -22,157 +26,180 @@ export default async function EditCandidatePage({ params }: { params: Promise<{ 
     try {
       tagsString = JSON.parse(candidate.tags).join(", ");
     } catch {
-      tagsString = candidate.tags; // fallback if plain string
+      tagsString = candidate.tags;
     }
   }
 
   const updateCandidateWithId = updateCandidate.bind(null, id);
 
   return (
-    <div className="max-w-3xl mx-auto animate-in fade-in duration-500">
-      <div className="mb-8 flex items-center gap-4">
-        <Link href={`/candidates/${id}`} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors">
-          <ArrowLeft size={20} />
+    <div className="max-w-3xl mx-auto animate-in fade-in duration-500 space-y-6">
+      <div className="flex items-center gap-4">
+        <Link
+          href={`/candidates/${id}`}
+          className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft size={18} />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Editar Candidato</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1">Atualize as informações do talento.</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Editar Candidato
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+            Atualize as informações cadastrais e competências do talento.
+          </p>
         </div>
       </div>
 
-      <form action={updateCandidateWithId} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-        <div className="p-8 space-y-6">
-          
+      <form
+        action={updateCandidateWithId}
+        className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden"
+      >
+        <div className="p-6 sm:p-10 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label htmlFor="firstName" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <User size={16} className="text-blue-500" />
+            <div className="space-y-1.5">
+              <label
+                htmlFor="firstName"
+                className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2"
+              >
+                <User size={14} className="text-maitre-gold" />
                 Nome *
               </label>
-              <input 
-                type="text" 
-                id="firstName" 
-                name="firstName" 
+              <input
+                type="text"
+                id="firstName"
+                name="firstName"
                 required
                 defaultValue={candidate.firstName}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium"
               />
             </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="lastName" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="lastName"
+                className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+              >
                 Sobrenome *
               </label>
-              <input 
-                type="text" 
-                id="lastName" 
-                name="lastName" 
+              <input
+                type="text"
+                id="lastName"
+                name="lastName"
                 required
                 defaultValue={candidate.lastName}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Mail size={16} className="text-emerald-500" />
+            <div className="space-y-1.5">
+              <label
+                htmlFor="email"
+                className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2"
+              >
+                <Mail size={14} className="text-maitre-gold" />
                 E-mail *
               </label>
-              <input 
-                type="email" 
-                id="email" 
-                name="email" 
+              <input
+                type="email"
+                id="email"
+                name="email"
                 required
                 defaultValue={candidate.email}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium"
               />
             </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="phone" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Phone size={16} className="text-maitre-gold" />
-                Telefone
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="phone"
+                className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2"
+              >
+                <Phone size={14} className="text-emerald-500" />
+                Telefone / WhatsApp
               </label>
-              <input 
-                type="text" 
-                id="phone" 
+              <input
+                type="text"
+                id="phone"
                 name="phone"
-                defaultValue={candidate.phone || ""} 
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-maitre-gold focus:ring-1 focus:ring-maitre-gold outline-none transition-all"
+                defaultValue={candidate.phone || ""}
+                placeholder="(11) 99999-9999"
+                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label htmlFor="linkedinUrl" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Globe size={16} className="text-blue-600" />
+            <div className="space-y-1.5">
+              <label
+                htmlFor="linkedinUrl"
+                className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2"
+              >
+                <Globe size={14} className="text-blue-500" />
                 LinkedIn URL
               </label>
-              <input 
-                type="url" 
-                id="linkedinUrl" 
-                name="linkedinUrl" 
+              <input
+                type="url"
+                id="linkedinUrl"
+                name="linkedinUrl"
                 defaultValue={candidate.linkedinUrl || ""}
-                placeholder="https://linkedin.com/in/..." 
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none transition-all"
+                placeholder="https://linkedin.com/in/..."
+                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium"
               />
             </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="source" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Target size={16} className="text-purple-500" />
-                Origem (Source)
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="tags"
+                className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2"
+              >
+                <Tag size={14} className="text-maitre-gold" />
+                Tags e Competências
               </label>
-              <input 
-                type="text" 
-                id="source" 
-                name="source" 
-                defaultValue={candidate.source || ""}
-                placeholder="ex: LinkedIn, Indicação..." 
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all"
+              <input
+                type="text"
+                id="tags"
+                name="tags"
+                defaultValue={tagsString}
+                placeholder="React, Node.js, Vendas, etc."
+                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="tags" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-              <Tag size={16} className="text-red-500" />
-              Tags / Competências (separadas por vírgula)
-            </label>
-            <input 
-              type="text" 
-              id="tags" 
-              name="tags" 
-              defaultValue={tagsString}
-              placeholder="React, TypeScript, Figma..." 
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="profileSummary" className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
-              <AlignLeft size={16} className="text-slate-500" />
+          <div className="space-y-1.5">
+            <label
+              htmlFor="profileSummary"
+              className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2"
+            >
+              <AlignLeft size={14} className="text-maitre-gold" />
               Resumo Profissional
             </label>
-            <textarea 
-              id="profileSummary" 
-              name="profileSummary" 
+            <textarea
+              id="profileSummary"
+              name="profileSummary"
+              rows={4}
               defaultValue={candidate.profileSummary || ""}
-              rows={6}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none transition-all resize-y"
-            ></textarea>
+              placeholder="Resumo das principais realizações e trajetória..."
+              className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium resize-y"
+            />
           </div>
-          
         </div>
-        
-        <div className="bg-slate-50 dark:bg-slate-950/50 p-6 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-4">
-          <Link href={`/candidates/${id}`} className="px-6 py-2.5 rounded-lg font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
+
+        <div className="p-6 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+          <Link
+            href={`/candidates/${id}`}
+            className="px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm font-bold transition-colors"
+          >
             Cancelar
           </Link>
-          <SubmitButton text="Salvar Alterações" loadingText="Salvando..." />
+          <SubmitButton
+            label="Salvar Alterações"
+            loadingLabel="Salvando..."
+            className="bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 hover:brightness-105 px-6 py-3 rounded-xl font-black text-sm shadow-md transition-all active:scale-98 cursor-pointer"
+          />
         </div>
       </form>
     </div>
