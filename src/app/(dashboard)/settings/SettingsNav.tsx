@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Building, Users } from "lucide-react";
+import { User, Building } from "lucide-react";
 import { clsx } from "clsx";
+import { useSession } from "next-auth/react";
 
 export default function SettingsNav() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const role = session?.user?.role;
+  const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
   const links = [
     {
@@ -14,17 +19,15 @@ export default function SettingsNav() {
       label: "Meu Perfil",
       icon: User,
     },
-    {
-      href: "/settings/organization",
-      label: "Empresa",
-      icon: Building,
-    },
-    // We can add team management later:
-    // {
-    //   href: "/settings/team",
-    //   label: "Equipe",
-    //   icon: Users,
-    // }
+    ...(isAdmin
+      ? [
+          {
+            href: "/settings/organization",
+            label: "Dados da Empresa",
+            icon: Building,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -32,19 +35,24 @@ export default function SettingsNav() {
       {links.map((link) => {
         const Icon = link.icon;
         const isActive = pathname === link.href || pathname?.startsWith(link.href + "/");
-        
+
         return (
           <Link
             key={link.href}
             href={link.href}
             className={clsx(
-              "flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200",
+              "flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 text-sm",
               isActive
-                ? "bg-maitre-gold/10 text-maitre-gold dark:bg-maitre-gold/20 dark:text-maitre-gold"
+                ? "bg-maitre-gold/15 text-maitre-gold dark:bg-maitre-gold/20 dark:text-maitre-gold font-bold"
                 : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
             )}
           >
-            <Icon size={18} className={clsx(isActive ? "text-maitre-gold" : "text-slate-400 dark:text-slate-500")} />
+            <Icon
+              size={18}
+              className={clsx(
+                isActive ? "text-maitre-gold" : "text-slate-400 dark:text-slate-500"
+              )}
+            />
             {link.label}
           </Link>
         );

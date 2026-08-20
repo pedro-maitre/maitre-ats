@@ -1,62 +1,64 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Briefcase, MapPin, Users, ChevronRight } from "lucide-react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { Plus } from "lucide-react";
+import JobDashboardView from "@/components/jobs/JobDashboardView";
 
 export default async function JobsPage() {
+  const session = await getServerSession(authOptions);
+
   const jobs = await prisma.job.findMany({
     include: {
+      recruiter: {
+        select: { name: true },
+      },
       _count: {
-        select: { applications: true }
-      }
-    }
+        select: { applications: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
   });
 
+  const formattedJobs = jobs.map((job) => ({
+    id: job.id,
+    title: job.title,
+    department: job.department,
+    location: job.location,
+    status: job.status,
+    recruiterId: job.recruiterId,
+    hiringManagerId: job.hiringManagerId,
+    recruiterName: job.recruiter?.name,
+    applicationsCount: job._count.applications,
+    createdAt: job.createdAt,
+  }));
+
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Vagas Abertas</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">Gerencie os processos seletivos ativos.</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Vagas & Processos Seletivos
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
+            Gerencie todas as oportunidades ativas da Maître Consultoria.
+          </p>
         </div>
-        <Link href="/jobs/new" className="bg-maitre-gold hover:bg-maitre-gold-hover text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-sm block text-center">
-          Nova Vaga
+
+        <Link
+          href="/jobs/new"
+          className="inline-flex items-center gap-2 bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 px-5 py-2.5 rounded-xl font-extrabold shadow-md hover:brightness-105 transition-all text-sm active:scale-95"
+        >
+          <Plus size={18} />
+          <span>Criar Nova Vaga</span>
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {jobs.map(job => (
-          <Link href={`/jobs/${job.id}/board`} key={job.id} className="bg-white dark:bg-slate-900 ring-1 ring-slate-900/5 dark:ring-white/5 shadow-sm rounded-xl p-6 hover:shadow-lg transition-all group block">
-            <div className="flex justify-between items-start mb-4">
-              <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-3 rounded-lg">
-                <Briefcase size={24} />
-              </div>
-              <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                {job.status === "OPEN" ? "ABERTA" : job.status}
-              </span>
-            </div>
-            
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2 group-hover:text-maitre-gold dark:group-hover:text-[#f2d291] transition-colors">
-              {job.title}
-            </h3>
-            
-            <div className="flex flex-col gap-2 mt-4">
-              <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
-                <MapPin size={16} className="mr-2" />
-                {job.location || "Local não informado"}
-              </div>
-              <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
-                <Users size={16} className="mr-2" />
-                {job._count.applications} candidatos
-              </div>
-            </div>
-            
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-sm font-bold text-maitre-gold group-hover:text-maitre-gold-hover">
-              <span>Ver Processo Seletivo</span>
-              <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        ))}
-      </div>
+      <JobDashboardView
+        initialJobs={formattedJobs}
+        currentUserId={session?.user?.id}
+        userRole={session?.user?.role}
+      />
     </div>
   );
 }
