@@ -50,8 +50,8 @@ export default async function JobsPage() {
               </div>
             </div>
             
-            <div className="mt-6 pt-4 border-t dark:border-slate-800 flex justify-between items-center text-sm font-semibold text-blue-600 dark:text-blue-400 group-hover:text-maitre-gold">
-              Ver Pipeline
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-sm font-bold text-maitre-gold group-hover:text-maitre-gold-hover">
+              <span>Ver Processo Seletivo</span>
               <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>

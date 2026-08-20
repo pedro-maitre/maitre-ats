@@ -46,10 +46,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // If role is CANDIDATE, auto-create candidate profile
+    // If role is CANDIDATE, auto-create / link candidate profile
     if (user.role === "CANDIDATE") {
-      await prisma.candidate.create({
-        data: {
+      await prisma.candidate.upsert({
+        where: { email },
+        update: {
+          firstName: name.split(" ")[0] || name,
+          lastName: name.split(" ").slice(1).join(" ") || "",
+          userId: user.id,
+        },
+        create: {
           firstName: name.split(" ")[0] || name,
           lastName: name.split(" ").slice(1).join(" ") || "",
           email,

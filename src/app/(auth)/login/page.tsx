@@ -19,26 +19,40 @@ export default function LoginPage() {
     setError("");
 
     const res = await signIn("credentials", {
-      email,
+      email: email.trim().toLowerCase(),
       password,
       redirect: false,
     });
 
     if (res?.error) {
-      setError(res.error);
+      setError(res.error || "E-mail ou senha incorretos.");
       setLoading(false);
     } else {
-      router.push("/jobs");
+      // Check session role for redirect
+      const sessionRes = await fetch("/api/auth/session");
+      const sessionData = await sessionRes.json();
+      if (sessionData?.user?.role === "CANDIDATE") {
+        router.push("/carreiras/maitre/candidato");
+      } else {
+        router.push("/jobs");
+      }
+      router.refresh();
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
-      <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl border dark:border-slate-800 p-8">
+      <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-8 sm:p-10">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">TalentFlow</h1>
-          <p className="text-sm font-semibold text-maitre-gold mb-2 uppercase tracking-widest">by Maître Consultoria</p>
-          <p className="text-slate-500 dark:text-slate-400">Entre para acessar seu painel.</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Maître<span className="text-maitre-gold">ATS</span>
+          </h1>
+          <p className="text-xs font-bold text-maitre-gold mt-1 uppercase tracking-widest">
+            Gestão Inteligente de Recrutamento
+          </p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
+            Entre para acessar seu painel de vagas e candidatos.
+          </p>
         </div>
 
         {error && (

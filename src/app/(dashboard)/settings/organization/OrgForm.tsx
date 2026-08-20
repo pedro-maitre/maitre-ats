@@ -90,9 +90,9 @@ export default function OrgForm({
             <p className="text-xs text-slate-500 mt-2 flex flex-wrap items-center gap-2">
               Sua página pública de carreiras será: 
               <span className="font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-                maitre-ats.com/careers/{formData.slug || "..."}
+                maitre-ats.com/carreiras/{formData.slug || "..."}
               </span>
-              <Link href={`/careers/${formData.slug}`} target="_blank" className="text-blue-500 hover:underline flex items-center gap-1">
+              <Link href={`/carreiras/${formData.slug}`} target="_blank" className="text-maitre-gold hover:underline flex items-center gap-1 font-semibold">
                  <ExternalLink size={12}/> Acessar
               </Link>
             </p>

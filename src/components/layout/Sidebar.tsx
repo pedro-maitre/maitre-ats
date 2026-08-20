@@ -43,15 +43,15 @@ export default async function Sidebar() {
           <span>Configurações</span>
         </Link>
 
-        <a 
-          href="https://talentosmaitre.vercel.app/careers/maitre" 
+        <Link 
+          href="/carreiras/maitre" 
           target="_blank" 
           rel="noopener noreferrer"
           className="flex items-center gap-3 px-4 py-3 rounded-lg text-maitre-gold hover:bg-maitre-gold/10 transition-colors mt-4 border border-slate-800/60"
         >
           <ExternalLink size={20} />
           <span>Página de Carreiras</span>
-        </a>
+        </Link>
       </nav>
       
       <div className="p-4 border-t border-slate-800">

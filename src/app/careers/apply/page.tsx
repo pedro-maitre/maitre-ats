@@ -17,7 +17,8 @@ export default function ApplyPage() {
     lastName: "",
     email: "",
     phone: "",
-    profileSummary: ""
+    profileSummary: "",
+    resumeUrl: ""
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,7 +50,8 @@ export default function ApplyPage() {
         lastName: names.slice(1).join(" ") || "",
         email: parsed.email || "",
         phone: parsed.phone || "",
-        profileSummary: parsed.rawText || ""
+        profileSummary: parsed.rawText || "",
+        resumeUrl: parsed.resumeUrl || "",
       });
     } catch (err: any) {
       setError(err.message);

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
-    const { firstName, lastName, email, phone, profileSummary, source } = data;
+    const { firstName, lastName, email, phone, profileSummary, source, resumeUrl } = data;
 
     if (!firstName || !email) {
       return NextResponse.json({ error: "Nome e Email são obrigatórios." }, { status: 400 });
@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
         lastName,
         phone,
         profileSummary,
+        resumeUrl,
         source: source || "Banco de Talentos",
       },
       create: {
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
         email,
         phone,
         profileSummary,
+        resumeUrl,
         source: source || "Banco de Talentos",
         organizationId: orgId,
       },
