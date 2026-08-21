@@ -93,9 +93,17 @@ export default function CandidateLoginPage({
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-              Senha
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Senha
+              </label>
+              <Link
+                href={`/carreiras/${companySlug}/candidato/recuperar-senha`}
+                className="text-xs font-semibold text-maitre-gold hover:underline"
+              >
+                Esqueceu a senha?
+              </Link>
+            </div>
             <div className="relative">
               <input
                 type="password"

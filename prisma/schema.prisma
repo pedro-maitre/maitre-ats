@@ -153,3 +153,13 @@ model Activity {
 
   createdAt        DateTime     @default(now())
 }
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
