@@ -11,6 +11,8 @@ export async function updateJob(jobId: string, formData: FormData) {
   const description = formData.get("description") as string;
   const salaryMin = formData.get("salaryMin") ? parseFloat(formData.get("salaryMin") as string) : null;
   const salaryMax = formData.get("salaryMax") ? parseFloat(formData.get("salaryMax") as string) : null;
+  const rawRecruiterId = formData.get("recruiterId") as string;
+  const recruiterId = rawRecruiterId && rawRecruiterId !== "none" ? rawRecruiterId : null;
 
   if (!title || !description) {
     throw new Error("Título e descrição são obrigatórios");
@@ -25,6 +27,7 @@ export async function updateJob(jobId: string, formData: FormData) {
       description,
       salaryMin,
       salaryMax,
+      recruiterId,
     }
   });
 
@@ -32,3 +35,4 @@ export async function updateJob(jobId: string, formData: FormData) {
   revalidatePath(`/jobs/${jobId}/board`);
   redirect(`/jobs/${jobId}/board`);
 }
+

@@ -8,17 +8,35 @@ import JobDashboardView from "@/components/jobs/JobDashboardView";
 export default async function JobsPage() {
   const session = await getServerSession(authOptions);
 
-  const jobs = await prisma.job.findMany({
-    include: {
-      recruiter: {
-        select: { name: true },
+  const [jobs, recruiters] = await Promise.all([
+    prisma.job.findMany({
+      include: {
+        recruiter: {
+          select: { id: true, name: true, email: true },
+        },
+        _count: {
+          select: { applications: true },
+        },
       },
-      _count: {
-        select: { applications: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.user.findMany({
+      where: {
+        role: {
+          in: ["RECRUITER", "ADMIN", "SUPER_ADMIN"],
+        },
       },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    }),
+  ]);
 
   const formattedJobs = jobs.map((job) => ({
     id: job.id,
@@ -56,6 +74,7 @@ export default async function JobsPage() {
 
       <JobDashboardView
         initialJobs={formattedJobs}
+        recruiters={recruiters}
         currentUserId={session?.user?.id}
         userRole={session?.user?.role}
       />

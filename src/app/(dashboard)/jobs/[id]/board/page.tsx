@@ -1,7 +1,7 @@
 import KanbanBoard from "@/components/kanban/KanbanBoard";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ArrowLeft, Building2, MapPin, Users, ExternalLink, Briefcase } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Users, ExternalLink, Briefcase, UserCheck, Edit } from "lucide-react";
 
 export default async function JobBoardPage({
   params,
@@ -14,6 +14,9 @@ export default async function JobBoardPage({
     where: { id },
     include: {
       organization: true,
+      recruiter: {
+        select: { id: true, name: true, email: true },
+      },
       stages: {
         orderBy: { order: "asc" },
         include: {
@@ -61,17 +64,27 @@ export default async function JobBoardPage({
           <ArrowLeft size={16} /> Voltar para lista de vagas
         </Link>
 
-        {job.organization && (
+        <div className="flex items-center gap-2.5">
           <Link
-            href={`/carreiras/${job.organization.slug}/${job.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-maitre-gold hover:underline text-xs font-bold bg-maitre-gold/10 hover:bg-maitre-gold/20 px-3.5 py-1.5 rounded-xl border border-maitre-gold/20 transition-all"
+            href={`/jobs/${job.id}/edit`}
+            className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-all"
           >
-            <ExternalLink size={14} />
-            <span>Ver na Página de Carreiras Pública</span>
+            <Edit size={14} />
+            <span>Editar Vaga</span>
           </Link>
-        )}
+
+          {job.organization && (
+            <Link
+              href={`/carreiras/${job.organization.slug}/${job.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-maitre-gold hover:underline text-xs font-bold bg-maitre-gold/10 hover:bg-maitre-gold/20 px-3.5 py-1.5 rounded-xl border border-maitre-gold/20 transition-all"
+            >
+              <ExternalLink size={14} />
+              <span>Ver no Portal Público</span>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Board Header Banner */}
@@ -90,7 +103,7 @@ export default async function JobBoardPage({
             {job.title}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-4 mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-3 mt-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">
               <Briefcase size={14} className="text-maitre-gold" />
               {job.department || "Geral"}
@@ -102,6 +115,10 @@ export default async function JobBoardPage({
             <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">
               <Users size={14} className="text-maitre-gold" />
               {totalCandidates} {totalCandidates === 1 ? "candidato no pipeline" : "candidatos no pipeline"}
+            </span>
+            <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg text-slate-700 dark:text-slate-300 font-bold border border-slate-200/60 dark:border-slate-700/60">
+              <UserCheck size={14} className="text-maitre-gold" />
+              Responsável: {job.recruiter?.name || "Sem recrutador atribuído"}
             </span>
           </div>
         </div>
