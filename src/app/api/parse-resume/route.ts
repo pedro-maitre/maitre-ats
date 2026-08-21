@@ -6,21 +6,23 @@ import { randomUUID } from "crypto";
 import { promises as fs } from "fs";
 import path from "path";
 
-// Initialise Supabase client (anon for upload, service role for bucket management if available)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-// Optional service role client for bucket creation (if env var is set)
-const supabaseService = process.env.SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
-  : null;
+import { supabase } from "@/lib/supabase";
+
+export const dynamic = "force-dynamic";
+
+function getServiceSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://yqnlcwglyxqsemqhjkmp.supabase.co";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!key) return null;
+  return createClient(url, key);
+}
 
 /**
  * Ensure that the "resumes" bucket exists.
  * If it does not exist and a service role client is available, it will be created.
  */
 async function ensureResumesBucket(): Promise<void> {
+  const supabaseService = getServiceSupabase();
   const checkClient = supabaseService ?? supabase;
   const { data, error } = await checkClient.storage.getBucket("resumes");
 
@@ -63,6 +65,7 @@ export async function POST(req: NextRequest) {
     console.log("Received file size:", file.size, "ArrayBuffer byteLength:", arrayBuf.byteLength, "Header:", buffer.subarray(0, 30).toString());
 
     // Choose storage client: use service role client if available (has write permissions), otherwise fall back to anon client
+    const supabaseService = getServiceSupabase();
     const storageClient = supabaseService ?? supabase;
 
     // Upload PDF to Supabase storage bucket 'resumes'
