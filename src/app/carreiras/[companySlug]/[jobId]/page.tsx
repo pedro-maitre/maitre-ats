@@ -1,7 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Briefcase, MapPin, Building2, ArrowLeft, DollarSign, CheckCircle2, Share2, Sparkles } from "lucide-react";
+import {
+  Briefcase,
+  MapPin,
+  Building2,
+  ArrowLeft,
+  DollarSign,
+  CheckCircle2,
+  Share2,
+  Sparkles,
+  Award,
+  Tag,
+  PauseCircle,
+} from "lucide-react";
 
 export default async function JobDetailsPage({
   params,
@@ -14,7 +26,7 @@ export default async function JobDetailsPage({
     where: {
       id: jobId,
       organization: { slug: companySlug },
-      status: "OPEN",
+      status: { in: ["OPEN", "PAUSED"] },
     },
     include: {
       organization: true,
@@ -26,8 +38,24 @@ export default async function JobDetailsPage({
 
   if (!job) notFound();
 
+  const isPaused = job.status === "PAUSED";
+
+  let skillsList: string[] = [];
+  if (job.requiredSkills) {
+    try {
+      const parsed = JSON.parse(job.requiredSkills);
+      skillsList = Array.isArray(parsed) ? parsed : job.requiredSkills.split(",").map((s) => s.trim());
+    } catch {
+      skillsList = job.requiredSkills.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+  }
+
   const formatSalary = (val: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(val);
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      maximumFractionDigits: 0,
+    }).format(val);
 
   return (
     <div className="max-w-4xl mx-auto animate-in fade-in duration-500 space-y-6">
@@ -38,23 +66,51 @@ export default async function JobDetailsPage({
         <ArrowLeft size={16} /> Voltar para todas as vagas
       </Link>
 
+      {/* Paused Warning Banner */}
+      {isPaused && (
+        <div className="p-5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-3xl text-amber-900 dark:text-amber-200 flex items-center gap-3">
+          <PauseCircle size={22} className="text-amber-500 shrink-0" />
+          <div>
+            <p className="font-bold text-sm">Inscrições Temporariamente Suspensas</p>
+            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+              Esta vaga foi pausada pela equipe de recrutamento para análise das candidaturas já recebidas.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden">
         {/* Job Header */}
         <div className="p-8 sm:p-12 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-maitre-gold/15 text-maitre-gold border border-maitre-gold/30">
-              Vaga Aberta
+            <span
+              className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${
+                isPaused
+                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                  : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+              }`}
+            >
+              {isPaused ? "Vaga Pausada" : "Vaga Aberta"}
             </span>
-            <span className="text-xs font-medium text-slate-400">
-              Publicada pela equipe de talentos
-            </span>
+
+            {job.seniority && (
+              <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-maitre-gold/15 text-maitre-gold border border-maitre-gold/30">
+                {job.seniority}
+              </span>
+            )}
+
+            {job.employmentType && (
+              <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                {job.employmentType}
+              </span>
+            )}
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-6 leading-tight">
             {job.title}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm font-semibold text-slate-600 dark:text-slate-300">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm font-semibold text-slate-600 dark:text-slate-300">
             <span className="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3.5 py-1.5 rounded-xl">
               <Building2 size={16} className="text-maitre-gold" />
               {job.organization.name}
@@ -82,6 +138,26 @@ export default async function JobDetailsPage({
 
         {/* Job Description Content */}
         <div className="p-8 sm:p-12 space-y-10">
+          {/* Required Skills Badges */}
+          {skillsList.length > 0 && (
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                <Tag size={16} className="text-maitre-gold" />
+                Competências & Habilidades Desejadas
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {skillsList.map((skill, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3.5 py-1.5 bg-maitre-gold/10 text-maitre-gold border border-maitre-gold/20 rounded-xl text-xs font-bold"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <h2 className="text-xl font-extrabold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <Sparkles size={20} className="text-maitre-gold" />
@@ -121,18 +197,31 @@ export default async function JobDetailsPage({
         {/* Apply Callout Footer */}
         <div className="p-8 sm:p-12 bg-gradient-to-r from-slate-900 to-[#1d1e20] text-white text-center border-t border-slate-800 space-y-4">
           <h3 className="text-2xl font-black text-white">
-            Pronto para dar o próximo passo na sua carreira?
+            {isPaused
+              ? "Inscrições temporariamente pausadas"
+              : "Pronto para dar o próximo passo na sua carreira?"}
           </h3>
           <p className="text-slate-300 max-w-lg mx-auto text-sm sm:text-base">
-            Envie seu currículo agora. Nossa inteligência artificial preenche seus dados e você acompanha todas as fases no seu painel.
+            {isPaused
+              ? "A equipe da Maître está avaliando as inscrições recebidas. Acompanhe novas atualizações ou visualize outras vagas abertas."
+              : "Envie seu currículo agora. Nossa inteligência artificial preenche seus dados e você acompanha todas as fases no seu painel."}
           </p>
           <div className="pt-2">
-            <Link
-              href={`/carreiras/${companySlug}/${job.id}/apply`}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 hover:brightness-105 px-10 py-4 rounded-2xl font-black text-lg transition-all shadow-xl active:scale-95"
-            >
-              Candidatar-se para esta Vaga
-            </Link>
+            {isPaused ? (
+              <Link
+                href={`/carreiras/${companySlug}`}
+                className="inline-flex items-center gap-2 bg-slate-800 text-white px-8 py-3.5 rounded-2xl font-bold text-sm hover:bg-slate-700 transition-all shadow-md"
+              >
+                Ver Outras Vagas Disponíveis
+              </Link>
+            ) : (
+              <Link
+                href={`/carreiras/${companySlug}/${job.id}/apply`}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 hover:brightness-105 px-10 py-4 rounded-2xl font-black text-lg transition-all shadow-xl active:scale-95"
+              >
+                Candidatar-se para esta Vaga
+              </Link>
+            )}
           </div>
         </div>
       </div>

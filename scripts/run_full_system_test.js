@@ -145,10 +145,30 @@ async function runTests() {
 
   // TEST 5: Job Application Submission & Knockout Rule
   let testAppId = null;
+  let createdJobForTest = null;
   try {
-    const activeJob = org.jobs[0];
-    if (!activeJob || activeJob.stages.length === 0) {
-      throw new Error('Nenhuma vaga aberta com etapas para teste.');
+    let activeJob = org.jobs && org.jobs[0] ? org.jobs[0] : null;
+    if (!activeJob || !activeJob.stages || activeJob.stages.length === 0) {
+      activeJob = await prisma.job.create({
+        data: {
+          title: "Desenvolvedor Full Stack Sênior",
+          description: "Vaga para validação do sistema",
+          status: "OPEN",
+          organizationId: org.id,
+          salaryMin: 6000,
+          salaryMax: 8000,
+          stages: {
+            create: [
+              { name: "Triagem", order: 0 },
+              { name: "Entrevista RH", order: 1 },
+              { name: "Entrevista Técnica", order: 2 },
+              { name: "Proposta", order: 3 },
+            ],
+          },
+        },
+        include: { stages: { orderBy: { order: "asc" } } },
+      });
+      createdJobForTest = activeJob.id;
     }
 
     const firstStage = activeJob.stages[0];

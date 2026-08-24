@@ -46,9 +46,12 @@ model Job {
   description      String
   department       String?
   location         String?      // e.g., "Remote", "São Paulo, SP"
+  employmentType   String?      // e.g., "CLT", "PJ", "ESTAGIO", "TEMPORARIO"
+  seniority        String?      // e.g., "ESTAGIO", "JUNIOR", "PLENO", "SENIOR", "ESPECIALISTA", "LEAD", "DIRETORIA"
+  requiredSkills   String?      // JSON string or comma separated tags
   salaryMin        Float?
   salaryMax        Float?
-  status           String       @default("DRAFT")
+  status           String       @default("OPEN")
   organizationId   String
   organization     Organization @relation(fields: [organizationId], references: [id])
   

@@ -1,7 +1,18 @@
-import KanbanBoard from "@/components/kanban/KanbanBoard";
+import JobPipelineContainer from "@/components/jobs/JobPipelineContainer";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ArrowLeft, Building2, MapPin, Users, ExternalLink, Briefcase, UserCheck, Edit } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  MapPin,
+  Users,
+  ExternalLink,
+  Briefcase,
+  UserCheck,
+  Edit,
+  DollarSign,
+} from "lucide-react";
+import { evaluateApplicationFit } from "@/lib/fit-evaluator";
 
 export default async function JobBoardPage({
   params,
@@ -37,7 +48,8 @@ export default async function JobBoardPage({
     0
   );
 
-  const stages = job.stages.map((stage) => ({
+  // Formatar estágios para o KanbanBoard
+  const initialStages = job.stages.map((stage) => ({
     id: stage.id,
     name: stage.name,
     candidates: stage.applications.map((app) => ({
@@ -52,6 +64,60 @@ export default async function JobBoardPage({
       tags: app.candidate.tags,
     })),
   }));
+
+  // Lista simples de estágios para dropdowns e filtros
+  const stagesList = job.stages.map((st) => ({
+    id: st.id,
+    name: st.name,
+    order: st.order,
+  }));
+
+  // Lista plana de candidatos para a tabela de Triagem Inteligente com avaliação Fit 3D
+  const triagemCandidates = job.stages.flatMap((stage) =>
+    stage.applications.map((app) => {
+      const evaluation = evaluateApplicationFit(
+        {
+          title: job.title,
+          description: job.description,
+          department: job.department,
+          salaryMin: job.salaryMin,
+          salaryMax: job.salaryMax,
+        },
+        {
+          tags: app.candidate.tags,
+          profileSummary: app.candidate.profileSummary,
+        },
+        {
+          salaryExpectation: app.salaryExpectation,
+        }
+      );
+
+      return {
+        id: app.id,
+        candidateId: app.candidate.id,
+        name: `${app.candidate.firstName} ${app.candidate.lastName}`,
+        email: app.candidate.email,
+        phone: app.candidate.phone,
+        resumeUrl: app.candidate.resumeUrl,
+        linkedinUrl: app.candidate.linkedinUrl,
+        source: app.candidate.source,
+        tags: app.candidate.tags,
+        salaryExpectation: app.salaryExpectation,
+        priority: app.priority,
+        stageId: stage.id,
+        stageName: stage.name,
+        enteredStageAt: app.enteredStageAt,
+        evaluation,
+      };
+    })
+  );
+
+  const formatSalary = (val: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      maximumFractionDigits: 0,
+    }).format(val);
 
   return (
     <div className="min-h-screen space-y-6 animate-in fade-in duration-500">
@@ -112,9 +178,19 @@ export default async function JobBoardPage({
               <MapPin size={14} className="text-maitre-gold" />
               {job.location || "Remoto"}
             </span>
+            {(job.salaryMin || job.salaryMax) && (
+              <span className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-lg font-bold">
+                <DollarSign size={14} />
+                {job.salaryMin && job.salaryMax
+                  ? `${formatSalary(job.salaryMin)} - ${formatSalary(job.salaryMax)}`
+                  : job.salaryMax
+                  ? `Até ${formatSalary(job.salaryMax)}`
+                  : `A partir de ${formatSalary(job.salaryMin!)}`}
+              </span>
+            )}
             <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">
               <Users size={14} className="text-maitre-gold" />
-              {totalCandidates} {totalCandidates === 1 ? "candidato no pipeline" : "candidatos no pipeline"}
+              {totalCandidates} {totalCandidates === 1 ? "candidato" : "candidatos"}
             </span>
             <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg text-slate-700 dark:text-slate-300 font-bold border border-slate-200/60 dark:border-slate-700/60">
               <UserCheck size={14} className="text-maitre-gold" />
@@ -124,8 +200,19 @@ export default async function JobBoardPage({
         </div>
       </div>
 
-      {/* Kanban Drag & Drop Board */}
-      <KanbanBoard initialStages={stages} />
+      {/* Unified Pipeline Container: Kanban View + Smart Triagem Table */}
+      <JobPipelineContainer
+        initialStages={initialStages}
+        triagemCandidates={triagemCandidates}
+        stagesList={stagesList}
+        job={{
+          id: job.id,
+          title: job.title,
+          department: job.department,
+          salaryMin: job.salaryMin,
+          salaryMax: job.salaryMax,
+        }}
+      />
     </div>
   );
 }

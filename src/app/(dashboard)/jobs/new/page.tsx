@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createJob } from "../actions";
-import { Briefcase, Building2, MapPin, AlignLeft, ArrowLeft, DollarSign, UserCheck } from "lucide-react";
+import { Briefcase, Building2, MapPin, AlignLeft, ArrowLeft, DollarSign, UserCheck, Tag, Award } from "lucide-react";
 import Link from "next/link";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
@@ -43,7 +43,7 @@ export default async function NewJobPage() {
             Criar Nova Vaga
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-            Preencha os detalhes para publicar um novo processo seletivo na Maître.
+            Preencha os detalhes e requisitos para publicar um novo processo seletivo na Maître.
           </p>
         </div>
       </div>
@@ -53,6 +53,7 @@ export default async function NewJobPage() {
         className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden"
       >
         <div className="p-6 sm:p-10 space-y-6">
+          {/* Título & Recrutador */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-1.5">
               <label
@@ -67,7 +68,7 @@ export default async function NewJobPage() {
                 id="title"
                 name="title"
                 required
-                placeholder="ex: Desenvolvedor Fullstack Sênior"
+                placeholder="ex: Desenvolvedor Full Stack Sênior"
                 className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium"
               />
             </div>
@@ -96,7 +97,52 @@ export default async function NewJobPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Regime & Senioridade */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="employmentType"
+                className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+              >
+                Regime de Contratação
+              </label>
+              <select
+                id="employmentType"
+                name="employmentType"
+                defaultValue="CLT"
+                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium cursor-pointer"
+              >
+                <option value="CLT">CLT (Efetivo)</option>
+                <option value="PJ">PJ (Prestador)</option>
+                <option value="ESTAGIO">Estágio</option>
+                <option value="TEMPORARIO">Temporário</option>
+                <option value="COOPERADO">Cooperado</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="seniority"
+                className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300"
+              >
+                Senioridade
+              </label>
+              <select
+                id="seniority"
+                name="seniority"
+                defaultValue="PLENO"
+                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium cursor-pointer"
+              >
+                <option value="ESTAGIO">Estágio</option>
+                <option value="JUNIOR">Júnior</option>
+                <option value="PLENO">Pleno</option>
+                <option value="SENIOR">Sênior</option>
+                <option value="ESPECIALISTA">Especialista</option>
+                <option value="LEAD">Lead / Coordenação</option>
+                <option value="DIRETORIA">Diretoria</option>
+              </select>
+            </div>
+
             <div className="space-y-1.5">
               <label
                 htmlFor="department"
@@ -109,7 +155,7 @@ export default async function NewJobPage() {
                 type="text"
                 id="department"
                 name="department"
-                placeholder="ex: Engenharia & Tecnologia"
+                placeholder="ex: Engenharia & Tech"
                 className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium"
               />
             </div>
@@ -126,12 +172,13 @@ export default async function NewJobPage() {
                 type="text"
                 id="location"
                 name="location"
-                placeholder="ex: Remoto, São Paulo - SP"
+                placeholder="ex: Remoto ou SP"
                 className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium"
               />
             </div>
           </div>
 
+          {/* Salário */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
               <label
@@ -168,6 +215,25 @@ export default async function NewJobPage() {
             </div>
           </div>
 
+          {/* Competências Mandatórias */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="requiredSkills"
+              className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2"
+            >
+              <Tag size={14} className="text-maitre-gold" />
+              Competências Obrigatórias (Separe por vírgula)
+            </label>
+            <input
+              type="text"
+              id="requiredSkills"
+              name="requiredSkills"
+              placeholder="ex: React, Node.js, TypeScript, PostgreSQL"
+              className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-sm font-medium"
+            />
+          </div>
+
+          {/* Descrição */}
           <div className="space-y-1.5">
             <label
               htmlFor="description"

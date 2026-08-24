@@ -108,7 +108,17 @@ export default async function CompanyCarreirasPage({
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+                      <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-500 dark:text-slate-400">
+                        {job.seniority && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-maitre-gold/10 text-maitre-gold border border-maitre-gold/20 text-xs font-extrabold uppercase tracking-wider">
+                            {job.seniority}
+                          </span>
+                        )}
+                        {job.employmentType && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold">
+                            {job.employmentType}
+                          </span>
+                        )}
                         <span className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg font-medium text-slate-700 dark:text-slate-300">
                           <Briefcase size={14} className="text-maitre-gold" />
                           {job.department || "Geral"}

@@ -107,17 +107,48 @@ export async function deleteCandidate(candidateId: string) {
 export async function deleteUser(userId: string) {
   const session = await getServerSession(authOptions);
 
-  if (session?.user?.role !== "SUPER_ADMIN") {
-    throw new Error("Não autorizado. Apenas o Admin Master pode excluir usuários da equipe.");
+  if (session?.user?.role !== "SUPER_ADMIN" && session?.user?.role !== "ADMIN") {
+    return { success: false, error: "Não autorizado. Apenas Administradores podem excluir usuários." };
   }
 
-  if (session.user.id === userId) {
-    throw new Error("Você não pode excluir sua própria conta.");
+  if (session?.user?.id === userId) {
+    return { success: false, error: "Você não pode excluir sua própria conta enquanto estiver logado." };
   }
 
   try {
-    await prisma.user.delete({
-      where: { id: userId },
+    await prisma.$transaction(async (tx) => {
+      // 1. Desvincular vagas atribuídas ao recrutador ou gestor
+      await tx.job.updateMany({
+        where: { recruiterId: userId },
+        data: { recruiterId: null },
+      });
+
+      await tx.job.updateMany({
+        where: { hiringManagerId: userId },
+        data: { hiringManagerId: null },
+      });
+
+      // 2. Desvincular atividades
+      await tx.activity.updateMany({
+        where: { actorId: userId },
+        data: { actorId: null },
+      });
+
+      // 3. Remover avaliações feitas por este usuário
+      await tx.evaluation.deleteMany({
+        where: { evaluatorId: userId },
+      });
+
+      // 4. Desvincular candidato caso exista
+      await tx.candidate.updateMany({
+        where: { userId: userId },
+        data: { userId: null },
+      });
+
+      // 5. Excluir usuário
+      await tx.user.delete({
+        where: { id: userId },
+      });
     });
 
     revalidatePath("/users");

@@ -168,19 +168,27 @@ export default function KanbanBoard({ initialStages }: { initialStages: Stage[] 
                                 </div>
 
                                 <div className="flex flex-col gap-1 items-end">
-                                  <span className="text-slate-400 font-medium">Status AI</span>
+                                  <span className="text-slate-400 font-medium">Classificação Fit</span>
                                   <div className="flex items-center gap-1">
-                                    {candidate.priority === "PRIORIZADO" ? (
-                                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
-                                        <CheckCircle size={12} /> Priori.
+                                    {candidate.fitCategory === "ALTO_FIT" ? (
+                                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[11px]">
+                                        <CheckCircle size={11} /> Alto Fit
                                       </span>
-                                    ) : candidate.priority === "DUVIDA" ? (
-                                      <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded">
-                                        <HelpCircle size={12} /> Dúvida
+                                    ) : candidate.fitCategory === "MEDIO_FIT" ? (
+                                      <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-950/40 border border-amber-500/20 px-1.5 py-0.5 rounded text-[11px]">
+                                        <HelpCircle size={11} /> Médio Fit
+                                      </span>
+                                    ) : candidate.fitCategory === "BAIXO_FIT" ? (
+                                      <span className="flex items-center gap-1 text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-950/40 border border-red-500/20 px-1.5 py-0.5 rounded text-[11px]">
+                                        <AlertTriangle size={11} /> Baixo Fit
+                                      </span>
+                                    ) : candidate.priority === "PRIORIZADO" ? (
+                                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[11px]">
+                                        <CheckCircle size={11} /> Priori.
                                       </span>
                                     ) : (
-                                      <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400 font-semibold bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                                        Normal
+                                      <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400 font-semibold bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[11px]">
+                                        Em Triagem
                                       </span>
                                     )}
                                   </div>

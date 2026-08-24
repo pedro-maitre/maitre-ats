@@ -43,6 +43,8 @@ export default async function JobsPage() {
     title: job.title,
     department: job.department,
     location: job.location,
+    employmentType: job.employmentType,
+    seniority: job.seniority,
     status: job.status,
     recruiterId: job.recruiterId,
     hiringManagerId: job.hiringManagerId,

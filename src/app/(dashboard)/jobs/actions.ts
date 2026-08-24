@@ -11,6 +11,9 @@ export async function createJob(formData: FormData) {
   const title = formData.get("title") as string;
   const department = formData.get("department") as string;
   const location = formData.get("location") as string;
+  const employmentType = (formData.get("employmentType") as string) || "CLT";
+  const seniority = (formData.get("seniority") as string) || "PLENO";
+  const requiredSkills = formData.get("requiredSkills") as string;
   const description = formData.get("description") as string;
   const salaryMin = formData.get("salaryMin") ? parseFloat(formData.get("salaryMin") as string) : null;
   const salaryMax = formData.get("salaryMax") ? parseFloat(formData.get("salaryMax") as string) : null;
@@ -35,6 +38,9 @@ export async function createJob(formData: FormData) {
       title,
       department,
       location,
+      employmentType,
+      seniority,
+      requiredSkills,
       description,
       salaryMin,
       salaryMax,
@@ -91,4 +97,3 @@ export async function assignJobRecruiter(jobId: string, recruiterId: string | nu
     return { success: false, error: error?.message || "Erro ao atribuir recrutador." };
   }
 }
-
