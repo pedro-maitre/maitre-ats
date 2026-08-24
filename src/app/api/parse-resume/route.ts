@@ -19,28 +19,27 @@ function getServiceSupabase() {
 
 /**
  * Ensure that the "resumes" bucket exists.
- * If it does not exist and a service role client is available, it will be created.
+ * Only attempts creation if a service role client is available.
  */
 async function ensureResumesBucket(): Promise<void> {
   const supabaseService = getServiceSupabase();
-  const checkClient = supabaseService ?? supabase;
-  const { data, error } = await checkClient.storage.getBucket("resumes");
+  if (!supabaseService) {
+    // Anon client does not have bucket admin permissions, but can upload to the public 'resumes' bucket directly.
+    return;
+  }
 
-  if (error && error.message.includes("Bucket not found")) {
-    if (!supabaseService) {
-      // No service role key – cannot create bucket automatically
-      throw new Error(
-        'Bucket "resumes" not found and SUPABASE_SERVICE_ROLE_KEY is not set. Create the bucket manually in Supabase console.'
-      );
+  try {
+    const { data, error } = await supabaseService.storage.getBucket("resumes");
+    if (error && error.message.includes("Bucket not found")) {
+      const { error: createErr } = await supabaseService.storage.createBucket("resumes", {
+        public: true,
+      });
+      if (createErr) {
+        console.error("Failed to create Supabase bucket:", createErr);
+      }
     }
-
-    const { error: createErr } = await supabaseService.storage.createBucket("resumes", {
-      public: true,
-    });
-    if (createErr) {
-      console.error("Failed to create Supabase bucket:", createErr);
-      throw new Error(`Failed to create bucket: ${createErr.message}`);
-    }
+  } catch (err) {
+    console.warn("Could not check/create bucket via service role:", err);
   }
 }
 
