@@ -7,16 +7,20 @@ datasource db {
 }
 
 model Organization {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   users       User[]
+  memberships OrganizationMembership[]
   jobs        Job[]
   stages      Stage[]  // Global or org-level stages
   candidates  Candidate[]
+  documents   Document[]
+  outbox      IntegrationOutbox[]
+  retentionPolicies RetentionPolicy[]
 }
 
 model User {
@@ -24,14 +28,17 @@ model User {
   email          String       @unique
   password       String?
   name           String?
-  role           String       @default("CANDIDATE")
+  role           String       @default("CANDIDATE") // SUPER_ADMIN, ADMIN, RECRUITER, CANDIDATE
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
+  
+  memberships    OrganizationMembership[]
   
   // Relations
   jobsManaged    Job[]        @relation("HiringManager")
   jobsRecruited  Job[]        @relation("Recruiter")
   evaluations    Evaluation[]
+  scorecards     Scorecard[]  @relation("ScorecardEvaluator")
   activities     Activity[]
 
   candidate      Candidate?   // Link user to candidate profile
@@ -40,31 +47,46 @@ model User {
   updatedAt      DateTime     @updatedAt
 }
 
+model OrganizationMembership {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String       @default("RECRUITER") // ADMIN, RECRUITER, HIRING_MANAGER, INTERVIEWER
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+}
+
 model Job {
-  id               String       @id @default(cuid())
-  title            String
-  description      String
-  department       String?
-  location         String?      // e.g., "Remote", "São Paulo, SP"
-  employmentType   String?      // e.g., "CLT", "PJ", "ESTAGIO", "TEMPORARIO"
-  seniority        String?      // e.g., "ESTAGIO", "JUNIOR", "PLENO", "SENIOR", "ESPECIALISTA", "LEAD", "DIRETORIA"
-  requiredSkills   String?      // JSON string or comma separated tags
-  salaryMin        Float?
-  salaryMax        Float?
-  status           String       @default("OPEN")
-  organizationId   String
-  organization     Organization @relation(fields: [organizationId], references: [id])
+  id                      String       @id @default(cuid())
+  title                   String
+  description             String
+  department              String?
+  location                String?      // e.g., "Remote", "São Paulo, SP"
+  employmentType          String?      // e.g., "CLT", "PJ", "ESTAGIO", "TEMPORARIO"
+  seniority               String?      // e.g., "ESTAGIO", "JUNIOR", "PLENO", "SENIOR", "ESPECIALISTA", "LEAD", "DIRETORIA"
+  requiredSkills          String?      // JSON string or comma separated tags
+  salaryMin               Float?
+  salaryMax               Float?
+  salaryFitTolerancePercent Float?     @default(15.0) // Tolerância percentual de fit salarial configurável
+  status                  String       @default("OPEN") // OPEN, PAUSED, CLOSED
+  organizationId          String
+  organization            Organization @relation(fields: [organizationId], references: [id])
   
-  hiringManagerId  String?
-  hiringManager    User?        @relation("HiringManager", fields: [hiringManagerId], references: [id])
-  recruiterId      String?
-  recruiter        User?        @relation("Recruiter", fields: [recruiterId], references: [id])
+  hiringManagerId         String?
+  hiringManager           User?        @relation("HiringManager", fields: [hiringManagerId], references: [id])
+  recruiterId             String?
+  recruiter               User?        @relation("Recruiter", fields: [recruiterId], references: [id])
 
-  applications     Application[]
-  stages           Stage[]      // Custom stages per job
+  applications            Application[]
+  stages                  Stage[]      // Custom stages per job
 
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
 }
 
 model Candidate {
@@ -73,7 +95,8 @@ model Candidate {
   lastName         String
   email            String       @unique
   phone            String?
-  resumeUrl        String?
+  resumeUrl        String?      // Link do PDF
+  documentId       String?      // Referência ao registro de Documento Privado
   linkedinUrl      String?
   source           String?
   profileSummary   String?
@@ -86,6 +109,8 @@ model Candidate {
   user             User?        @relation(fields: [userId], references: [id])
 
   applications     Application[]
+  documents        Document[]
+  consents         CandidateConsent[]
 
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
@@ -101,6 +126,8 @@ model Stage {
   organization     Organization? @relation(fields: [organizationId], references: [id])
 
   applications     Application[]
+  fromTransitions  ApplicationStageTransition[] @relation("FromStageTransitions")
+  toTransitions    ApplicationStageTransition[] @relation("ToStageTransitions")
 
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
@@ -109,9 +136,9 @@ model Stage {
 model Application {
   id               String       @id @default(cuid())
   candidateId      String
-  candidate        Candidate    @relation(fields: [candidateId], references: [id])
+  candidate        Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   jobId            String
-  job              Job          @relation(fields: [jobId], references: [id])
+  job              Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
   stageId          String
   stage            Stage        @relation(fields: [stageId], references: [id])
   
@@ -121,17 +148,166 @@ model Application {
   salaryExpectation Float?
   enteredStageAt   DateTime     @default(now())
   
+  // Governança de IA & Fit 3D
+  algorithmVersion String?      @default("v3.0-fit3d")
+  aiExplanation    String?
+  aiSnapshot       String?      // JSON snapshot
+  manualOverride   Boolean      @default(false)
+  overrideReason   String?
+  reviewedBy       String?
+  reviewedAt       DateTime?
+
   evaluations      Evaluation[]
   activities       Activity[]
+  transitions      ApplicationStageTransition[]
+  interviews       Interview[]
+  offers           Offer[]
+  hireConversion   HireConversion?
 
   createdAt        DateTime     @default(now()) // apply date
   updatedAt        DateTime     @updatedAt
 }
 
+model ApplicationStageTransition {
+  id            String       @id @default(cuid())
+  applicationId String
+  fromStageId   String?
+  toStageId     String
+  changedBy     String       // ID do usuário ou "SYSTEM"
+  reason        String?
+  changedAt     DateTime     @default(now())
+
+  application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fromStage     Stage?       @relation("FromStageTransitions", fields: [fromStageId], references: [id])
+  toStage       Stage        @relation("ToStageTransitions", fields: [toStageId], references: [id])
+
+  @@index([applicationId, changedAt])
+}
+
+model Document {
+  id                 String       @id @default(cuid())
+  organizationId     String
+  candidateId        String?
+  provider           String       @default("SUPABASE_PRIVATE")
+  bucket             String       @default("resumes-private")
+  storageKey         String
+  originalName       String
+  mimeType           String       @default("application/pdf")
+  sizeBytes          Int          @default(0)
+  checksum           String?
+  classification     String       @default("CURRICULO") // CURRICULO, LAUDO, DIPLOMA, CERTIFICADO
+  retentionUntil     DateTime?
+  createdAt          DateTime     @default(now())
+
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  candidate          Candidate?   @relation(fields: [candidateId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, candidateId])
+}
+
+model AuditEvent {
+  id             String       @id @default(cuid())
+  organizationId String?
+  actorUserId    String?
+  action         String       // RESUME_DOWNLOAD, STAGE_CHANGE, CANDIDATE_DELETE, ROLE_CHANGE, OVERRIDE_FIT, HIRE_AUTHORIZED, EXPORT_DATA
+  resourceType   String       // Application, Candidate, Job, Document, User
+  resourceId     String
+  beforeData     String?      // JSON snapshot
+  afterData      String?      // JSON snapshot
+  ipAddress      String?
+  userAgent      String?
+  reason         String?
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([resourceType, resourceId])
+}
+
+model Interview {
+  id             String       @id @default(cuid())
+  applicationId  String
+  title          String
+  scheduledAt    DateTime
+  durationMin    Int          @default(45)
+  format         String       @default("ONLINE") // ONLINE, IN_PERSON
+  meetingUrl     String?
+  status         String       @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  application    Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  scorecards     Scorecard[]
+
+  @@index([applicationId, scheduledAt])
+}
+
+model Scorecard {
+  id                 String       @id @default(cuid())
+  interviewId        String
+  evaluatorId        String
+  technicalScore     Float        @default(0) // 1 to 5
+  cultureScore       Float        @default(0) // 1 to 5
+  communicationScore Float        @default(0) // 1 to 5
+  overallRecommendation String   @default("HIRE") // STRONG_HIRE, HIRE, HOLD, NO_HIRE
+  notes              String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  interview          Interview    @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  evaluator          User         @relation("ScorecardEvaluator", fields: [evaluatorId], references: [id])
+
+  @@index([interviewId, evaluatorId])
+}
+
+model Offer {
+  id             String       @id @default(cuid())
+  applicationId  String
+  salaryOffered  Float
+  employmentType String       @default("CLT") // CLT, PJ, ESTAGIO
+  startDate      DateTime?
+  benefits       String?      // JSON string or text
+  status         String       @default("DRAFT") // DRAFT, PENDING_APPROVAL, APPROVED, SENT, ACCEPTED, REJECTED
+  approvedBy     String?
+  approvedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  application    Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+model HireConversion {
+  id             String       @id @default(cuid())
+  applicationId  String       @unique
+  convertedBy    String
+  employeeCode   String?
+  status         String       @default("CONVERTED") // CONVERTED, PENDING_ONBOARDING
+  convertedAt    DateTime     @default(now())
+
+  application    Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model IntegrationOutbox {
+  id             String       @id @default(cuid())
+  organizationId String
+  eventType      String       // candidate.hire_authorized.v1, application.stage_changed.v1
+  payload        String       // JSON estruturado
+  status         String       @default("PENDING") // PENDING, PUBLISHED, FAILED
+  attempts       Int          @default(0)
+  occurredAt     DateTime     @default(now())
+  publishedAt    DateTime?
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status, occurredAt])
+}
+
 model Evaluation {
   id               String       @id @default(cuid())
   applicationId    String
-  application      Application  @relation(fields: [applicationId], references: [id])
+  application      Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   evaluatorId      String
   evaluator        User         @relation(fields: [evaluatorId], references: [id])
   
@@ -146,15 +322,52 @@ model Evaluation {
 model Activity {
   id               String       @id @default(cuid())
   applicationId    String
-  application      Application  @relation(fields: [applicationId], references: [id])
+  application      Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   actorId          String?
   actor            User?        @relation(fields: [actorId], references: [id])
   
-  type             String       // e.g., "STAGE_CHANGE", "NOTE_ADDED"
+  type             String       // e.g., "STAGE_CHANGE", "NOTE_ADDED", "APPLICATION_SUBMITTED"
   description      String
   metadata         String?      // JSON string
 
   createdAt        DateTime     @default(now())
+}
+
+model CandidateConsent {
+  id             String       @id @default(cuid())
+  candidateId    String
+  purpose        String       // R&S, BANCO_TALENTOS, CONTATO_FUTURO
+  granted        Boolean      @default(true)
+  grantedAt      DateTime     @default(now())
+  revokedAt      DateTime?
+  ipAddress      String?
+
+  candidate      Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId, purpose])
+}
+
+model RetentionPolicy {
+  id             String       @id @default(cuid())
+  organizationId String
+  dataType       String       // RESUME_PDF, INACTIVE_CANDIDATE, INTERVIEW_NOTES
+  retentionDays  Int          @default(730) // 2 anos por padrão
+  actionOnExpiry String       // ANONYMIZE, DELETE
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model DataSubjectRequest {
+  id             String       @id @default(cuid())
+  email          String
+  requestType    String       // ACCESS, CORRECTION, DELETION, REVOCATION
+  status         String       @default("PENDING") // PENDING, COMPLETED, REJECTED
+  justification  String?
+  requestedAt    DateTime     @default(now())
+  resolvedAt     DateTime?
+
+  @@index([email, requestType])
 }
 
 model PasswordResetToken {

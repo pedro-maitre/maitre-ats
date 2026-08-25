@@ -196,6 +196,9 @@ O controle de acesso é aplicado no middleware de borda ([proxy.ts](file:///c:/U
 O repositório conta com suítes de testes automatizados em TypeScript/Node.js na pasta `scripts/`:
 
 ```bash
+# Teste Mestre de Arquitetura & Segurança da Evolução (Conecta Talentos)
+npx tsx scripts/test_evolution_master.ts
+
 # Teste completo de integração do sistema (Banco, Storage, RBAC, Bcrypt, Stepper)
 node scripts/run_full_system_test.js
 
