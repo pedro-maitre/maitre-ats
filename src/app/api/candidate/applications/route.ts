@@ -43,6 +43,16 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    let candidateTags: string[] = [];
+    if (candidate.tags) {
+      try {
+        const parsed = JSON.parse(candidate.tags);
+        candidateTags = Array.isArray(parsed) ? parsed : [String(parsed)];
+      } catch {
+        candidateTags = candidate.tags.split(",").map((t) => t.trim()).filter(Boolean);
+      }
+    }
+
     return NextResponse.json({
       candidate: {
         id: candidate.id,
@@ -53,7 +63,7 @@ export async function GET(req: NextRequest) {
         linkedinUrl: candidate.linkedinUrl,
         resumeUrl: candidate.resumeUrl,
         profileSummary: candidate.profileSummary,
-        tags: candidate.tags ? JSON.parse(candidate.tags) : [],
+        tags: candidateTags,
       },
       applications: candidate.applications.map((app) => ({
         id: app.id,
@@ -100,7 +110,12 @@ export async function PUT(req: NextRequest) {
 
     const email = session.user.email.toLowerCase();
     const body = await req.json();
-    const { firstName, lastName, phone, linkedinUrl, profileSummary, resumeUrl } = body;
+    const { firstName, lastName, phone, linkedinUrl, profileSummary, resumeUrl, tags } = body;
+
+    let formattedTags: string | undefined = undefined;
+    if (tags !== undefined) {
+      formattedTags = Array.isArray(tags) ? JSON.stringify(tags) : String(tags);
+    }
 
     const updated = await prisma.candidate.update({
       where: { email },
@@ -111,6 +126,7 @@ export async function PUT(req: NextRequest) {
         linkedinUrl: linkedinUrl !== undefined ? linkedinUrl : undefined,
         profileSummary: profileSummary !== undefined ? profileSummary : undefined,
         resumeUrl: resumeUrl || undefined,
+        tags: formattedTags,
       },
     });
 

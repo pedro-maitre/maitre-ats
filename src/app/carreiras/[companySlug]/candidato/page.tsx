@@ -121,7 +121,9 @@ export default function CandidateDashboardPage({
           body: JSON.stringify({
             resumeUrl: newResumeUrl,
             phone: parseData.phone || undefined,
-            profileSummary: parseData.rawText || undefined,
+            profileSummary: parseData.profileSummary || parseData.rawText || undefined,
+            tags: parseData.tags || undefined,
+            linkedinUrl: parseData.linkedinUrl || undefined,
           }),
         });
 

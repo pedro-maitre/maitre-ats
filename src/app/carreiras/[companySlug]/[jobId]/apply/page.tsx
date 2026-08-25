@@ -1,10 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useRef } from "react";
-import { UploadCloud, CheckCircle, Loader2, ArrowLeft, Lock, Sparkles, ShieldCheck } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  DollarSign,
+  Users,
+  Megaphone,
+  CheckCircle,
+  Loader2,
+  ArrowLeft,
+  Sparkles,
+  Building2,
+  Briefcase,
+  Mail,
+  User,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
+import { useSession } from "next-auth/react";
 import { submitApplication } from "./actions";
 
 export default function JobApplyPage({
@@ -13,67 +27,31 @@ export default function JobApplyPage({
   params: Promise<{ companySlug: string; jobId: string }>;
 }) {
   const { companySlug, jobId } = use(params);
+  const { data: session, status } = useSession();
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [isParsing, setIsParsing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const [uploadedResumeUrl, setUploadedResumeUrl] = useState("");
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    phone: "",
-    linkedinUrl: "",
-    tags: "",
-    salaryExpectation: "",
-    profileSummary: "",
-  });
+  // AS 3 PERGUNTAS SOLICITADAS
+  const [salaryExpectation, setSalaryExpectation] = useState("");
+  const [isReferral, setIsReferral] = useState<"NAO" | "SIM">("NAO");
+  const [referralName, setReferralName] = useState("");
+  const [sourceChannel, setSourceChannel] = useState("LinkedIn");
+  const [sourceDetails, setSourceDetails] = useState("");
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      setFile(selectedFile);
-      setError("");
+  // E-mail e Nome para caso não esteja logado
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
 
-      setIsParsing(true);
-      try {
-        const data = new FormData();
-        data.append("resume", selectedFile);
-
-        const res = await fetch("/api/parse-resume", {
-          method: "POST",
-          body: data,
-        });
-
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || "Erro ao processar currículo");
-        }
-
-        const parsed = await res.json();
-
-        setUploadedResumeUrl(parsed.resumeUrl || "");
-
-        // Auto-fill extracted data
-        setFormData((prev) => ({
-          ...prev,
-          firstName: prev.firstName || (parsed.name ? parsed.name.split(" ")[0] : ""),
-          lastName: prev.lastName || (parsed.name ? parsed.name.split(" ").slice(1).join(" ") : ""),
-          email: prev.email || (parsed.email || ""),
-          phone: prev.phone || (parsed.phone || ""),
-        }));
-      } catch (err: any) {
-        console.error("Parse error:", err);
-      } finally {
-        setIsParsing(false);
-      }
+  useEffect(() => {
+    if (session?.user?.email) {
+      setEmail(session.user.email);
+      if (session.user.name) setName(session.user.name);
     }
-  };
+  }, [session]);
+
+  const isLoggedIn = Boolean(session?.user?.email);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,45 +59,35 @@ export default function JobApplyPage({
     setError("");
 
     try {
-      let finalResumeUrl = uploadedResumeUrl;
+      if (!salaryExpectation) {
+        throw new Error("Por favor, informe a sua pretensão salarial.");
+      }
 
-      // Fallback: If file was selected but not uploaded yet, upload now
-      if (file && !finalResumeUrl) {
-        try {
-          const uploadFormData = new FormData();
-          uploadFormData.append("resume", file);
-          const uploadRes = await fetch("/api/parse-resume", {
-            method: "POST",
-            body: uploadFormData,
-          });
-          if (uploadRes.ok) {
-            const parsed = await uploadRes.json();
-            finalResumeUrl = parsed.resumeUrl || "";
-            setUploadedResumeUrl(finalResumeUrl);
-          }
-        } catch (uploadErr) {
-          console.warn("Upload fallback error:", uploadErr);
-        }
+      if (isReferral === "SIM" && !referralName.trim()) {
+        throw new Error("Por favor, informe o nome de quem indicou você para a vaga.");
+      }
+
+      const effectiveEmail = email || session?.user?.email;
+      if (!effectiveEmail) {
+        throw new Error("Por favor, informe seu e-mail cadastrado na Área do Candidato.");
       }
 
       const data = new FormData();
       data.append("jobId", jobId);
       data.append("companySlug", companySlug);
-      data.append("firstName", formData.firstName);
-      data.append("lastName", formData.lastName);
-      data.append("email", formData.email);
-      data.append("password", formData.password);
-      data.append("phone", formData.phone);
-      data.append("salaryExpectation", formData.salaryExpectation);
-      data.append("profileSummary", formData.profileSummary);
-      data.append("linkedinUrl", formData.linkedinUrl);
-      data.append("tags", formData.tags);
-      data.append("resumeUrl", finalResumeUrl);
+      data.append("email", effectiveEmail);
+      data.append("firstName", name ? name.split(" ")[0] : "Candidato");
+      data.append("lastName", name ? name.split(" ").slice(1).join(" ") : "");
+      data.append("salaryExpectation", salaryExpectation);
+      data.append("isReferral", isReferral);
+      data.append("referralName", referralName);
+      data.append("sourceChannel", sourceChannel);
+      data.append("sourceDetails", sourceDetails);
 
       await submitApplication(data);
       setSuccess(true);
     } catch (err: any) {
-      console.error("Submit error:", err);
+      console.error("Erro ao enviar candidatura:", err);
       setError(err.message || "Erro ao enviar candidatura. Tente novamente.");
     } finally {
       setIsSubmitting(false);
@@ -135,23 +103,23 @@ export default function JobApplyPage({
           </div>
           <div>
             <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2">
-              Inscrição Confirmada!
+              Candidatura Confirmada!
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-base leading-relaxed">
-              Seu currículo foi recebido pela equipe de recrutamento. Agora você pode acompanhar o status do seu processo seletivo em tempo real.
+              Suas respostas foram registradas e seu perfil cadastrado foi vinculado a esta vaga. Acompanhe a evolução do processo pela sua Área do Candidato.
             </p>
           </div>
 
-          <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href={`/carreiras/${companySlug}/candidato`}
-              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 px-6 py-3 rounded-xl font-bold shadow-md hover:brightness-105 transition-all text-sm"
+              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 px-6 py-3.5 rounded-xl font-bold shadow-md hover:brightness-105 transition-all text-sm cursor-pointer"
             >
               Acessar Minhas Candidaturas
             </Link>
             <Link
               href={`/carreiras/${companySlug}`}
-              className="inline-flex items-center justify-center px-6 py-3 rounded-xl font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm border border-slate-200 dark:border-slate-800"
+              className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm border border-slate-200 dark:border-slate-800"
             >
               Ver Outras Vagas
             </Link>
@@ -162,7 +130,7 @@ export default function JobApplyPage({
   }
 
   return (
-    <div className="max-w-2xl mx-auto animate-in fade-in duration-500 space-y-6">
+    <div className="max-w-xl mx-auto animate-in fade-in duration-500 space-y-6">
       <Link
         href={`/carreiras/${companySlug}/${jobId}`}
         className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 font-semibold text-sm transition-colors"
@@ -171,65 +139,59 @@ export default function JobApplyPage({
       </Link>
 
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden">
+        {/* Header Compacto */}
         <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 p-8 sm:p-10 border-b border-slate-100 dark:border-slate-800 text-center space-y-2">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-maitre-gold/15 text-maitre-gold text-xs font-bold uppercase tracking-wider border border-maitre-gold/30">
-            <Sparkles size={14} /> Preenchimento com Inteligência Artificial
+            <Sparkles size={14} /> Candidatura Direta
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            Envie sua Candidatura
+            Confirmar Candidatura
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">
-            Faça o upload do seu currículo em PDF. Nossa IA lê os dados e você poderá acompanhar o processo pelo portal.
+            Seus dados cadastrais e currículo serão utilizados da sua <strong>Área do Candidato</strong>. Basta responder às perguntas abaixo.
           </p>
         </div>
 
         <div className="p-8 sm:p-10 space-y-8">
-          {/* Upload Area */}
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-2xl p-8 sm:p-10 text-center cursor-pointer transition-all ${
-              file
-                ? "border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20"
-                : "border-slate-300 dark:border-slate-700 hover:border-maitre-gold dark:hover:border-maitre-gold hover:bg-slate-50/60 dark:hover:bg-slate-800/30"
-            }`}
-          >
-            <input
-              type="file"
-              accept=".pdf"
-              className="hidden"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-            />
-            {isParsing ? (
-              <div className="flex flex-col items-center text-maitre-gold space-y-3">
-                <Loader2 size={44} className="animate-spin text-maitre-gold" />
-                <div>
-                  <p className="font-bold text-slate-900 dark:text-white">Extraindo dados com IA...</p>
-                  <p className="text-xs text-slate-500">Lendo informações de contato e competências</p>
+          {/* Card de Identificação da Conta */}
+          {isLoggedIn ? (
+            <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-sm shrink-0">
+                ✓
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                  Candidatando-se como:
+                </p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                  {name ? `${name} (${session?.user?.email})` : session?.user?.email}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                <ShieldCheck size={16} className="text-maitre-gold" />
+                <span>Identificação do Candidato</span>
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1.5">
+                  Seu E-mail Cadastrado *
+                </label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    required
+                    placeholder="seu.email@exemplo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full p-3.5 pl-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium outline-none focus:ring-2 focus:ring-maitre-gold"
+                  />
+                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 </div>
               </div>
-            ) : file ? (
-              <div className="flex flex-col items-center text-emerald-600 space-y-2">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                  <CheckCircle size={28} />
-                </div>
-                <p className="font-bold text-slate-900 dark:text-white">{file.name}</p>
-                <p className="text-xs text-emerald-600 font-semibold">Currículo anexado com sucesso! Clique para alterar.</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center text-slate-400 space-y-3">
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-maitre-gold">
-                  <UploadCloud size={30} />
-                </div>
-                <div>
-                  <p className="font-bold text-slate-800 dark:text-slate-200 text-base mb-0.5">
-                    Clique para enviar seu currículo (PDF)
-                  </p>
-                  <p className="text-xs text-slate-500">Preencheremos os campos automaticamente para você</p>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 p-4 rounded-xl text-sm font-medium border border-red-200 dark:border-red-900/50">
@@ -237,146 +199,138 @@ export default function JobApplyPage({
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  Nome *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Seu nome"
-                  className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-all text-sm font-medium"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  Sobrenome
-                </label>
-                <input
-                  type="text"
-                  placeholder="Seu sobrenome"
-                  className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-all text-sm font-medium"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  E-mail *
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="exemplo@email.com"
-                  className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-all text-sm font-medium"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  Telefone / WhatsApp
-                </label>
-                <input
-                  type="tel"
-                  placeholder="(11) 99999-9999"
-                  className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-all text-sm font-medium"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
-              </div>
-            </div>
-
-            {/* Candidate Portal Password */}
-            <div className="p-5 rounded-2xl bg-maitre-gold/5 border border-maitre-gold/20 space-y-3">
-              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm">
-                <ShieldCheck size={18} className="text-maitre-gold" />
-                <span>Acesso à Área do Candidato</span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Defina uma senha para poder acompanhar o status do processo seletivo e futuras entrevistas em tempo real.
-              </p>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  Senha de Acesso (Mínimo 6 dígitos)
-                </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-all text-sm font-medium pl-10"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  />
-                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            
+            {/* PERGUNTA 1: Pretensão Salarial */}
+            <div className="space-y-3 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-maitre-gold/20 text-maitre-gold flex items-center justify-center font-black text-xs">
+                  1
                 </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  Pretensão Salarial (R$)
+                <label className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <DollarSign size={16} className="text-emerald-500" />
+                  Qual a sua pretensão salarial mensal (R$)? *
                 </label>
+              </div>
+              <div className="relative max-w-sm pt-1">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
+                  R$
+                </span>
                 <input
                   type="number"
+                  required
+                  min={500}
                   placeholder="Ex: 8000"
-                  className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-all text-sm font-medium"
-                  value={formData.salaryExpectation}
-                  onChange={(e) => setFormData({ ...formData, salaryExpectation: e.target.value })}
+                  value={salaryExpectation}
+                  onChange={(e) => setSalaryExpectation(e.target.value)}
+                  className="w-full p-3.5 pl-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-base font-bold outline-none focus:ring-2 focus:ring-maitre-gold transition-all"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  LinkedIn URL
+            </div>
+
+            {/* PERGUNTA 2: Indicação para a Vaga */}
+            <div className="space-y-3 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-maitre-gold/20 text-maitre-gold flex items-center justify-center font-black text-xs">
+                  2
+                </div>
+                <label className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Users size={16} className="text-blue-500" />
+                  Você é uma indicação para esta vaga? *
                 </label>
-                <input
-                  type="url"
-                  placeholder="https://linkedin.com/in/..."
-                  className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-all text-sm font-medium"
-                  value={formData.linkedinUrl}
-                  onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
-                />
+              </div>
+
+              <div className="pt-2 space-y-3">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsReferral("NAO");
+                      setReferralName("");
+                    }}
+                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all border cursor-pointer ${
+                      isReferral === "NAO"
+                        ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-transparent shadow-sm"
+                        : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    Não
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsReferral("SIM")}
+                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all border cursor-pointer ${
+                      isReferral === "SIM"
+                        ? "bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 border-transparent shadow-sm"
+                        : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    Sim, fui indicado(a)
+                  </button>
+                </div>
+
+                {isReferral === "SIM" && (
+                  <div className="animate-in fade-in duration-300 pt-2 space-y-1.5">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Quem indicou você? *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Nome do colaborador ou contato da equipe..."
+                      value={referralName}
+                      onChange={(e) => setReferralName(e.target.value)}
+                      className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium outline-none focus:ring-2 focus:ring-maitre-gold transition-all"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                Principais Competências (Separe por vírgula)
-              </label>
-              <input
-                type="text"
-                placeholder="Ex: React, Node.js, Liderança, Metodologias Ágeis"
-                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-all text-sm font-medium"
-                value={formData.tags}
-                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-              />
+            {/* PERGUNTA 3: Como soube da Vaga */}
+            <div className="space-y-3 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-maitre-gold/20 text-maitre-gold flex items-center justify-center font-black text-xs">
+                  3
+                </div>
+                <label className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Megaphone size={16} className="text-purple-500" />
+                  Como você soube desta vaga? *
+                </label>
+              </div>
+
+              <div className="pt-2 space-y-3">
+                <select
+                  value={sourceChannel}
+                  onChange={(e) => setSourceChannel(e.target.value)}
+                  className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-maitre-gold transition-all cursor-pointer"
+                >
+                  <option value="LinkedIn">🌐 LinkedIn</option>
+                  <option value="Portal de Carreiras Maître">🏢 Portal de Carreiras / Site Oficial</option>
+                  <option value="Indicação de Amigo ou Colega">👥 Indicação de Amigo ou Colega</option>
+                  <option value="Instagram / Redes Sociais">📱 Instagram / Redes Sociais</option>
+                  <option value="Abordagem de Recrutador (Hunting)">🎯 Abordagem de Recrutador (Hunting)</option>
+                  <option value="Outro">📝 Outro Canal</option>
+                </select>
+
+                {sourceChannel === "Outro" && (
+                  <div className="animate-in fade-in duration-300 pt-1">
+                    <input
+                      type="text"
+                      placeholder="Especifique como soube da oportunidade..."
+                      value={sourceDetails}
+                      onChange={(e) => setSourceDetails(e.target.value)}
+                      className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium outline-none focus:ring-2 focus:ring-maitre-gold transition-all"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                Resumo Profissional / Apresentação
-              </label>
-              <textarea
-                rows={4}
-                placeholder="Conte um pouco sobre sua trajetória, conquistas e objetivos profissionais..."
-                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 outline-none focus:ring-2 focus:ring-maitre-gold transition-all resize-y text-sm font-medium"
-                value={formData.profileSummary}
-                onChange={(e) => setFormData({ ...formData, profileSummary: e.target.value })}
-              />
-            </div>
-
+            {/* Botão de Envio */}
             <button
               type="submit"
-              disabled={isSubmitting || !formData.email || !formData.firstName}
+              disabled={isSubmitting || !salaryExpectation || (isReferral === "SIM" && !referralName.trim())}
               className="w-full bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 hover:brightness-105 disabled:opacity-50 p-4 rounded-2xl font-black text-base transition-all flex items-center justify-center gap-2 shadow-lg active:scale-98 cursor-pointer"
             >
               {isSubmitting ? (
@@ -385,7 +339,7 @@ export default function JobApplyPage({
                   <span>Enviando Candidatura...</span>
                 </>
               ) : (
-                <span>Confirmar Inscrição</span>
+                <span>Confirmar e Enviar Candidatura</span>
               )}
             </button>
           </form>

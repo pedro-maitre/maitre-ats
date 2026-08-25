@@ -13,6 +13,7 @@ export async function createCandidate(formData: FormData) {
   const profileSummary = formData.get("profileSummary") as string;
   const tagsStr = formData.get("tags") as string;
   const source = formData.get("source") as string;
+  const resumeUrl = (formData.get("resumeUrl") as string) || null;
 
   if (!firstName || !lastName || !email) {
     throw new Error("Nome, sobrenome e e-mail são obrigatórios");
@@ -45,6 +46,7 @@ export async function createCandidate(formData: FormData) {
       phone,
       linkedinUrl,
       profileSummary,
+      resumeUrl: resumeUrl || undefined,
       tags: tagsJson,
       source: source || "Cadastro Manual",
       organizationId: org.id
