@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Briefcase, Users, Settings, LayoutDashboard, UserCog, ExternalLink, ShieldCheck, Award } from "lucide-react";
+import { Briefcase, Users, Settings, LayoutDashboard, UserCog, ExternalLink, ShieldCheck, Award, UserCheck } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import LogoutButton from "./LogoutButton";
@@ -66,6 +66,19 @@ export default async function Sidebar() {
         >
           <Users size={18} className="text-maitre-gold" />
           <span>Banco de Talentos</span>
+        </Link>
+
+        <Link
+          href="/employees"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-800/80 hover:text-white transition-colors text-sm font-semibold"
+        >
+          <UserCheck size={18} className="text-purple-400" />
+          <div className="flex items-center justify-between flex-1">
+            <span>Core HR</span>
+            <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded">
+              Colaboradores
+            </span>
+          </div>
         </Link>
 
         {isAdmin && (
