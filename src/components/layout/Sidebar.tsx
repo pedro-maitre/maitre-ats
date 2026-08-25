@@ -42,7 +42,7 @@ export default async function Sidebar() {
       <div className="p-6 border-b border-slate-800/80">
         <Link href="/jobs" className="flex items-center gap-2">
           <h1 className="text-2xl font-black text-white tracking-tight">
-            Maître<span className="text-maitre-gold">ATS</span>
+            Maître<span className="text-maitre-gold">Conecta</span>
           </h1>
         </Link>
         <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mt-0.5">

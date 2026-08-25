@@ -26,7 +26,7 @@ function recordTest(name, passed, details) {
 
 async function runTests() {
   console.log('====================================================');
-  console.log('🚀 INICIANDO BATERIA COMPLETA DE TESTES DO MAÎTRE ATS');
+  console.log('🚀 INICIANDO BATERIA COMPLETA DE TESTES DO MAÎTRE CONECTA');
   console.log('====================================================\n');
 
   // TEST 1: Database & Prisma Connection

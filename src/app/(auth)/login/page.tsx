@@ -54,7 +54,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-8 sm:p-10 space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Maître<span className="text-maitre-gold">ATS</span>
+            Maître<span className="text-maitre-gold">Conecta</span>
           </h1>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-bold uppercase tracking-wider border border-slate-200 dark:border-slate-700">
             Acesso Restrito da Equipe

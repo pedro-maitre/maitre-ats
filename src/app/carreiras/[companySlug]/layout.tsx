@@ -97,7 +97,7 @@ export default async function CarreirasLayout({
           <p className="flex items-center gap-1 text-xs">
             Tecnologia e Gestão por{" "}
             <span className="font-bold text-slate-800 dark:text-slate-200">
-              Maître<span className="text-maitre-gold font-black">ATS</span>
+              Maître<span className="text-maitre-gold font-black">Conecta</span>
             </span>
           </p>
         </div>

@@ -1,5 +1,5 @@
 /**
- * Motor de Avaliação Heurística e Fit 3D - Maître ATS
+ * Motor de Avaliação Heurística e Fit 3D - Maître Conecta
  * Calcula Salary Fit, Skills Match e Fit Geral com base nos dados estruturados da vaga e candidato.
  */
 

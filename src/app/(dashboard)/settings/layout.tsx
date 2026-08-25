@@ -2,7 +2,7 @@ import React from "react";
 import SettingsNav from "./SettingsNav";
 
 export const metadata = {
-  title: "Configurações | Maître ATS",
+  title: "Configurações | Maître Conecta",
 };
 
 export default function SettingsLayout({

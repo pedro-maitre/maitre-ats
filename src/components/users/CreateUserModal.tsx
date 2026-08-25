@@ -80,7 +80,7 @@ export default function CreateUserModal({
               Criar Novo Usuário
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Cadastre um membro da equipe com credenciais de acesso ao Maître ATS.
+              Cadastre um membro da equipe com credenciais de acesso ao Maître Conecta.
             </p>
           </div>
         </div>

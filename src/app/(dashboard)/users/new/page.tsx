@@ -49,7 +49,7 @@ export default async function NewUserPage() {
             Criar Novo Usuário
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-            Cadastre um novo membro da equipe com credenciais de acesso ao Maître ATS.
+            Cadastre um novo membro da equipe com credenciais de acesso ao Maître Conecta.
           </p>
         </div>
       </div>

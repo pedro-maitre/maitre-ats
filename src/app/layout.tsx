@@ -6,8 +6,8 @@ import AuthProvider from "@/components/providers/AuthProvider";
 const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Maître ATS",
-  description: "Enterprise Applicant Tracking System by Maître Consultoria",
+  title: "Maître Conecta",
+  description: "Plataforma Inteligente de Recrutamento e Conexão de Talentos da Maître Consultoria",
 };
 
 export const dynamic = "force-dynamic";
