@@ -6,8 +6,9 @@ import AuthProvider from "@/components/providers/AuthProvider";
 const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Maître Conecta",
-  description: "Plataforma Inteligente de Recrutamento e Conexão de Talentos da Maître Consultoria",
+  metadataBase: new URL("https://maitreconecta.vercel.app"),
+  title: "Maître Conecta — Suíte Integrada de RH & Talentos",
+  description: "Plataforma Inteligente de Recrutamento, Core HR e Conexão de Talentos da Maître Consultoria",
 };
 
 export const dynamic = "force-dynamic";

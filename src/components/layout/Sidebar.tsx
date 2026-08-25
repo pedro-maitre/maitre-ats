@@ -57,7 +57,7 @@ export default async function Sidebar() {
     <div className="w-64 h-screen bg-[#1d1e20] text-slate-300 flex flex-col fixed left-0 top-0 border-r border-slate-800 z-50">
       {/* Brand Header */}
       <div className="p-5 border-b border-slate-800/80 shrink-0">
-        <Link href="/jobs" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <h1 className="text-xl font-black text-white tracking-tight">
             Maître<span className="text-maitre-gold">Conecta</span>
           </h1>
@@ -69,6 +69,22 @@ export default async function Sidebar() {
 
       {/* Navigation Scrollable */}
       <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto custom-scrollbar">
+        {/* DASHBOARD GERAL */}
+        <div className="space-y-1">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-slate-800/90 text-white hover:bg-slate-700 transition-colors text-xs font-bold shadow-sm"
+          >
+            <LayoutDashboard size={16} className="text-maitre-gold shrink-0" />
+            <div className="flex items-center justify-between flex-1">
+              <span>Painel Executivo</span>
+              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 bg-maitre-gold/20 text-maitre-gold rounded">
+                Geral
+              </span>
+            </div>
+          </Link>
+        </div>
+
         {/* GRUPO 1: ATRAÇÃO & CORE */}
         <div className="space-y-1">
           <span className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-500">

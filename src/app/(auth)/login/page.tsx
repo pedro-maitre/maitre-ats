@@ -38,8 +38,8 @@ export default function LoginPage() {
           // Redirect candidates to candidate portal
           router.push("/carreiras/maitre/candidato");
         } else {
-          // Recruiters and Admins go to ATS Jobs Dashboard
-          router.push("/jobs");
+          // Recruiters and Admins go directly to the Master Executive Dashboard
+          router.push("/");
         }
         router.refresh();
       }

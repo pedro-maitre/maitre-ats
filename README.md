@@ -1,6 +1,7 @@
 # 🌐 Maître Conecta
 
-> **Plataforma Inteligente de Recrutamento, Seleção e Conexão de Talentos da Maître Consultoria.**
+> **Plataforma Inteligente de Recrutamento, Core HR e Suíte de Gestão de Talentos da Maître Consultoria.**  
+> 🔗 **Ambiente de Produção:** [https://maitreconecta.vercel.app](https://maitreconecta.vercel.app)
 
 Construído com **Next.js 16 (React 19)**, **TypeScript**, **Tailwind CSS v4**, **PostgreSQL**, **Prisma ORM**, **Supabase Storage** e **OpenAI**.
 
