@@ -7,14 +7,19 @@
 
 ## 📌 1. Visão Geral do Sistema
 
-O **Maître Conecta** é um sistema moderno de **R&S (Recrutamento e Seleção / ATS - Applicant Tracking System)** e **Conexão de Talentos** projetado para consultorias de executive search, hunting ativo e gestão de processos seletivos de alto volume.
+### A Suíte de 9 Módulos do Maître Conecta:
 
-### Principais Pilares:
-1. **Pipeline Visual Kanban & Gestão de Vagas:** Controle em tempo real do ciclo de vida das vagas (`OPEN`, `PAUSED`, `CLOSED`), customização dinâmica de etapas e arrasto de candidatos (*Drag-and-drop*).
-2. **Motor de Fit 3D & Triagem Inteligente:** Algoritmo de classificação automática de candidatos em 3 dimensões (Fit Salarial, Match de Competências e Critérios Eliminatórios/Knockouts), categorizando em abas (*Alto Fit*, *Médio Fit*, *Baixo Fit*) com ações em lote.
-3. **Motor Definitivo de Processamento de Currículos:** Arquitetura de armazenamento resiliente com *Fallback Triplo* (Supabase Storage, Vercel Blob e Local) e *Parsing Híbrido* (Extrator Heurístico 100% offline + OpenAI GPT-4o-mini com proteção contra esgotamento de cota).
-4. **Portal Público de Carreiras & Área do Candidato:** Experiência com inscrição simplificada em 3 perguntas objetivas e acompanhamento do processo seletivo em tempo real via *Stepper*.
-5. **Segurança Corporativa & RBAC:** Autenticação robusta (NextAuth.js + Bcrypt), controle de acesso baseado em 4 papéis (`SUPER_ADMIN`, `ADMIN`, `RECRUITER`, `CANDIDATE`) e recuperação de senha com tokens de uso único.
+| Módulo | Responsabilidade | Rota Principal | Status |
+| :--- | :--- | :--- | :---: |
+| **Conecta Talentos** | ATS, vagas, pipeline, triagem 3D, entrevistas, scorecards e ofertas | `/jobs`, `/candidates` | **✅ Ativo** |
+| **Conecta Pessoas** | Core HR, cadastro, vínculos, matrículas e ficha funcional | `/employees` | **✅ Ativo** |
+| **Conecta Operações** | Admissão digital, documentos seguros com SHA-256 e termos | `/operations` | **✅ Ativo** |
+| **Conecta Insights** | People Analytics, indicadores estratégicos de funil e projeção salarial | `/insights` | **✅ Ativo** |
+| **Conecta Desenvolvimento** | Competências, desempenho 9-Box, feedback contínuo e PDI | `/development` | **🟡 Hub Integrado** |
+| **Conecta Aprendizagem** | Treinamentos corporativos, LMS, trilhas e certificados | `/learning` | **🟡 Hub Integrado** |
+| **Conecta Cultura** | Clima organizacional, pesquisas de pulso, eNPS e rituais de cultura | `/culture` | **🟡 Hub Integrado** |
+| **Conecta Carreiras** | Mobilidade interna, recrutamento interno e mapas de sucessão | `/careers-hub` | **🟡 Hub Integrado** |
+| **Conecta Consultoria** | Projetos estratégicos, entregáveis e acompanhamento dos consultores Maître | `/consulting` | **🟡 Hub Integrado** |
 
 ---
 
