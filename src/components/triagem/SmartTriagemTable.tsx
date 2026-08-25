@@ -23,7 +23,11 @@ import {
   UserCheck,
   Building2,
   HelpCircle,
+  MoreHorizontal,
+  Calendar,
+  Award,
 } from "lucide-react";
+import ApplicationActionModal from "@/components/kanban/ApplicationActionModal";
 import {
   batchMoveCandidates,
   batchUpdatePriority,
@@ -84,6 +88,7 @@ export default function SmartTriagemTable({
   const [isPerformingBatch, setIsPerformingBatch] = useState(false);
   const [batchTargetStageId, setBatchTargetStageId] = useState<string>("");
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [selectedApp, setSelectedApp] = useState<{ id: string; name: string } | null>(null);
 
   // Formatador de Moeda
   const formatCurrency = (val: number | null | undefined) => {
@@ -681,12 +686,22 @@ export default function SmartTriagemTable({
                     {/* Ações */}
                     <td className="p-4 text-right pr-6">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedApp({ id: c.id, name: c.name })}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-maitre-gold/20 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:text-maitre-gold transition-colors"
+                          title="Abrir Gestão de Entrevistas, Propostas e Contratação"
+                        >
+                          <MoreHorizontal size={14} />
+                          <span>Ações</span>
+                        </button>
+
                         {c.resumeUrl && (
                           <a
                             href={c.resumeUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="p-2 rounded-xl text-slate-400 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                             title="Visualizar Currículo (PDF)"
                           >
                             <FileText size={16} />
@@ -727,6 +742,15 @@ export default function SmartTriagemTable({
           </table>
         </div>
       </div>
+
+      {/* Enterprise Action Modal */}
+      {selectedApp && (
+        <ApplicationActionModal
+          applicationId={selectedApp.id}
+          candidateName={selectedApp.name}
+          onClose={() => setSelectedApp(null)}
+        />
+      )}
     </div>
   );
 }
