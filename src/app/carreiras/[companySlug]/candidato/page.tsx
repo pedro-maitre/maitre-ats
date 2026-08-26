@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -57,17 +57,8 @@ export default function CandidateDashboardPage({
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push(`/carreiras/${companySlug}/candidato/login`);
-    } else if (status === "authenticated") {
-      fetchData();
-    }
-  }, [status, companySlug, router]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      setLoading(true);
       const res = await fetch("/api/candidate/applications");
       if (!res.ok) {
         throw new Error("Erro ao carregar seus dados.");
@@ -87,7 +78,15 @@ export default function CandidateDashboardPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push(`/carreiras/${companySlug}/candidato/login`);
+    } else if (status === "authenticated") {
+      fetchData();
+    }
+  }, [status, companySlug, router, fetchData]);
 
   const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

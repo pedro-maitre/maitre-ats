@@ -23,41 +23,82 @@ export default async function CompanyCarreirasPage({
 
   const jobs = org.jobs;
   const departments = Array.from(new Set(jobs.map((j) => j.department || "Geral")));
+  const primaryColor = org.primaryColor || "#D4AF37";
+
+  const headline = org.bannerHeadline || `Construa sua história na ${org.name}`;
+  const subheadline =
+    org.bannerSubheadline ||
+    "Buscamos pessoas talentosas e apaixonadas por inovação. Conheça nossas vagas disponíveis e acompanhe seu processo seletivo em tempo real.";
 
   return (
     <div className="animate-in fade-in duration-500 space-y-10">
-      {/* Hero Section */}
+      {/* Hero Section White-Label */}
       <div className="relative rounded-3xl bg-gradient-to-br from-[#1d1e20] via-slate-900 to-[#121316] text-white p-8 sm:p-12 shadow-2xl border border-slate-800 overflow-hidden text-center">
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-maitre-gold/10 rounded-full blur-3xl pointer-events-none" />
+        <div
+          className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none"
+          style={{ backgroundColor: primaryColor }}
+        />
         <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-maitre-gold/15 border border-maitre-gold/30 text-maitre-gold text-xs font-bold uppercase tracking-wider">
+          <div
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border"
+            style={{
+              backgroundColor: `${primaryColor}20`,
+              borderColor: `${primaryColor}40`,
+              color: primaryColor,
+            }}
+          >
             <Sparkles size={14} />
             Oportunidades em Aberto
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
-            Construa sua história na{" "}
-            <span className="bg-gradient-to-r from-maitre-gold via-[#fff2d1] to-maitre-gold bg-clip-text text-transparent">
-              {org.name}
-            </span>
+
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+            {headline}
           </h1>
+
           <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Buscamos pessoas talentosas e apaixonadas por inovação. Conheça nossas vagas disponíveis e acompanhe seu processo seletivo em tempo real.
+            {subheadline}
           </p>
 
           <div className="pt-2 flex flex-wrap justify-center gap-4 text-xs sm:text-sm font-semibold text-slate-400">
             <span className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-xl">
-              <Briefcase size={15} className="text-maitre-gold" />
+              <Briefcase size={15} style={{ color: primaryColor }} />
               {jobs.length} {jobs.length === 1 ? "vaga aberta" : "vagas abertas"}
             </span>
             <span className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-xl">
-              <Building2 size={15} className="text-maitre-gold" />
+              <Building2 size={15} style={{ color: primaryColor }} />
               {departments.length} {departments.length === 1 ? "área de atuação" : "áreas de atuação"}
             </span>
           </div>
         </div>
       </div>
+
+      {/* Seção Sobre a Empresa / Cultura (Se cadastrado) */}
+      {org.aboutUs && (
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-md border border-slate-200/80 dark:border-slate-800/80 p-8 sm:p-10 space-y-4">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center font-bold"
+              style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}
+            >
+              <Building2 size={18} />
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                Sobre a {org.name} & Nossa Cultura
+              </h2>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Conheça nossos valores e ambiente de trabalho
+              </span>
+            </div>
+          </div>
+
+          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+            {org.aboutUs}
+          </p>
+        </div>
+      )}
 
       {/* Jobs List Section */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden">

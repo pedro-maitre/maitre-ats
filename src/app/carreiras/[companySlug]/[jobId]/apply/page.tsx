@@ -44,13 +44,6 @@ export default function JobApplyPage({
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
 
-  useEffect(() => {
-    if (session?.user?.email) {
-      setEmail(session.user.email);
-      if (session.user.name) setName(session.user.name);
-    }
-  }, [session]);
-
   const isLoggedIn = Boolean(session?.user?.email);
 
   const handleSubmit = async (e: React.FormEvent) => {

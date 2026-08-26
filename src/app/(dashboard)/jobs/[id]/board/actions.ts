@@ -8,6 +8,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/audit";
 import { requireAuth } from "@/lib/security";
+import { sendInterviewEmail, sendOfferEmail } from "@/lib/email";
 
 /**
  * Move um candidato individual para outra etapa com transação ACID e histórico (ApplicationStageTransition).
@@ -466,9 +467,29 @@ export async function scheduleInterview(params: {
         notes: params.notes || undefined,
       },
       include: {
-        application: { select: { jobId: true, job: { select: { organizationId: true } } } },
+        application: {
+          select: {
+            jobId: true,
+            candidate: { select: { firstName: true, lastName: true, email: true } },
+            job: { select: { title: true, organizationId: true, organization: { select: { name: true } } } },
+          },
+        },
       },
     });
+
+    // Dispara e-mail para o candidato
+    if (interview.application.candidate.email) {
+      sendInterviewEmail({
+        candidateName: `${interview.application.candidate.firstName} ${interview.application.candidate.lastName}`,
+        candidateEmail: interview.application.candidate.email,
+        jobTitle: interview.application.job.title,
+        companyName: interview.application.job.organization.name,
+        scheduledAt: interview.scheduledAt,
+        format: interview.format,
+        meetingUrl: interview.meetingUrl || undefined,
+        notes: interview.notes || undefined,
+      }).catch((e) => console.error("Erro ao enviar e-mail de entrevista:", e));
+    }
 
     await logAuditEvent({
       organizationId: interview.application.job.organizationId,
@@ -567,9 +588,28 @@ export async function createOffer(params: {
         status: "PENDING_APPROVAL",
       },
       include: {
-        application: { select: { jobId: true, job: { select: { organizationId: true } } } },
+        application: {
+          select: {
+            jobId: true,
+            candidate: { select: { firstName: true, lastName: true, email: true } },
+            job: { select: { title: true, organizationId: true, organization: { select: { name: true } } } },
+          },
+        },
       },
     });
+
+    // Dispara e-mail de proposta para o candidato
+    if (offer.application.candidate.email) {
+      sendOfferEmail({
+        candidateName: `${offer.application.candidate.firstName} ${offer.application.candidate.lastName}`,
+        candidateEmail: offer.application.candidate.email,
+        jobTitle: offer.application.job.title,
+        companyName: offer.application.job.organization.name,
+        salaryOffered: offer.salaryOffered,
+        employmentType: offer.employmentType,
+        benefits: offer.benefits || undefined,
+      }).catch((e) => console.error("Erro ao enviar e-mail de proposta:", e));
+    }
 
     await logAuditEvent({
       organizationId: offer.application.job.organizationId,

@@ -217,7 +217,8 @@ export default async function JobDetailsPage({
             ) : (
               <Link
                 href={`/carreiras/${companySlug}/${job.id}/apply`}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 hover:brightness-105 px-10 py-4 rounded-2xl font-black text-lg transition-all shadow-xl active:scale-95"
+                className="inline-flex items-center gap-2 hover:brightness-105 text-slate-950 px-10 py-4 rounded-2xl font-black text-lg transition-all shadow-xl active:scale-95"
+                style={{ backgroundColor: job.organization.primaryColor || "#D4AF37" }}
               >
                 Candidatar-se para esta Vaga
               </Link>

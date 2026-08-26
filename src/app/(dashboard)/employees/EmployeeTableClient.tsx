@@ -46,7 +46,7 @@ export default function EmployeeTableClient({ conversions }: { conversions: any[
     jobTitle: "",
     department: "Tecnologia",
     salary: "",
-    employeeCode: `MC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+    employeeCode: "MC-2026-001",
   });
 
   const formatCurrency = (val: number) =>

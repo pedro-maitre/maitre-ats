@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { deleteJob } from "@/app/actions/delete-actions";
 import { assignJobRecruiter } from "@/app/(dashboard)/jobs/actions";
+import { useTenant } from "@/lib/tenant-context";
 
 export type RecruiterUser = {
   id: string;
@@ -35,6 +36,9 @@ export type JobData = {
   employmentType?: string | null;
   seniority?: string | null;
   status: string;
+  organizationId?: string | null;
+  organizationName?: string | null;
+  organizationSlug?: string | null;
   recruiterId: string | null;
   hiringManagerId: string | null;
   recruiterName?: string | null;
@@ -53,6 +57,7 @@ export default function JobDashboardView({
   currentUserId?: string;
   userRole?: string;
 }) {
+  const { selectedTenantId, selectedTenant } = useTenant();
   const [jobs, setJobs] = useState<JobData[]>(initialJobs);
   const [tab, setTab] = useState<"all" | "mine">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,11 +76,19 @@ export default function JobDashboardView({
   const baseJobs = tab === "mine" ? myJobs : jobs;
 
   const displayedJobs = baseJobs.filter((job) => {
+    // 1. Filtro por Tenant selecionado na Topbar
+    if (selectedTenantId !== "ALL" && job.organizationId !== selectedTenantId) {
+      return false;
+    }
+
+    // 2. Filtro por busca
     const matchesSearch =
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (job.department && job.department.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (job.location && job.location.toLowerCase().includes(searchQuery.toLowerCase()));
+      (job.location && job.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (job.organizationName && job.organizationName.toLowerCase().includes(searchQuery.toLowerCase()));
 
+    // 3. Filtro por Recrutador
     const matchesRecruiter =
       selectedRecruiterFilter === "ALL"
         ? true
@@ -306,7 +319,14 @@ export default function JobDashboardView({
                   </div>
                 )}
 
-                {/* Title */}
+                {/* Title & Organization Badge */}
+                {selectedTenantId === "ALL" && job.organizationName && (
+                  <div className="mb-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-maitre-gold bg-maitre-gold/10 border border-maitre-gold/20 px-2 py-0.5 rounded-lg">
+                    <Building2 size={11} />
+                    <span>{job.organizationName}</span>
+                  </div>
+                )}
+
                 <Link href={`/jobs/${job.id}/board`}>
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-maitre-gold transition-colors line-clamp-1">
                     {job.title}

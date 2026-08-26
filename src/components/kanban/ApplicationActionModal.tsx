@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   X,
   User,
@@ -18,7 +18,6 @@ import {
   Sparkles,
   ExternalLink,
   Plus,
-  Building2,
   UserCheck,
 } from "lucide-react";
 import {
@@ -75,7 +74,7 @@ export default function ApplicationActionModal({
   const [overrideReason, setOverrideReason] = useState("");
 
   // 5. Contratação (Hire)
-  const [employeeCode, setEmployeeCode] = useState(`MC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`);
+  const [employeeCode, setEmployeeCode] = useState("MC-2026-001");
 
   if (!applicationId) return null;
 

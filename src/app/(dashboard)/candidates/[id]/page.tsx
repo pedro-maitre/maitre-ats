@@ -115,6 +115,15 @@ export default async function CandidateProfilePage({
             </a>
           )}
           <Link
+            href={`/candidates/${candidate.id}/export`}
+            target="_blank"
+            className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all border border-slate-700 shadow-sm"
+          >
+            <Sparkles size={16} className="text-maitre-gold" />
+            <span>Dossiê Executivo (PDF)</span>
+          </Link>
+
+          <Link
             href={`/candidates/${candidate.id}/edit`}
             className="inline-flex items-center gap-2 bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 hover:brightness-105 px-5 py-2.5 rounded-xl font-extrabold text-sm shadow-md transition-all active:scale-95"
           >

@@ -11,6 +11,9 @@ export default async function JobsPage() {
   const [jobs, recruiters] = await Promise.all([
     prisma.job.findMany({
       include: {
+        organization: {
+          select: { id: true, name: true, slug: true },
+        },
         recruiter: {
           select: { id: true, name: true, email: true },
         },
@@ -46,6 +49,9 @@ export default async function JobsPage() {
     employmentType: job.employmentType,
     seniority: job.seniority,
     status: job.status,
+    organizationId: job.organizationId,
+    organizationName: job.organization?.name,
+    organizationSlug: job.organization?.slug,
     recruiterId: job.recruiterId,
     hiringManagerId: job.hiringManagerId,
     recruiterName: job.recruiter?.name,

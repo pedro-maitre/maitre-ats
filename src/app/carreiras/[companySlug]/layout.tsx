@@ -24,21 +24,45 @@ export default async function CarreirasLayout({
   }
 
   const isCandidateLoggedIn = session?.user && (session.user.role === "CANDIDATE" || !session.user.role);
+  const primaryColor = org.primaryColor || "#D4AF37";
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col font-sans selection:bg-maitre-gold selection:text-slate-900">
+    <div
+      className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col font-sans selection:text-slate-900"
+      style={{
+        // @ts-expect-error CSS custom property
+        "--company-primary": primaryColor,
+      }}
+    >
       {/* Header */}
-      <header className="bg-[#1d1e20] text-white shadow-xl border-b-[3px] border-maitre-gold sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
+      <header
+        className="bg-[#1d1e20] text-white shadow-xl sticky top-0 z-40 backdrop-blur-md bg-opacity-95 border-b-[3px]"
+        style={{ borderBottomColor: primaryColor }}
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <Link
             href={`/carreiras/${org.slug}`}
             className="flex items-center gap-3 group transition-all"
           >
-            <div className="bg-white/10 p-2.5 rounded-xl group-hover:bg-maitre-gold/20 transition-colors border border-white/10">
-              <Building2 size={24} className="text-maitre-gold" />
-            </div>
+            {org.logoUrl ? (
+              <div className="bg-white/10 p-1.5 rounded-xl border border-white/10 flex items-center justify-center max-w-[120px] max-h-[42px] overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={org.logoUrl}
+                  alt={org.name}
+                  className="max-h-8 w-auto object-contain"
+                />
+              </div>
+            ) : (
+              <div
+                className="p-2.5 rounded-xl transition-colors border border-white/10 text-white font-black"
+                style={{ backgroundColor: `${primaryColor}25` }}
+              >
+                <Building2 size={24} style={{ color: primaryColor }} />
+              </div>
+            )}
             <div>
-              <span className="text-xl font-black tracking-tight text-white group-hover:text-maitre-gold transition-colors">
+              <span className="text-xl font-black tracking-tight text-white group-hover:opacity-90 transition-opacity">
                 {org.name}
               </span>
               <span className="block text-xs font-semibold uppercase tracking-widest text-slate-400">
@@ -49,6 +73,17 @@ export default async function CarreirasLayout({
 
           {/* Navigation & Candidate Area */}
           <div className="flex items-center gap-3">
+            {org.websiteUrl && (
+              <Link
+                href={org.websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+              >
+                <span>Site Institucional</span>
+              </Link>
+            )}
+
             <Link
               href={`/carreiras/${org.slug}`}
               className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
@@ -61,9 +96,17 @@ export default async function CarreirasLayout({
               <div className="flex items-center gap-2">
                 <Link
                   href={`/carreiras/${org.slug}/candidato`}
-                  className="inline-flex items-center gap-2 bg-maitre-gold/15 hover:bg-maitre-gold/25 text-maitre-gold border border-maitre-gold/30 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm"
+                  className="inline-flex items-center gap-2 border px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm"
+                  style={{
+                    backgroundColor: `${primaryColor}20`,
+                    borderColor: `${primaryColor}50`,
+                    color: primaryColor,
+                  }}
                 >
-                  <div className="w-6 h-6 rounded-full bg-maitre-gold text-slate-950 flex items-center justify-center text-xs font-black">
+                  <div
+                    className="w-6 h-6 rounded-full text-slate-950 flex items-center justify-center text-xs font-black"
+                    style={{ backgroundColor: primaryColor }}
+                  >
                     {session?.user?.name ? session.user.name[0].toUpperCase() : "C"}
                   </div>
                   <span className="hidden md:inline">Minhas Candidaturas</span>
@@ -73,7 +116,8 @@ export default async function CarreirasLayout({
             ) : (
               <Link
                 href={`/carreiras/${org.slug}/candidato/login`}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-maitre-gold to-[#e5c07b] hover:brightness-105 text-slate-950 px-4 py-2 rounded-xl text-sm font-extrabold transition-all shadow-md active:scale-95"
+                className="inline-flex items-center gap-2 hover:brightness-105 text-slate-950 px-4 py-2 rounded-xl text-sm font-extrabold transition-all shadow-md active:scale-95"
+                style={{ backgroundColor: primaryColor }}
               >
                 <User size={16} />
                 <span>Área do Candidato</span>

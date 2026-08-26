@@ -7,11 +7,17 @@ datasource db {
 }
 
 model Organization {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  logoUrl           String?
+  primaryColor      String?  @default("#D4AF37")
+  bannerHeadline    String?
+  bannerSubheadline String?
+  aboutUs           String?
+  websiteUrl        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   users       User[]
   memberships OrganizationMembership[]
