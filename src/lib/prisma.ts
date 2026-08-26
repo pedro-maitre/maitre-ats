@@ -7,14 +7,14 @@ const globalForPrisma = global as unknown as {
   pool?: Pool;
 };
 
-// Configuração otimizada para Serverless / Next.js / Supabase Pooler
+// Configuração otimizada para Serverless / Next.js
 const pool =
   globalForPrisma.pool ||
   new Pool({
-    connectionString: (process.env.DATABASE_URL || "").replace(":5432/", ":6543/"),
-    max: process.env.NODE_ENV === "production" ? 4 : 5,
-    idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 5000,
+    connectionString: process.env.DATABASE_URL,
+    max: process.env.NODE_ENV === "production" ? 10 : 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
   });
 
 if (process.env.NODE_ENV !== "production") {
