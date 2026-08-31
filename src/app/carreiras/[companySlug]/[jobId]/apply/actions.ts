@@ -173,11 +173,40 @@ export async function submitApplication(formData: FormData) {
     throw new Error("Você já se candidatou para esta vaga. Acesse a sua Área do Candidato para acompanhar o status.");
   }
 
-  // KNOCKOUT RULE: Verifica se pretensão salarial excede o teto da vaga
+  // Processa Respostas das Killer Questions
+  const killerAnswersRaw = formData.get("killerAnswers") as string;
+  let isDisqualifiedByKillerQuestion = false;
+  let killerAnswersFormatted: Record<string, string> = {};
+
+  if (killerAnswersRaw) {
+    try {
+      killerAnswersFormatted = JSON.parse(killerAnswersRaw);
+    } catch {}
+  }
+
+  // Verifica se a vaga possui Killer Questions com regra eliminatória
+  if (job.requiredSkills) {
+    try {
+      const parsedSkills = JSON.parse(job.requiredSkills);
+      if (parsedSkills && typeof parsedSkills === "object" && Array.isArray(parsedSkills.killerQuestions)) {
+        for (const kq of parsedSkills.killerQuestions) {
+          const answer = killerAnswersFormatted[kq.id];
+          if (kq.disqualifyIfNo && (answer === "NAO" || answer === "false")) {
+            isDisqualifiedByKillerQuestion = true;
+          }
+        }
+      }
+    } catch {}
+  }
+
+  // KNOCKOUT RULE: Verifica se pretensão salarial excede o teto da vaga ou se foi desqualificado por Killer Question
   let fitCategory = "ALTO_FIT";
   let priority = "NORMAL";
 
-  if (job.salaryMax && expectationNum && expectationNum > job.salaryMax) {
+  if (isDisqualifiedByKillerQuestion) {
+    fitCategory = "BAIXO_FIT";
+    priority = "DUVIDA";
+  } else if (job.salaryMax && expectationNum && expectationNum > job.salaryMax) {
     fitCategory = "BAIXO_FIT";
     priority = "DUVIDA";
   }
@@ -188,10 +217,11 @@ export async function submitApplication(formData: FormData) {
       candidateId: candidate.id,
       jobId: job.id,
       stageId: firstStage.id,
-      matchScore: Math.floor(Math.random() * 26) + 75, // Score inicial entre 75-100%
+      matchScore: isDisqualifiedByKillerQuestion ? 30 : Math.floor(Math.random() * 26) + 75, // Score inicial
       salaryExpectation: expectationNum,
       fitCategory,
       priority,
+      aiSnapshot: Object.keys(killerAnswersFormatted).length > 0 ? JSON.stringify({ killerAnswers: killerAnswersFormatted }) : undefined,
     },
   });
 
@@ -200,18 +230,64 @@ export async function submitApplication(formData: FormData) {
     data: {
       applicationId: application.id,
       type: "APPLICATION_SUBMITTED",
-      description: isReferral === "true" || isReferral === "SIM"
-        ? `Candidatura enviada com indicação de: ${referralName || "Colaborador interno"}.`
-        : `Candidatura enviada. Canal de origem: ${computedSource}.`,
+      description: isDisqualifiedByKillerQuestion
+        ? `Candidatura submetida. ⚠️ Não atendeu a critério eliminatório da triagem.`
+        : `Candidatura submetida com sucesso pelo Portal de Carreiras.`,
       metadata: JSON.stringify({
+        source: computedSource,
         salaryExpectation: expectationNum,
-        isReferral: isReferral === "true" || isReferral === "SIM",
-        referralName: referralName || null,
-        sourceChannel,
-        sourceDetails: sourceDetails || null,
+        killerAnswers: killerAnswersFormatted,
+        disqualified: isDisqualifiedByKillerQuestion,
       }),
     },
   });
 
   return { success: true, candidateId: candidate.id, applicationId: application.id };
 }
+
+/**
+ * Retorna as perguntas de triagem e informações da vaga para a página de candidatura.
+ */
+export async function getJobKillerQuestions(jobId: string) {
+  try {
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: {
+        title: true,
+        department: true,
+        requiredSkills: true,
+        organization: {
+          select: {
+            name: true,
+            primaryColor: true,
+          },
+        },
+      },
+    });
+
+    if (!job) return { success: false, questions: [] };
+
+    let questions: any[] = [];
+    if (job.requiredSkills) {
+      try {
+        const parsed = JSON.parse(job.requiredSkills);
+        if (parsed && typeof parsed === "object" && Array.isArray(parsed.killerQuestions)) {
+          questions = parsed.killerQuestions;
+        }
+      } catch {}
+    }
+
+    return {
+      success: true,
+      jobTitle: job.title,
+      department: job.department,
+      companyName: job.organization.name,
+      primaryColor: job.organization.primaryColor,
+      questions,
+    };
+  } catch (error: any) {
+    console.error("Erro ao carregar perguntas da vaga:", error);
+    return { success: false, questions: [] };
+  }
+}
+

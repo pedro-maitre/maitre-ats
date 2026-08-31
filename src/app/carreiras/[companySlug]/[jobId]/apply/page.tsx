@@ -15,11 +15,13 @@ import {
   Mail,
   User,
   ShieldCheck,
+  ShieldAlert,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
 import { useSession } from "next-auth/react";
-import { submitApplication } from "./actions";
+import { submitApplication, getJobKillerQuestions } from "./actions";
 
 export default function JobApplyPage({
   params,
@@ -30,8 +32,23 @@ export default function JobApplyPage({
   const { data: session, status } = useSession();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  // Job Info & Killer Questions
+  const [jobTitle, setJobTitle] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [killerQuestions, setKillerQuestions] = useState<
+    Array<{
+      id: string;
+      question: string;
+      type: "BOOLEAN" | "TEXT";
+      isMandatory: boolean;
+      disqualifyIfNo: boolean;
+    }>
+  >([]);
+  const [killerAnswers, setKillerAnswers] = useState<Record<string, string>>({});
 
   // AS 3 PERGUNTAS SOLICITADAS
   const [salaryExpectation, setSalaryExpectation] = useState("");
@@ -45,6 +62,36 @@ export default function JobApplyPage({
   const [name, setName] = useState("");
 
   const isLoggedIn = Boolean(session?.user?.email);
+
+  useEffect(() => {
+    async function loadQuestions() {
+      setIsLoadingQuestions(true);
+      try {
+        const res = await getJobKillerQuestions(jobId);
+        if (res.success) {
+          setJobTitle(res.jobTitle || "");
+          setCompanyName(res.companyName || "");
+          setKillerQuestions(res.questions || []);
+
+          // Inicializa respostas padrão para booleanos
+          const initialAnswers: Record<string, string> = {};
+          (res.questions || []).forEach((q: any) => {
+            if (q.type === "BOOLEAN") {
+              initialAnswers[q.id] = "SIM";
+            } else {
+              initialAnswers[q.id] = "";
+            }
+          });
+          setKillerAnswers(initialAnswers);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar perguntas da vaga:", err);
+      } finally {
+        setIsLoadingQuestions(false);
+      }
+    }
+    loadQuestions();
+  }, [jobId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +112,13 @@ export default function JobApplyPage({
         throw new Error("Por favor, informe seu e-mail cadastrado na Área do Candidato.");
       }
 
+      // Valida perguntas obrigatórias
+      for (const q of killerQuestions) {
+        if (q.isMandatory && !killerAnswers[q.id]) {
+          throw new Error(`Por favor, responda à pergunta: "${q.question}"`);
+        }
+      }
+
       const data = new FormData();
       data.append("jobId", jobId);
       data.append("companySlug", companySlug);
@@ -76,6 +130,7 @@ export default function JobApplyPage({
       data.append("referralName", referralName);
       data.append("sourceChannel", sourceChannel);
       data.append("sourceDetails", sourceDetails);
+      data.append("killerAnswers", JSON.stringify(killerAnswers));
 
       await submitApplication(data);
       setSuccess(true);
@@ -98,21 +153,25 @@ export default function JobApplyPage({
             <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2">
               Candidatura Confirmada!
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-base leading-relaxed">
-              Suas respostas foram registradas e seu perfil cadastrado foi vinculado a esta vaga. Acompanhe a evolução do processo pela sua Área do Candidato.
+            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+              Obrigado pelo seu interesse. Suas respostas e currículo foram enviados diretamente para a equipe de Atração & Seleção.
             </p>
           </div>
 
-          <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+            Você pode acompanhar o status desta e de outras candidaturas acessando o seu portal.
+          </div>
+
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href={`/carreiras/${companySlug}/candidato`}
-              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 px-6 py-3.5 rounded-xl font-bold shadow-md hover:brightness-105 transition-all text-sm cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-maitre-gold hover:bg-maitre-gold-hover text-slate-950 font-bold text-xs shadow-lg transition-all text-center"
             >
-              Acessar Minhas Candidaturas
+              Acessar Meu Painel de Candidato
             </Link>
             <Link
               href={`/carreiras/${companySlug}`}
-              className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm border border-slate-200 dark:border-slate-800"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all text-center"
             >
               Ver Outras Vagas
             </Link>
@@ -123,25 +182,30 @@ export default function JobApplyPage({
   }
 
   return (
-    <div className="max-w-xl mx-auto animate-in fade-in duration-500 space-y-6">
+    <div className="max-w-2xl mx-auto animate-in fade-in duration-500 space-y-6">
       <Link
         href={`/carreiras/${companySlug}/${jobId}`}
         className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 font-semibold text-sm transition-colors"
       >
-        <ArrowLeft size={16} /> Voltar para os detalhes da vaga
+        <ArrowLeft size={16} /> Voltar para a descrição da vaga
       </Link>
 
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden">
-        {/* Header Compacto */}
-        <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 p-8 sm:p-10 border-b border-slate-100 dark:border-slate-800 text-center space-y-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-maitre-gold/15 text-maitre-gold text-xs font-bold uppercase tracking-wider border border-maitre-gold/30">
-            <Sparkles size={14} /> Candidatura Direta
-          </span>
+        {/* Header */}
+        <div className="p-8 sm:p-10 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 text-center space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-maitre-gold/15 text-maitre-gold text-xs font-bold uppercase tracking-wider border border-maitre-gold/30">
+            <Sparkles size={13} /> Inscrição de Candidatura
+          </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
             Confirmar Candidatura
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">
-            Seus dados cadastrais e currículo serão utilizados da sua <strong>Área do Candidato</strong>. Basta responder às perguntas abaixo.
+          {jobTitle && (
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              Vaga: {jobTitle} • {companyName}
+            </p>
+          )}
+          <p className="text-slate-500 dark:text-slate-400 text-xs max-w-md mx-auto">
+            Preencha as informações abaixo para concluir sua candidatura.
           </p>
         </div>
 
@@ -167,20 +231,32 @@ export default function JobApplyPage({
                 <ShieldCheck size={16} className="text-maitre-gold" />
                 <span>Identificação do Candidato</span>
               </div>
-              <div>
-                <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1.5">
-                  Seu E-mail Cadastrado *
-                </label>
-                <div className="relative">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1.5">
+                    Seu Nome Completo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Nome e Sobrenome"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium outline-none focus:ring-2 focus:ring-maitre-gold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-700 dark:text-slate-300 mb-1.5">
+                    Seu E-mail *
+                  </label>
                   <input
                     type="email"
                     required
                     placeholder="seu.email@exemplo.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-3.5 pl-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium outline-none focus:ring-2 focus:ring-maitre-gold"
+                    className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium outline-none focus:ring-2 focus:ring-maitre-gold"
                   />
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 </div>
               </div>
             </div>
@@ -193,7 +269,6 @@ export default function JobApplyPage({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            
             {/* PERGUNTA 1: Pretensão Salarial */}
             <div className="space-y-3 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
               <div className="flex items-center gap-2">
@@ -221,11 +296,79 @@ export default function JobApplyPage({
               </div>
             </div>
 
-            {/* PERGUNTA 2: Indicação para a Vaga */}
+            {/* PERGUNTAS DE TRIAGEM CUSTOMIZADAS (KILLER QUESTIONS DA VAGA) */}
+            {killerQuestions.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  <ShieldAlert size={16} className="text-amber-500" />
+                  <span>Perguntas Específicas da Vaga</span>
+                </div>
+
+                {killerQuestions.map((q, idx) => (
+                  <div
+                    key={q.id}
+                    className="space-y-3 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40"
+                  >
+                    <div className="flex items-start gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xs shrink-0 mt-0.5">
+                        {idx + 2}
+                      </div>
+                      <label className="text-sm font-extrabold text-slate-900 dark:text-white leading-snug">
+                        {q.question} {q.isMandatory && "*"}
+                      </label>
+                    </div>
+
+                    {q.type === "BOOLEAN" ? (
+                      <div className="flex items-center gap-3 pt-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setKillerAnswers((prev) => ({ ...prev, [q.id]: "SIM" }))
+                          }
+                          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                            killerAnswers[q.id] === "SIM"
+                              ? "bg-emerald-600 text-white border-emerald-500 shadow-sm"
+                              : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+                          }`}
+                        >
+                          Sim
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setKillerAnswers((prev) => ({ ...prev, [q.id]: "NAO" }))
+                          }
+                          className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                            killerAnswers[q.id] === "NAO"
+                              ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-transparent shadow-sm"
+                              : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+                          }`}
+                        >
+                          Não
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        required={q.isMandatory}
+                        placeholder="Sua resposta..."
+                        value={killerAnswers[q.id] || ""}
+                        onChange={(e) =>
+                          setKillerAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                        }
+                        className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:ring-2 focus:ring-maitre-gold"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* PERGUNTA: Indicação para a Vaga */}
             <div className="space-y-3 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-lg bg-maitre-gold/20 text-maitre-gold flex items-center justify-center font-black text-xs">
-                  2
+                  {killerQuestions.length + 2}
                 </div>
                 <label className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <Users size={16} className="text-blue-500" />
@@ -241,7 +384,7 @@ export default function JobApplyPage({
                       setIsReferral("NAO");
                       setReferralName("");
                     }}
-                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all border cursor-pointer ${
+                    className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                       isReferral === "NAO"
                         ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-transparent shadow-sm"
                         : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -252,7 +395,7 @@ export default function JobApplyPage({
                   <button
                     type="button"
                     onClick={() => setIsReferral("SIM")}
-                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all border cursor-pointer ${
+                    className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
                       isReferral === "SIM"
                         ? "bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 border-transparent shadow-sm"
                         : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -263,32 +406,32 @@ export default function JobApplyPage({
                 </div>
 
                 {isReferral === "SIM" && (
-                  <div className="animate-in fade-in duration-300 pt-2 space-y-1.5">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Quem indicou você? *
+                  <div className="animate-in fade-in duration-300 pt-1">
+                    <label className="block text-xs font-bold uppercase text-slate-600 dark:text-slate-400 mb-1.5">
+                      Nome de quem indicou você *
                     </label>
                     <input
                       type="text"
-                      required
-                      placeholder="Nome do colaborador ou contato da equipe..."
+                      required={isReferral === "SIM"}
+                      placeholder="Ex: Maria Silva (Engenharia)"
                       value={referralName}
                       onChange={(e) => setReferralName(e.target.value)}
-                      className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium outline-none focus:ring-2 focus:ring-maitre-gold transition-all"
+                      className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:ring-2 focus:ring-maitre-gold"
                     />
                   </div>
                 )}
               </div>
             </div>
 
-            {/* PERGUNTA 3: Como soube da Vaga */}
+            {/* PERGUNTA: Canal de Origem */}
             <div className="space-y-3 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-lg bg-maitre-gold/20 text-maitre-gold flex items-center justify-center font-black text-xs">
-                  3
+                  {killerQuestions.length + 3}
                 </div>
                 <label className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <Megaphone size={16} className="text-purple-500" />
-                  Como você soube desta vaga? *
+                  Por onde você soube desta oportunidade? *
                 </label>
               </div>
 
@@ -296,45 +439,47 @@ export default function JobApplyPage({
                 <select
                   value={sourceChannel}
                   onChange={(e) => setSourceChannel(e.target.value)}
-                  className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-maitre-gold transition-all cursor-pointer"
+                  className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:ring-2 focus:ring-maitre-gold cursor-pointer"
                 >
-                  <option value="LinkedIn">🌐 LinkedIn</option>
-                  <option value="Portal de Carreiras Maître">🏢 Portal de Carreiras / Site Oficial</option>
-                  <option value="Indicação de Amigo ou Colega">👥 Indicação de Amigo ou Colega</option>
-                  <option value="Instagram / Redes Sociais">📱 Instagram / Redes Sociais</option>
-                  <option value="Abordagem de Recrutador (Hunting)">🎯 Abordagem de Recrutador (Hunting)</option>
-                  <option value="Outro">📝 Outro Canal</option>
+                  <option value="LinkedIn">LinkedIn</option>
+                  <option value="Portal Maître">Portal de Carreiras Maître</option>
+                  <option value="Instagram / Redes Sociais">Instagram / Redes Sociais</option>
+                  <option value="Indicação">Indicação de Colega</option>
+                  <option value="Gupy / Vagas.com">Outras Plataformas</option>
+                  <option value="Outro">Outro Canal</option>
                 </select>
 
                 {sourceChannel === "Outro" && (
-                  <div className="animate-in fade-in duration-300 pt-1">
-                    <input
-                      type="text"
-                      placeholder="Especifique como soube da oportunidade..."
-                      value={sourceDetails}
-                      onChange={(e) => setSourceDetails(e.target.value)}
-                      className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium outline-none focus:ring-2 focus:ring-maitre-gold transition-all"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    placeholder="Especifique por onde soube..."
+                    value={sourceDetails}
+                    onChange={(e) => setSourceDetails(e.target.value)}
+                    className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:ring-2 focus:ring-maitre-gold"
+                  />
                 )}
               </div>
             </div>
 
-            {/* Botão de Envio */}
-            <button
-              type="submit"
-              disabled={isSubmitting || !salaryExpectation || (isReferral === "SIM" && !referralName.trim())}
-              className="w-full bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 hover:brightness-105 disabled:opacity-50 p-4 rounded-2xl font-black text-base transition-all flex items-center justify-center gap-2 shadow-lg active:scale-98 cursor-pointer"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="animate-spin" size={20} />
-                  <span>Enviando Candidatura...</span>
-                </>
-              ) : (
-                <span>Confirmar e Enviar Candidatura</span>
-              )}
-            </button>
+            {/* Submit Button */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-maitre-gold to-[#c59e2b] hover:from-[#e5c07b] hover:to-maitre-gold text-slate-950 font-black text-base shadow-xl shadow-maitre-gold/20 flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Processando candidatura...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Confirmar Envio da Candidatura</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
       </div>

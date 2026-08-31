@@ -23,8 +23,20 @@ export type SkillsMatchResult = {
 export type OverallFitCategory = "ALTO_FIT" | "MEDIO_FIT" | "BAIXO_FIT";
 
 export type ApplicationEvaluation = {
+  overallScore: number;
+  overallCategory: OverallFitCategory;
+  explanation: string;
   salaryFit: SalaryFitResult;
   skillsMatch: SkillsMatchResult;
+  techFit: {
+    score: number;
+    matchedSkills: string[];
+    missingSkills: string[];
+  };
+  seniorityFit: {
+    score: number;
+    label: string;
+  };
   fitCategory: OverallFitCategory;
   prioritySuggestion: "PRIORIZADO" | "NORMAL" | "DUVIDA";
   summaryBadge: {
@@ -306,9 +318,39 @@ export function evaluateApplicationFit(
   // Estilização do Badge de Fit
   const summaryBadge = getFitBadgeStyle(fitCategory, salaryFit.status);
 
+  // Overall Score ponderado (0 - 100%)
+  const salaryWeight =
+    salaryFit.status === "WITHIN_BUDGET" ? 100 : salaryFit.status === "SLIGHTLY_ABOVE" ? 70 : 30;
+  const overallScore = Math.round(skillsMatch.score * 0.65 + salaryWeight * 0.35);
+
+  // Explicação Heurística em Linguagem Natural
+  let explanation = "";
+  if (fitCategory === "ALTO_FIT") {
+    explanation = `Forte aderência de competências técnicas (${skillsMatch.score}%) e pretensão salarial compatível com o teto da vaga.`;
+  } else if (fitCategory === "MEDIO_FIT") {
+    explanation = `Aderência moderada (${skillsMatch.score}%). Recomenda-se entrevista técnica para aprofundar competências complementares.`;
+  } else {
+    explanation =
+      salaryFit.status === "OUT_OF_BUDGET"
+        ? `Pretensão salarial acima do orçamento previsto para esta vaga.`
+        : `Baixa aderência às competências obrigatórias e requisitos essenciais da posição.`;
+  }
+
   return {
+    overallScore,
+    overallCategory: fitCategory,
+    explanation,
     salaryFit,
     skillsMatch,
+    techFit: {
+      score: skillsMatch.score,
+      matchedSkills: skillsMatch.matchedSkills,
+      missingSkills: skillsMatch.missingSkills,
+    },
+    seniorityFit: {
+      score: skillsMatch.score >= 60 ? 90 : 65,
+      label: skillsMatch.score >= 60 ? "Compatível" : "Em Desenvolvimento",
+    },
     fitCategory,
     prioritySuggestion,
     summaryBadge,

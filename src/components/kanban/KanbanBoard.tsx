@@ -16,13 +16,26 @@ import {
   DollarSign,
   Award,
   Sparkles,
+  Eye,
+  EyeOff,
+  FileText,
+  MessageCircle,
+  Phone,
+  Shield,
 } from "lucide-react";
 import ApplicationActionModal from "./ApplicationActionModal";
+import ResumeSplitViewer from "@/components/candidates/ResumeSplitViewer";
+import WhatsAppQuickActionModal from "@/components/ui/WhatsAppQuickActionModal";
 
-type Candidate = {
-  id: string; // This is the applicationId
+export type KanbanCandidate = {
+  id: string; // applicationId
   candidateId: string;
   name: string;
+  email?: string;
+  phone?: string | null;
+  resumeUrl?: string | null;
+  linkedinUrl?: string | null;
+  salaryExpectation?: number | null;
   score: number;
   priority: string;
   fitCategory: string | null;
@@ -31,27 +44,44 @@ type Candidate = {
   tags: string | null;
 };
 
-type Stage = {
+export type KanbanStage = {
   id: string;
   name: string;
-  candidates: Candidate[];
+  candidates: KanbanCandidate[];
 };
 
-function getTimeInStage(date: Date) {
+// Calcula tempo de permanência na etapa e status do SLA
+function getStageSlaInfo(date: Date) {
   const diffInMs = new Date().getTime() - new Date(date).getTime();
   const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-  if (diffInHours < 24) {
-    return `${diffInHours}h`;
-  }
   const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays}d`;
+
+  let label = `${diffInHours}h`;
+  if (diffInHours >= 24) {
+    label = `${diffInDays}d`;
+  }
+
+  // SLA Rules: > 7 dias = Crítico (vermelho), > 3 dias = Atenção (âmbar), <= 3 dias = Normal
+  let slaLevel: "NORMAL" | "WARNING" | "CRITICAL" = "NORMAL";
+  if (diffInDays >= 7) {
+    slaLevel = "CRITICAL";
+  } else if (diffInDays >= 3) {
+    slaLevel = "WARNING";
+  }
+
+  return { label, diffInDays, slaLevel };
 }
 
 function getInitials(name: string) {
-  return name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase();
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
 }
 
-function parseTags(tagsString: string | null) {
+function parseTags(tagsString: string | null | undefined) {
   if (!tagsString) return [];
   try {
     return JSON.parse(tagsString).slice(0, 3);
@@ -60,10 +90,27 @@ function parseTags(tagsString: string | null) {
   }
 }
 
-export default function KanbanBoard({ initialStages }: { initialStages: Stage[] }) {
+export default function KanbanBoard({
+  initialStages,
+  jobTitle = "Vaga",
+  companyName = "Maître Conecta",
+}: {
+  initialStages: KanbanStage[];
+  jobTitle?: string;
+  companyName?: string;
+}) {
   const [stages, setStages] = useState(initialStages);
   const [isMounted, setIsMounted] = useState(false);
+  const [isBlindRecruitment, setIsBlindRecruitment] = useState(false);
+
+  // Modais
   const [selectedApp, setSelectedApp] = useState<{ id: string; name: string } | null>(null);
+  const [splitCandidate, setSplitCandidate] = useState<KanbanCandidate | null>(null);
+  const [whatsAppCandidate, setWhatsAppCandidate] = useState<KanbanCandidate | null>(null);
+
+  useEffect(() => {
+    setStages(initialStages);
+  }, [initialStages]);
 
   useEffect(() => {
     const timeout = setTimeout(() => setIsMounted(true), 0);
@@ -78,7 +125,7 @@ export default function KanbanBoard({ initialStages }: { initialStages: Stage[] 
 
     // Optimistic UI update
     setStages((prev) => {
-      const newStages = JSON.parse(JSON.stringify(prev)) as Stage[];
+      const newStages = JSON.parse(JSON.stringify(prev)) as KanbanStage[];
       const sourceStage = newStages.find((s) => s.id === source.droppableId);
       const destStage = newStages.find((s) => s.id === destination.droppableId);
 
@@ -100,37 +147,89 @@ export default function KanbanBoard({ initialStages }: { initialStages: Stage[] 
   if (!isMounted) return null;
 
   return (
-    <>
+    <div className="space-y-4">
+      {/* Barra de Controles Rápidos do Kanban */}
+      <div className="flex items-center justify-between px-2">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsBlindRecruitment(!isBlindRecruitment)}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+              isBlindRecruitment
+                ? "bg-purple-600 text-white border-purple-500 shadow-md shadow-purple-600/20"
+                : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300"
+            }`}
+            title="Oculta nomes e dados pessoais para avaliação 100% focada em competências"
+          >
+            {isBlindRecruitment ? <EyeOff size={14} /> : <Eye size={14} />}
+            <span>Triagem Cega (Blind Recruitment)</span>
+            {isBlindRecruitment && (
+              <span className="px-1.5 py-0.2 rounded bg-purple-800 text-[10px] uppercase font-black">
+                Ativo
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Legenda de SLA */}
+        <div className="hidden sm:flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            SLA Normal (&le; 2d)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            Atenção (&ge; 3d)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-rose-500" />
+            Crítico (&ge; 7d)
+          </span>
+        </div>
+      </div>
+
+      {/* Board Drag-and-Drop */}
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-8 h-[calc(100vh-200px)]">
+        <div className="flex gap-4 overflow-x-auto pb-8 h-[calc(100vh-230px)]">
           {stages.map((stage) => (
             <Droppable droppableId={stage.id} key={stage.id}>
               {(provided, snapshot) => (
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`flex-shrink-0 w-80 bg-slate-50 dark:bg-slate-800/40 rounded-2xl flex flex-col transition-colors border ${
+                  className={`flex-shrink-0 w-80 bg-slate-50 dark:bg-slate-850 rounded-3xl flex flex-col transition-colors border ${
                     snapshot.isDraggingOver
                       ? "border-maitre-gold/30 bg-maitre-gold/5 dark:bg-maitre-gold/10"
-                      : "border-transparent"
+                      : "border-slate-200/80 dark:border-slate-800/80"
                   }`}
                 >
-                  <div className="p-4 flex justify-between items-center mb-2">
-                    <h3 className="font-semibold text-slate-700 dark:text-slate-200">{stage.name}</h3>
-                    <span className="bg-slate-200/50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs px-2.5 py-1 rounded-full font-medium">
+                  {/* Header da Coluna */}
+                  <div className="p-4 flex justify-between items-center mb-1 border-b border-slate-200/60 dark:border-slate-800/60">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                        {stage.name}
+                      </h3>
+                    </div>
+                    <span className="bg-slate-200/60 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs px-2.5 py-0.5 rounded-full font-black">
                       {stage.candidates.length}
                     </span>
                   </div>
 
-                  <div className="flex-1 px-3 pb-3 overflow-y-auto min-h-[150px]">
+                  {/* Lista de Cards da Etapa */}
+                  <div className="flex-1 px-3 py-3 overflow-y-auto min-h-[150px]">
                     <div className="space-y-3">
                       {stage.candidates.length === 0 && !snapshot.isDraggingOver && (
-                        <div className="flex items-center justify-center h-24 border-2 border-dashed border-slate-200 dark:border-slate-700/50 rounded-xl opacity-60">
-                          <span className="text-xs font-medium text-slate-400">Vazio</span>
+                        <div className="flex items-center justify-center h-24 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl opacity-60">
+                          <span className="text-xs font-bold text-slate-400">Nenhum candidato nesta etapa</span>
                         </div>
                       )}
                       {stage.candidates.map((candidate, index) => {
                         const tags = parseTags(candidate.tags);
+                        const sla = getStageSlaInfo(candidate.enteredStageAt);
+
+                        const displayName = isBlindRecruitment
+                          ? `Candidato #${candidate.candidateId.substring(0, 5).toUpperCase()}`
+                          : candidate.name;
 
                         return (
                           <Draggable key={candidate.id} draggableId={candidate.id} index={index}>
@@ -140,36 +239,57 @@ export default function KanbanBoard({ initialStages }: { initialStages: Stage[] 
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 style={{ ...provided.draggableProps.style }}
-                                className={`bg-white dark:bg-slate-900 p-4 rounded-xl transition-all group ${
+                                className={`bg-white dark:bg-slate-900 p-4 rounded-2xl transition-all group border ${
                                   snapshot.isDragging
-                                    ? "shadow-2xl scale-105 rotate-2 z-50 cursor-grabbing ring-2 ring-maitre-gold"
-                                    : "shadow-sm ring-1 ring-slate-900/5 dark:ring-white/5 hover:shadow-md cursor-grab"
+                                    ? "shadow-2xl scale-105 rotate-1 z-50 cursor-grabbing border-maitre-gold ring-2 ring-maitre-gold/30"
+                                    : "shadow-sm border-slate-200/80 dark:border-slate-800 hover:border-maitre-gold/40 hover:shadow-md cursor-grab"
                                 }`}
                               >
+                                {/* Topo do Card: Avatar, Nome e Botões Rápidos */}
                                 <div className="flex justify-between items-start mb-3">
                                   <div
-                                    className="flex items-center gap-3 cursor-pointer flex-1"
-                                    onClick={() =>
-                                      setSelectedApp({
-                                        id: candidate.id,
-                                        name: candidate.name,
-                                      })
-                                    }
+                                    className="flex items-center gap-2.5 cursor-pointer flex-1"
+                                    onClick={() => setSplitCandidate(candidate)}
+                                    title="Clique para abrir Leitor de Currículo (Split View)"
                                   >
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 shadow-inner shrink-0">
-                                      {getInitials(candidate.name)}
+                                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center text-xs font-black text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 shadow-inner shrink-0">
+                                      {isBlindRecruitment ? <Shield size={14} className="text-purple-500" /> : getInitials(candidate.name)}
                                     </div>
-                                    <div>
-                                      <div className="font-semibold text-slate-900 dark:text-white leading-tight group-hover:text-maitre-gold transition-colors">
-                                        {candidate.name}
+                                    <div className="overflow-hidden">
+                                      <div className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-tight group-hover:text-maitre-gold transition-colors truncate">
+                                        {displayName}
                                       </div>
-                                      <div className="text-xs text-slate-500 font-medium">
-                                        {candidate.source || "Banco"}
+                                      <div className="text-[11px] text-slate-400 font-medium truncate">
+                                        {isBlindRecruitment ? "Perfil Anonimizado" : candidate.source || "Banco de Talentos"}
                                       </div>
                                     </div>
                                   </div>
 
-                                  <div className="flex items-center gap-1">
+                                  {/* Botões de Ação do Card */}
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    {/* Botão Split View (Leitor) */}
+                                    <button
+                                      type="button"
+                                      onClick={() => setSplitCandidate(candidate)}
+                                      className="p-1.5 rounded-lg text-slate-400 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                      title="Visualizar Currículo (Split View)"
+                                    >
+                                      <FileText size={15} />
+                                    </button>
+
+                                    {/* Botão WhatsApp 1-Click */}
+                                    {!isBlindRecruitment && candidate.phone && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setWhatsAppCandidate(candidate)}
+                                        className="p-1.5 rounded-lg text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
+                                        title="Enviar WhatsApp Rápido (1-Click)"
+                                      >
+                                        <MessageCircle size={15} />
+                                      </button>
+                                    )}
+
+                                    {/* Mais Ações */}
                                     <button
                                       type="button"
                                       onClick={() =>
@@ -178,68 +298,68 @@ export default function KanbanBoard({ initialStages }: { initialStages: Stage[] 
                                           name: candidate.name,
                                         })
                                       }
-                                      className="p-1 rounded-lg text-slate-400 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                                      title="Abrir Ações (Entrevista, Proposta, Fit, Contratação)"
+                                      className="p-1.5 rounded-lg text-slate-400 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                      title="Ações (Entrevista, Proposta, Fit)"
                                     >
-                                      <MoreHorizontal size={16} />
+                                      <MoreHorizontal size={15} />
                                     </button>
-                                    <Link
-                                      href={`/candidates/${candidate.candidateId}`}
-                                      target="_blank"
-                                      className="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors p-1"
-                                      title="Abrir Perfil Completo"
-                                    >
-                                      <ExternalLink size={14} />
-                                    </Link>
                                   </div>
                                 </div>
 
-                                {/* Badges & Tags */}
-                                <div className="flex flex-wrap gap-1.5 mb-3">
+                                {/* Tags de Competências */}
+                                <div className="flex flex-wrap gap-1 mb-3">
                                   {tags.map((tag: string, i: number) => (
                                     <span
                                       key={i}
-                                      className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded text-[10px] font-semibold border border-slate-200 dark:border-slate-700"
+                                      className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md text-[10px] font-semibold border border-slate-200 dark:border-slate-700"
                                     >
                                       {tag}
                                     </span>
                                   ))}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs">
-                                  <div className="flex flex-col gap-1">
-                                    <span className="text-slate-400 font-medium text-[10px] uppercase">Tempo</span>
-                                    <div className="flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300 text-xs">
-                                      <Clock size={12} className="text-slate-400" />
-                                      {getTimeInStage(candidate.enteredStageAt)}
-                                    </div>
+                                {/* Rodapé do Card: SLA e Fit Badge */}
+                                <div className="grid grid-cols-2 gap-2 mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 text-xs items-center">
+                                  {/* Indicador de SLA */}
+                                  <div className="flex items-center gap-1.5">
+                                    <span
+                                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border ${
+                                        sla.slaLevel === "CRITICAL"
+                                          ? "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-500/30"
+                                          : sla.slaLevel === "WARNING"
+                                          ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
+                                      }`}
+                                      title={`Permanência na etapa: ${sla.label}`}
+                                    >
+                                      <Clock size={10} />
+                                      <span>{sla.label}</span>
+                                    </span>
                                   </div>
 
-                                  <div className="flex flex-col gap-1 items-end">
-                                    <span className="text-slate-400 font-medium text-[10px] uppercase">Classificação</span>
-                                    <div className="flex items-center gap-1">
-                                      {candidate.fitCategory === "ALTO_FIT" ? (
-                                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[10px]">
-                                          <CheckCircle size={10} /> Alto Fit
-                                        </span>
-                                      ) : candidate.fitCategory === "MEDIO_FIT" ? (
-                                        <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-950/40 border border-amber-500/20 px-1.5 py-0.5 rounded text-[10px]">
-                                          <HelpCircle size={10} /> Médio Fit
-                                        </span>
-                                      ) : candidate.fitCategory === "BAIXO_FIT" ? (
-                                        <span className="flex items-center gap-1 text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-950/40 border border-red-500/20 px-1.5 py-0.5 rounded text-[10px]">
-                                          <AlertTriangle size={10} /> Baixo Fit
-                                        </span>
-                                      ) : candidate.priority === "PRIORIZADO" ? (
-                                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded text-[10px]">
-                                          <CheckCircle size={10} /> Priori.
-                                        </span>
-                                      ) : (
-                                        <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400 font-semibold bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">
-                                          Em Triagem
-                                        </span>
-                                      )}
-                                    </div>
+                                  {/* Fit Category Badge */}
+                                  <div className="flex items-center justify-end">
+                                    {candidate.fitCategory === "ALTO_FIT" ? (
+                                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 px-2 py-0.5 rounded-md text-[10px]">
+                                        <CheckCircle size={10} /> Alto Fit
+                                      </span>
+                                    ) : candidate.fitCategory === "MEDIO_FIT" ? (
+                                      <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-950/40 border border-amber-500/20 px-2 py-0.5 rounded-md text-[10px]">
+                                        <HelpCircle size={10} /> Médio Fit
+                                      </span>
+                                    ) : candidate.fitCategory === "BAIXO_FIT" ? (
+                                      <span className="flex items-center gap-1 text-rose-600 dark:text-rose-400 font-bold bg-rose-50 dark:bg-rose-950/40 border border-rose-500/20 px-2 py-0.5 rounded-md text-[10px]">
+                                        <AlertTriangle size={10} /> Baixo Fit
+                                      </span>
+                                    ) : candidate.priority === "PRIORIZADO" ? (
+                                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md text-[10px]">
+                                        <CheckCircle size={10} /> Prioritário
+                                      </span>
+                                    ) : (
+                                      <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md text-[10px]">
+                                        Em Triagem
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -257,6 +377,43 @@ export default function KanbanBoard({ initialStages }: { initialStages: Stage[] 
         </div>
       </DragDropContext>
 
+      {/* Split Viewer Modal */}
+      {splitCandidate && (
+        <ResumeSplitViewer
+          isOpen={!!splitCandidate}
+          onClose={() => setSplitCandidate(null)}
+          candidate={{
+            id: splitCandidate.id,
+            candidateId: splitCandidate.candidateId,
+            name: splitCandidate.name,
+            email: splitCandidate.email || "",
+            phone: splitCandidate.phone || null,
+            resumeUrl: splitCandidate.resumeUrl || null,
+            linkedinUrl: splitCandidate.linkedinUrl || null,
+            source: splitCandidate.source,
+            tags: splitCandidate.tags,
+            salaryExpectation: splitCandidate.salaryExpectation || null,
+            priority: splitCandidate.priority,
+          }}
+          jobTitle={jobTitle}
+          companyName={companyName}
+          onOpenActionsModal={(appId, name) => setSelectedApp({ id: appId, name })}
+        />
+      )}
+
+      {/* WhatsApp Quick Action Modal */}
+      {whatsAppCandidate && (
+        <WhatsAppQuickActionModal
+          isOpen={!!whatsAppCandidate}
+          onClose={() => setWhatsAppCandidate(null)}
+          applicationId={whatsAppCandidate.id}
+          candidateName={whatsAppCandidate.name}
+          candidatePhone={whatsAppCandidate.phone || null}
+          jobTitle={jobTitle}
+          companyName={companyName}
+        />
+      )}
+
       {/* Enterprise Action Modal */}
       {selectedApp && (
         <ApplicationActionModal
@@ -265,6 +422,6 @@ export default function KanbanBoard({ initialStages }: { initialStages: Stage[] 
           onClose={() => setSelectedApp(null)}
         />
       )}
-    </>
+    </div>
   );
 }

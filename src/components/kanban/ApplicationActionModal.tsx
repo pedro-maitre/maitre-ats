@@ -41,7 +41,7 @@ export default function ApplicationActionModal({
   onClose,
   onRefresh,
 }: ApplicationActionModalProps) {
-  const [activeTab, setActiveTab] = useState<"INTERVIEWS" | "OFFERS" | "FIT" | "HIRE">("INTERVIEWS");
+  const [activeTab, setActiveTab] = useState<"INTERVIEWS" | "OFFERS" | "FIT" | "HIRE" | "FEEDBACK_IA">("INTERVIEWS");
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -75,6 +75,14 @@ export default function ApplicationActionModal({
 
   // 5. Contratação (Hire)
   const [employeeCode, setEmployeeCode] = useState("MC-2026-001");
+
+  // 6. Feedback Humanizado com IA
+  const [feedbackType, setFeedbackType] = useState<string>("REJECTION_INTERVIEW");
+  const [feedbackStrengths, setFeedbackStrengths] = useState("Excelente postura profissional e domínio de conceitos fundamentais");
+  const [feedbackImprovements, setFeedbackImprovements] = useState("Aprofundar experiência prática em projetos de maior escala");
+  const [generatedFeedback, setGeneratedFeedback] = useState("");
+  const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
+  const [copiedFeedback, setCopiedFeedback] = useState(false);
 
   if (!applicationId) return null;
 
@@ -214,6 +222,42 @@ export default function ApplicationActionModal({
     }
   };
 
+  const handleGenerateFeedback = async () => {
+    setIsGeneratingFeedback(true);
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/candidate/generate-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          applicationId,
+          candidateName,
+          feedbackType,
+          strengths: feedbackStrengths,
+          improvements: feedbackImprovements,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setGeneratedFeedback(data.feedback);
+      } else {
+        setErrorMsg(data.error || "Erro ao gerar feedback.");
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Erro inesperado.");
+    } finally {
+      setIsGeneratingFeedback(false);
+    }
+  };
+
+  const handleCopyFeedback = () => {
+    if (!generatedFeedback) return;
+    navigator.clipboard.writeText(generatedFeedback);
+    setCopiedFeedback(true);
+    setTimeout(() => setCopiedFeedback(false), 2500);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
@@ -273,7 +317,18 @@ export default function ApplicationActionModal({
                 : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}
           >
-            <Sparkles size={14} /> Ajuste de Fit 3D
+            <Sparkles size={14} /> Ajuste Fit 3D
+          </button>
+
+          <button
+            onClick={() => setActiveTab("FEEDBACK_IA")}
+            className={`pb-3 px-3.5 border-b-2 flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeTab === "FEEDBACK_IA"
+                ? "border-purple-500 text-purple-600 dark:text-purple-400"
+                : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+            }`}
+          >
+            <Sparkles size={14} className="text-purple-500" /> Feedback com IA
           </button>
 
           <button
@@ -627,6 +682,108 @@ export default function ApplicationActionModal({
                 <span>Gravar Override de Decisão & Auditoria</span>
               </button>
             </form>
+          )}
+
+          {/* TAB: FEEDBACK HUMANIZADO COM IA */}
+          {activeTab === "FEEDBACK_IA" && (
+            <div className="space-y-5 animate-in fade-in duration-300">
+              <div className="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-500/20 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                    Gerador de Feedback Humanizado & Construtivo
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Gera uma devolutiva empática e personalizada orientada ao desenvolvimento do candidato.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300 mb-1">
+                    Tipo / Momento da Devolutiva
+                  </label>
+                  <select
+                    value={feedbackType}
+                    onChange={(e) => setFeedbackType(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+                  >
+                    <option value="REJECTION_INTERVIEW">Encerramento pós-entrevista (Fase Final)</option>
+                    <option value="REJECTION_TRIAGEM">Encerramento na Triagem Inicial</option>
+                    <option value="FUTURE_TALENT">Convite para Banco de Talentos / Futuras Vagas</option>
+                    <option value="GENERAL">Agradecimento e Feedback Geral</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300 mb-1">
+                    Pontos Fortes Identificados no Candidato
+                  </label>
+                  <input
+                    type="text"
+                    value={feedbackStrengths}
+                    onChange={(e) => setFeedbackStrengths(e.target.value)}
+                    placeholder="Ex: Excelente comunicação, boa base técnica, perfil colaborativo..."
+                    className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300 mb-1">
+                    Critérios / Sugestões para Futuras Oportunidades
+                  </label>
+                  <input
+                    type="text"
+                    value={feedbackImprovements}
+                    onChange={(e) => setFeedbackImprovements(e.target.value)}
+                    placeholder="Ex: Aprofundar experiência em arquitetura de microsserviços, liderança de times..."
+                    className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGenerateFeedback}
+                  disabled={isGeneratingFeedback}
+                  className="w-full py-3.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isGeneratingFeedback ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      <span>Gerando Feedback com IA...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={15} />
+                      <span>Gerar Mensagem de Feedback com IA</span>
+                    </>
+                  )}
+                </button>
+
+                {generatedFeedback && (
+                  <div className="space-y-2 pt-2 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400">
+                        Mensagem Humanizada Gerada:
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleCopyFeedback}
+                        className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 cursor-pointer"
+                      >
+                        {copiedFeedback ? "✓ Copiado!" : "Copiar Mensagem"}
+                      </button>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-sans text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+                      {generatedFeedback}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
 
           {/* TAB 4: CONTRATAR & CORE HR */}

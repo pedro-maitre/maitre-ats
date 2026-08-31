@@ -628,3 +628,77 @@ export async function createOffer(params: {
     return { success: false, error: error.message || "Falha ao criar proposta." };
   }
 }
+
+/**
+ * Registra o envio de mensagem via WhatsApp no histórico de atividades e auditoria.
+ */
+export async function logWhatsAppActivity(params: {
+  applicationId: string;
+  candidatePhone: string;
+  templateType: string;
+  messageText: string;
+}) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER"]);
+
+    const app = await prisma.application.findUnique({
+      where: { id: params.applicationId },
+      include: {
+        candidate: true,
+        job: { select: { id: true, title: true, organizationId: true } },
+      },
+    });
+
+    if (!app) {
+      return { success: false, error: "Candidatura não encontrada." };
+    }
+
+    const templateLabels: Record<string, string> = {
+      INTERVIEW: "Convite para Entrevista",
+      NEXT_STAGE: "Avanço de Etapa",
+      OFFER_ALIGNMENT: "Alinhamento de Proposta",
+      INITIAL_CONTACT: "Primeiro Contato / Triagem",
+      CUSTOM: "Mensagem Personalizada",
+    };
+
+    const label = templateLabels[params.templateType] || params.templateType;
+
+    // Registra na timeline de atividades do candidato
+    await prisma.activity.create({
+      data: {
+        applicationId: app.id,
+        actorId: user.id,
+        type: "WHATSAPP_CONTACT",
+        description: `Contato via WhatsApp (${label}) enviado para ${params.candidatePhone}.`,
+        metadata: JSON.stringify({
+          phone: params.candidatePhone,
+          template: params.templateType,
+          preview: params.messageText.substring(0, 150),
+          sentAt: new Date().toISOString(),
+        }),
+      },
+    });
+
+    // Registra evento de auditoria
+    await logAuditEvent({
+      organizationId: app.job.organizationId,
+      actorUserId: user.id,
+      action: "WHATSAPP_SENT",
+      resourceType: "Application",
+      resourceId: app.id,
+      afterData: {
+        phone: params.candidatePhone,
+        template: params.templateType,
+      },
+    });
+
+    revalidatePath(`/jobs/${app.job.id}/board`);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erro ao registrar atividade de WhatsApp:", error);
+    return { success: false, error: error.message || "Falha ao registrar contato." };
+  }
+}
+

@@ -48,7 +48,7 @@ export default async function JobBoardPage({
     0
   );
 
-  // Formatar estágios para o KanbanBoard
+  // Formatar estágios para o KanbanBoard com dados completos para Split View e WhatsApp
   const initialStages = job.stages.map((stage) => ({
     id: stage.id,
     name: stage.name,
@@ -56,6 +56,11 @@ export default async function JobBoardPage({
       id: app.id,
       candidateId: app.candidate.id,
       name: `${app.candidate.firstName} ${app.candidate.lastName}`,
+      email: app.candidate.email,
+      phone: app.candidate.phone,
+      resumeUrl: app.candidate.resumeUrl,
+      linkedinUrl: app.candidate.linkedinUrl,
+      salaryExpectation: app.salaryExpectation,
       score: app.matchScore || 0,
       priority: app.priority,
       fitCategory: app.fitCategory,

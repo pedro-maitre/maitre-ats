@@ -87,12 +87,39 @@ export default function JobEditForm({
   const [description, setDescription] = useState(job.description);
   const [recruiterId, setRecruiterId] = useState<string>(job.recruiterId || "none");
 
+  // Killer Questions State
+  const [killerQuestions, setKillerQuestions] = useState<{
+    id: string;
+    question: string;
+    type: "BOOLEAN" | "TEXT";
+    isMandatory: boolean;
+    disqualifyIfNo: boolean;
+  }[]>(() => {
+    if (!job.requiredSkills) return [];
+    try {
+      const parsed = JSON.parse(job.requiredSkills);
+      if (!Array.isArray(parsed) && parsed && typeof parsed === "object") {
+        return parsed.killerQuestions || [];
+      }
+    } catch {
+      return [];
+    }
+    return [];
+  });
+
+  const [newQuestionText, setNewQuestionText] = useState("");
+  const [newQuestionType, setNewQuestionType] = useState<"BOOLEAN" | "TEXT">("BOOLEAN");
+  const [newQuestionMandatory, setNewQuestionMandatory] = useState(true);
+  const [newQuestionDisqualify, setNewQuestionDisqualify] = useState(false);
+
   // Skills Tags State
   const [skillsList, setSkillsList] = useState<string[]>(() => {
     if (!job.requiredSkills) return [];
     try {
       const parsed = JSON.parse(job.requiredSkills);
-      return Array.isArray(parsed) ? parsed : job.requiredSkills.split(",").map((s) => s.trim());
+      if (Array.isArray(parsed)) return parsed;
+      if (parsed && typeof parsed === "object") return parsed.tags || [];
+      return job.requiredSkills.split(",").map((s) => s.trim());
     } catch {
       return job.requiredSkills.split(",").map((s) => s.trim()).filter(Boolean);
     }
@@ -127,6 +154,25 @@ export default function JobEditForm({
 
   const handleRemoveSkill = (skillToRemove: string) => {
     setSkillsList(skillsList.filter((s) => s !== skillToRemove));
+  };
+
+  // Killer Questions Actions
+  const handleAddKillerQuestion = () => {
+    if (!newQuestionText.trim()) return;
+    const newQ = {
+      id: `kq-${Date.now()}`,
+      question: newQuestionText.trim(),
+      type: newQuestionType,
+      isMandatory: newQuestionMandatory,
+      disqualifyIfNo: newQuestionDisqualify,
+    };
+    setKillerQuestions([...killerQuestions, newQ]);
+    setNewQuestionText("");
+    setNewQuestionDisqualify(false);
+  };
+
+  const handleRemoveKillerQuestion = (idToRemove: string) => {
+    setKillerQuestions(killerQuestions.filter((q) => q.id !== idToRemove));
   };
 
   // Stages Actions
@@ -197,7 +243,10 @@ export default function JobEditForm({
         status,
         description,
         recruiterId: recruiterId === "none" ? null : recruiterId,
-        requiredSkills: JSON.stringify(skillsList),
+        requiredSkills: JSON.stringify({
+          tags: skillsList,
+          killerQuestions: killerQuestions,
+        }),
         stages: stages.map((st) => ({
           id: st.id.startsWith("temp-") ? undefined : st.id,
           name: st.name,
@@ -573,12 +622,146 @@ export default function JobEditForm({
           </div>
         </div>
 
-        {/* SEÇÃO 5: PERSONALIZADOR DE ETAPAS DO FUNIL (STAGES BUILDER) */}
+        {/* SEÇÃO 5: PERGUNTAS DE TRIAGEM CUSTOMIZADAS (KILLER QUESTIONS) */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800 space-y-6">
+          <div className="border-b border-slate-100 dark:border-slate-800 pb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                <ShieldAlert size={18} className="text-amber-500" />
+                5. Perguntas de Triagem & Killer Questions (Eliminatórias)
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Perguntas respondidas pelo candidato durante a inscrição para pré-qualificação e desclassificação automática.
+              </p>
+            </div>
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              {killerQuestions.length} {killerQuestions.length === 1 ? "pergunta ativa" : "perguntas ativas"}
+            </span>
+          </div>
+
+          {/* Lista de Perguntas Criadas */}
+          <div className="space-y-3">
+            {killerQuestions.map((q, idx) => (
+              <div
+                key={q.id}
+                className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 flex items-start justify-between gap-4"
+              >
+                <div className="flex items-start gap-3 flex-1">
+                  <span className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
+                    {idx + 1}
+                  </span>
+                  <div className="space-y-1 flex-1">
+                    <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                      {q.question}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
+                        Tipo: {q.type === "BOOLEAN" ? "Sim / Não" : "Texto Curto"}
+                      </span>
+                      {q.isMandatory && (
+                        <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold">
+                          Obrigatória
+                        </span>
+                      )}
+                      {q.disqualifyIfNo && (
+                        <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/20">
+                          ⚠️ Eliminatória se responder &ldquo;Não&rdquo;
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleRemoveKillerQuestion(q.id)}
+                  className="text-slate-400 hover:text-rose-500 p-1 transition-colors cursor-pointer"
+                  title="Remover pergunta"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+
+            {killerQuestions.length === 0 && (
+              <div className="p-6 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-slate-400 text-xs">
+                Nenhuma pergunta de triagem adicionada. Adicione perguntas para qualificar candidatos automaticamente.
+              </div>
+            )}
+          </div>
+
+          {/* Adicionar Nova Pergunta */}
+          <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 space-y-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Adicionar Nova Pergunta
+            </h4>
+
+            <div className="space-y-3">
+              <input
+                type="text"
+                value={newQuestionText}
+                onChange={(e) => setNewQuestionText(e.target.value)}
+                placeholder="Ex: Possui disponibilidade para início imediato? / Possui Inglês avançado?"
+                className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-maitre-gold"
+              />
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="qtype"
+                      checked={newQuestionType === "BOOLEAN"}
+                      onChange={() => setNewQuestionType("BOOLEAN")}
+                      className="text-maitre-gold focus:ring-maitre-gold"
+                    />
+                    <span>Sim / Não</span>
+                  </label>
+
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="qtype"
+                      checked={newQuestionType === "TEXT"}
+                      onChange={() => setNewQuestionType("TEXT")}
+                      className="text-maitre-gold focus:ring-maitre-gold"
+                    />
+                    <span>Resposta de Texto</span>
+                  </label>
+
+                  {newQuestionType === "BOOLEAN" && (
+                    <label className="flex items-center gap-1.5 cursor-pointer text-rose-600 dark:text-rose-400 font-bold ml-2">
+                      <input
+                        type="checkbox"
+                        checked={newQuestionDisqualify}
+                        onChange={(e) => setNewQuestionDisqualify(e.target.checked)}
+                        className="rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                      />
+                      <span>Eliminatória se responder &ldquo;Não&rdquo;</span>
+                    </label>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAddKillerQuestion}
+                  disabled={!newQuestionText.trim()}
+                  className="px-4 py-2 rounded-xl bg-maitre-gold hover:bg-maitre-gold-hover text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-40"
+                >
+                  <Plus size={14} />
+                  <span>Incluir Pergunta</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SEÇÃO 6: PERSONALIZADOR DE ETAPAS DO FUNIL (STAGES BUILDER) */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800 space-y-6">
           <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
             <h2 className="text-base font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <Layers size={18} className="text-maitre-gold" />
-              5. Personalizador de Etapas do Processo Seletivo (Funil)
+              6. Personalizador de Etapas do Processo Seletivo (Funil)
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Configure, reordene ou adicione colunas customizadas ao quadro Kanban e à Triagem desta vaga.

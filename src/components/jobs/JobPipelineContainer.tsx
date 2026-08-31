@@ -110,7 +110,11 @@ export default function JobPipelineContainer({
       {/* Content Area based on Selected Mode */}
       {viewMode === "kanban" ? (
         <div className="animate-in fade-in duration-300">
-          <KanbanBoard initialStages={initialStages} />
+          <KanbanBoard
+            initialStages={initialStages}
+            jobTitle={job.title}
+            companyName={job.department || "Maître Conecta"}
+          />
         </div>
       ) : (
         <div className="animate-in fade-in duration-300">

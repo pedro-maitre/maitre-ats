@@ -73,7 +73,7 @@ export async function requireTenantAccess(
 
   // Verifica memberships ativas por tenant
   const hasMembership = dbUser.memberships.some(
-    (m) => m.organizationId === targetOrganizationId
+    (m: any) => m.organizationId === targetOrganizationId
   );
 
   if (!hasMembership) {

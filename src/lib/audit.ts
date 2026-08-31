@@ -28,7 +28,9 @@ export type AuditAction =
   | "ORGANIZATION_UPDATE"
   | "ORGANIZATION_DELETE"
   | "EXPORT_DATA"
-  | "LGPD_REQUEST";
+  | "LGPD_REQUEST"
+  | "WHATSAPP_SENT"
+  | "FEEDBACK_GENERATED";
 
 export interface LogAuditEventParams {
   organizationId?: string | null;
