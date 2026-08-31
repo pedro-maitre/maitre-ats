@@ -266,3 +266,87 @@ export async function sendHiringManagerInviteEmail(params: {
     html: getBaseEmailTemplate("Acesso ao Portal do Gestor", content),
   });
 }
+
+// 4. E-mail de Boas-Vindas & Admissão Digital do Novo Contratado
+export async function sendAdmissionWelcomeEmail(params: {
+  candidateName: string;
+  candidateEmail: string;
+  jobTitle: string;
+  companyName: string;
+  admissionUrl: string;
+}) {
+  const content = `
+    <h2 style="color:#ffffff;font-size:20px;font-weight:800;margin-top:0;">
+      🎉 Seja bem-vindo(a) à equipe, ${params.candidateName}!
+    </h2>
+    <p style="font-size:15px;line-height:1.6;color:#cbd5e1;">
+      Sua contratação para a oportunidade de <strong style="color:#D4AF37;">${params.jobTitle}</strong> na empresa <strong style="color:#ffffff;">${params.companyName}</strong> foi aprovada com sucesso!
+    </p>
+    <p style="font-size:15px;line-height:1.6;color:#cbd5e1;">
+      Para darmos seguimento à sua admissão e emissão do contrato de trabalho, disponibilizamos um portal exclusivo e seguro para envio dos seus dados cadastrais e documentos obrigatórios.
+    </p>
+
+    <div style="background-color:#0f172a;border-radius:14px;border:1px solid #334155;padding:22px;margin:25px 0;text-align:center;">
+      <p style="margin:0 0 15px 0;font-size:14px;color:#94a3b8;">
+        Clique no botão abaixo para acessar sua ficha de admissão digital:
+      </p>
+      <a href="${params.admissionUrl}" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:12px;font-weight:800;font-size:15px;display:inline-block;box-shadow:0 10px 15px -3px rgba(16, 185, 129, 0.3);" target="_blank">
+        📂 Acessar Portal de Admissão Digital
+      </a>
+      <p style="margin:15px 0 0 0;font-size:12px;color:#64748b;">
+        Ambiente protegido com criptografia de ponta a ponta e integridade SHA-256.
+      </p>
+    </div>
+
+    <p style="font-size:13px;line-height:1.6;color:#94a3b8;margin-bottom:0;">
+      Caso tenha alguma dúvida referente aos documentos solicitados, responda ao seu consultor de RH ou utilize os canais oficiais de suporte da Maître.
+    </p>
+  `;
+
+  return sendEmail({
+    to: params.candidateEmail,
+    subject: `🚀 Admissão Digital: Seja bem-vindo(a) à ${params.companyName}!`,
+    html: getBaseEmailTemplate("Portal de Admissão Digital", content),
+  });
+}
+
+// 5. Notificação de Exigência / Reenvio de Documento de Admissão
+export async function sendAdmissionRequirementEmail(params: {
+  candidateName: string;
+  candidateEmail: string;
+  jobTitle: string;
+  companyName: string;
+  admissionUrl: string;
+  requirementNotes: string;
+}) {
+  const content = `
+    <h2 style="color:#ffffff;font-size:20px;font-weight:800;margin-top:0;">
+      Olá, ${params.candidateName}
+    </h2>
+    <p style="font-size:15px;line-height:1.6;color:#cbd5e1;">
+      Durante a análise dos documentos para sua admissão na vaga <strong style="color:#D4AF37;">${params.jobTitle}</strong> (${params.companyName}), o Departamento Pessoal identificou uma pendência que precisa da sua atenção:
+    </p>
+
+    <div style="background-color:#7f1d1d20;border-radius:14px;border:1px solid #ef444450;padding:20px;margin:25px 0;">
+      <h3 style="margin:0 0 8px 0;font-size:14px;color:#f87171;font-weight:bold;">
+        ⚠️ Ajuste Solicitado pelo DP:
+      </h3>
+      <p style="margin:0;font-size:14px;color:#fca5a5;line-height:1.6;">
+        ${params.requirementNotes}
+      </p>
+    </div>
+
+    <div style="text-align:center;margin:30px 0;">
+      <a href="${params.admissionUrl}" style="background:linear-gradient(135deg, #f59e0b 0%, #d97706 100%);color:#0f172a;text-decoration:none;padding:14px 32px;border-radius:12px;font-weight:800;font-size:15px;display:inline-block;" target="_blank">
+        Corrigir / Reenviar Documento
+      </a>
+    </div>
+  `;
+
+  return sendEmail({
+    to: params.candidateEmail,
+    subject: `⚠️ Ação Necessária: Ajuste na Documentação de Admissão - ${params.companyName}`,
+    html: getBaseEmailTemplate("Ajuste na Documentação de Admissão", content),
+  });
+}
+

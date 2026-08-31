@@ -19,6 +19,8 @@ import {
   ExternalLink,
   Plus,
   UserCheck,
+  Copy,
+  Check,
 } from "lucide-react";
 import {
   scheduleInterview,
@@ -75,6 +77,8 @@ export default function ApplicationActionModal({
 
   // 5. Contratação (Hire)
   const [employeeCode, setEmployeeCode] = useState("MC-2026-001");
+  const [admissionUrl, setAdmissionUrl] = useState<string | null>(null);
+  const [copiedAdmissionUrl, setCopiedAdmissionUrl] = useState(false);
 
   // 6. Feedback Humanizado com IA
   const [feedbackType, setFeedbackType] = useState<string>("REJECTION_INTERVIEW");
@@ -213,7 +217,10 @@ export default function ApplicationActionModal({
       const res = await authorizeHire(applicationId, employeeCode);
       if (!res.success) throw new Error(res.error);
 
-      setSuccessMsg("🚀 Contratação autorizada! Matrícula gerada e evento disparado na Outbox para o Core HR.");
+      if (res.admissionUrl) {
+        setAdmissionUrl(res.admissionUrl);
+      }
+      setSuccessMsg("🚀 Contratação autorizada! E-mail com o Portal de Admissão Digital enviado ao candidato e registro integrado ao Core HR.");
       if (onRefresh) onRefresh();
     } catch (err: any) {
       setErrorMsg(err.message || "Erro ao autorizar contratação.");
@@ -823,8 +830,33 @@ export default function ApplicationActionModal({
                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg active:scale-98"
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <UserCheck size={16} />}
-                <span>Efetivar Contratação & Enviar para Core HR</span>
+                <span>Efetivar Contratação & Iniciar Admissão Digital</span>
               </button>
+
+              {admissionUrl && (
+                <div className="p-4 rounded-2xl bg-slate-900 border border-emerald-500/30 space-y-2 animate-in fade-in">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold text-emerald-400 flex items-center gap-1.5">
+                      <CheckCircle2 size={14} /> Link do Portal de Admissão:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(admissionUrl);
+                        setCopiedAdmissionUrl(true);
+                        setTimeout(() => setCopiedAdmissionUrl(false), 3000);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-bold transition-all flex items-center gap-1"
+                    >
+                      {copiedAdmissionUrl ? <Check size={12} /> : <Copy size={12} />}
+                      <span>{copiedAdmissionUrl ? "Copiado!" : "Copiar Link"}</span>
+                    </button>
+                  </div>
+                  <p className="text-[11px] font-mono text-slate-300 break-all bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                    {admissionUrl}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

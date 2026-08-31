@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Plus,
   ShieldCheck,
+  FileCheck,
   Clock,
   Sparkles,
   FileText,
@@ -304,6 +305,15 @@ export default function EmployeeTableClient({ conversions }: { conversions: any[
                             <FileText size={16} />
                           </a>
                         )}
+
+                        <Link
+                          href="/operations"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 hover:underline p-1"
+                          title="Ver Dossiê e Documentos no Conecta Operações"
+                        >
+                          <FileCheck size={13} />
+                          <span>Admissão</span>
+                        </Link>
 
                         <Link
                           href={`/candidates/${cand.id}`}

@@ -8,7 +8,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { logAuditEvent } from "@/lib/audit";
 import { requireAuth } from "@/lib/security";
-import { sendInterviewEmail, sendOfferEmail } from "@/lib/email";
+import { sendInterviewEmail, sendOfferEmail, sendAdmissionWelcomeEmail } from "@/lib/email";
 
 /**
  * Move um candidato individual para outra etapa com transação ACID e histórico (ApplicationStageTransition).
@@ -365,7 +365,7 @@ export async function authorizeHire(applicationId: string, employeeCode?: string
       where: { id: applicationId },
       include: {
         candidate: true,
-        job: { select: { id: true, title: true, organizationId: true } },
+        job: { select: { id: true, title: true, organizationId: true, organization: { select: { name: true, slug: true } } } },
       },
     });
 
@@ -373,20 +373,25 @@ export async function authorizeHire(applicationId: string, employeeCode?: string
       return { success: false, error: "Candidatura não encontrada." };
     }
 
-    // Transação de Contratação + Outbox Event
+    const admissionToken = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+
+    // Transação de Contratação + Outbox Event + Admissão Digital
     await prisma.$transaction(async (tx) => {
-      // Cria o registro de conversão
+      // Cria ou atualiza o registro de conversão com token de admissão
       await tx.hireConversion.upsert({
         where: { applicationId: app.id },
         update: {
           convertedBy: user.email || "SYSTEM",
           employeeCode: employeeCode || undefined,
           convertedAt: new Date(),
+          admissionStatus: "PENDING_DOCUMENTS",
         },
         create: {
           applicationId: app.id,
           convertedBy: user.email || "SYSTEM",
           employeeCode: employeeCode || undefined,
+          token: admissionToken,
+          admissionStatus: "PENDING_DOCUMENTS",
         },
       });
 
@@ -404,6 +409,7 @@ export async function authorizeHire(applicationId: string, employeeCode?: string
             jobId: app.job.id,
             jobTitle: app.job.title,
             employeeCode: employeeCode || null,
+            admissionToken,
             authorizedBy: user.email,
             occurredAt: new Date().toISOString(),
           }),
@@ -416,9 +422,22 @@ export async function authorizeHire(applicationId: string, employeeCode?: string
           applicationId: app.id,
           actorId: user.id || undefined,
           type: "STAGE_CHANGE",
-          description: `🎉 Contratação autorizada e enviada para o Core HR por ${user.name || user.email}.`,
+          description: `🎉 Contratação autorizada! Processo de Admissão Digital iniciado por ${user.name || user.email}.`,
         },
       });
+    });
+
+    // Enviar e-mail de Boas-Vindas e Admissão Digital ao Candidato
+    const baseUrl = process.env.NEXTAUTH_URL || "https://maitreconecta.vercel.app";
+    const orgSlug = app.job.organization.slug;
+    const admissionUrl = `${baseUrl}/carreiras/${orgSlug}/admissao/${admissionToken}`;
+
+    await sendAdmissionWelcomeEmail({
+      candidateName: `${app.candidate.firstName} ${app.candidate.lastName}`.trim(),
+      candidateEmail: app.candidate.email,
+      jobTitle: app.job.title,
+      companyName: app.job.organization.name,
+      admissionUrl,
     });
 
     // Auditoria
@@ -428,12 +447,14 @@ export async function authorizeHire(applicationId: string, employeeCode?: string
       action: "HIRE_AUTHORIZED",
       resourceType: "Application",
       resourceId: app.id,
-      afterData: { employeeCode: employeeCode || null },
+      afterData: { employeeCode: employeeCode || null, admissionToken },
     });
 
     revalidatePath(`/jobs/${app.job.id}/board`);
+    revalidatePath(`/operations`);
+    revalidatePath(`/employees`);
 
-    return { success: true };
+    return { success: true, admissionToken, admissionUrl };
   } catch (error: any) {
     console.error("Erro ao autorizar contratação:", error);
     return { success: false, error: error.message || "Falha ao autorizar contratação." };

@@ -201,7 +201,9 @@ model Document {
   mimeType           String       @default("application/pdf")
   sizeBytes          Int          @default(0)
   checksum           String?
-  classification     String       @default("CURRICULO") // CURRICULO, LAUDO, DIPLOMA, CERTIFICADO
+  classification     String       @default("CURRICULO") // CURRICULO, RG_CNH, CPF, CTPS, RESIDENCIA, DIPLOMA, TITULO_ELEITOR, ASO, DADOS_BANCARIOS, TERMO_LGPD
+  status             String       @default("APPROVED") // PENDING, APPROVED, REJECTED
+  rejectionReason    String?
   retentionUntil     DateTime?
   createdAt          DateTime     @default(now())
 
@@ -285,14 +287,21 @@ model Offer {
 }
 
 model HireConversion {
-  id             String       @id @default(cuid())
-  applicationId  String       @unique
-  convertedBy    String
-  employeeCode   String?
-  status         String       @default("CONVERTED") // CONVERTED, PENDING_ONBOARDING
-  convertedAt    DateTime     @default(now())
+  id               String       @id @default(cuid())
+  applicationId    String       @unique
+  convertedBy      String
+  employeeCode     String?
+  status           String       @default("CONVERTED") // CONVERTED, PENDING_ONBOARDING
+  token            String?      @unique
+  admissionStatus  String       @default("PENDING_DOCUMENTS") // PENDING_DOCUMENTS, UNDER_REVIEW, REQUIREMENT, APPROVED, MATRICULATED
+  additionalData   String?      // JSON string with bank info, PIS, civil status, address, dependents
+  targetStartDate  DateTime?
+  notes            String?
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  convertedAt      DateTime     @default(now())
 
-  application    Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application      Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 model IntegrationOutbox {
