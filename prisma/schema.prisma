@@ -27,6 +27,8 @@ model Organization {
   documents   Document[]
   outbox      IntegrationOutbox[]
   retentionPolicies RetentionPolicy[]
+  performanceEvaluations PerformanceEvaluation[]
+  developmentPlans       DevelopmentPlan[]
 }
 
 model User {
@@ -117,6 +119,8 @@ model Candidate {
   applications     Application[]
   documents        Document[]
   consents         CandidateConsent[]
+  performanceEvaluations PerformanceEvaluation[]
+  developmentPlans       DevelopmentPlan[]
 
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
@@ -393,4 +397,46 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 
   @@index([email])
+}
+
+model PerformanceEvaluation {
+  id               String       @id @default(cuid())
+  organizationId   String
+  candidateId      String
+  evaluatorId      String?
+  cycleName        String       @default("Ciclo Anual 2026")
+  performanceScore Float        @default(3.0) // 1.0 a 5.0
+  potentialScore   Float        @default(3.0) // 1.0 a 5.0
+  boxPosition      String       @default("KEY_PROFESSIONAL") // TOP_TALENT, FUTURE_LEADER, ENIGMA, HIGH_PERFORMER, KEY_PROFESSIONAL, DILEMMA, TECHNICAL_EXPERT, EFFECTIVE, RISK
+  competencies     String?      // JSON string
+  strengths        String?
+  improvements     String?
+  evaluatedAt      DateTime     @default(now())
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  candidate        Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, candidateId])
+}
+
+model DevelopmentPlan {
+  id              String       @id @default(cuid())
+  organizationId  String
+  candidateId     String
+  title           String
+  description     String?
+  status          String       @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, DELAYED
+  category        String       @default("TECH_SKILLS") // TECH_SKILLS, LEADERSHIP, SOFT_SKILLS, CERTIFICATION
+  targetDate      DateTime?
+  completedAt     DateTime?
+  actionItems     String?      // JSON string of items
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  candidate       Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, candidateId])
 }
