@@ -22,22 +22,27 @@ export default async function DashboardLayout({
     redirect("/carreiras/maitre/candidato");
   }
 
-  // Buscar organizações disponíveis para o contexto multitenant
-  const organizations = await prisma.organization.findMany({
-    orderBy: { name: "asc" },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      _count: {
-        select: {
-          jobs: true,
-          candidates: true,
-          users: true,
+  // Buscar organizações disponíveis para o contexto multitenant com fallback resiliente
+  let organizations: any[] = [];
+  try {
+    organizations = await prisma.organization.findMany({
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        _count: {
+          select: {
+            jobs: true,
+            candidates: true,
+            users: true,
+          },
         },
       },
-    },
-  });
+    });
+  } catch (err) {
+    console.error("Erro ao carregar organizações no layout:", err);
+  }
 
   return (
     <TenantProvider initialOrganizations={organizations}>

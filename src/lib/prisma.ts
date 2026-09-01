@@ -7,11 +7,18 @@ const globalForPrisma = global as unknown as {
   pool?: Pool;
 };
 
-// Configuração otimizada para Serverless / Next.js
+const connectionString = process.env.DATABASE_URL;
+const isSupabaseOrProd =
+  Boolean(connectionString?.includes("supabase.com")) ||
+  Boolean(connectionString?.includes("pooler.supabase.com")) ||
+  process.env.NODE_ENV === "production";
+
+// Configuração otimizada para Serverless / Next.js com SSL resiliente
 const pool =
   globalForPrisma.pool ||
   new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
+    ssl: isSupabaseOrProd ? { rejectUnauthorized: false } : undefined,
     max: process.env.NODE_ENV === "production" ? 10 : 5,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,
