@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import ApplicationActionModal from "./ApplicationActionModal";
 import ResumeSplitViewer from "@/components/candidates/ResumeSplitViewer";
-import WhatsAppQuickActionModal from "@/components/ui/WhatsAppQuickActionModal";
+import WhatsAppFeedbackModal from "@/components/feedback/WhatsAppFeedbackModal";
 
 export type KanbanCandidate = {
   id: string; // applicationId
@@ -271,7 +271,8 @@ export default function KanbanBoard({
                                     <button
                                       type="button"
                                       onClick={() => setSplitCandidate(candidate)}
-                                      className="p-1.5 rounded-lg text-slate-400 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                      aria-label={`Visualizar currículo de ${candidate.name}`}
+                                      className="p-2 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-xl text-slate-400 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                       title="Visualizar Currículo (Split View)"
                                     >
                                       <FileText size={15} />
@@ -282,7 +283,8 @@ export default function KanbanBoard({
                                       <button
                                         type="button"
                                         onClick={() => setWhatsAppCandidate(candidate)}
-                                        className="p-1.5 rounded-lg text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
+                                        aria-label={`Enviar feedback via WhatsApp para ${candidate.name}`}
+                                        className="p-2 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-xl text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
                                         title="Enviar WhatsApp Rápido (1-Click)"
                                       >
                                         <MessageCircle size={15} />
@@ -298,7 +300,8 @@ export default function KanbanBoard({
                                           name: candidate.name,
                                         })
                                       }
-                                      className="p-1.5 rounded-lg text-slate-400 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                      aria-label={`Mais ações para a candidatura de ${candidate.name}`}
+                                      className="p-2 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-xl text-slate-400 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                       title="Ações (Entrevista, Proposta, Fit)"
                                     >
                                       <MoreHorizontal size={15} />
@@ -401,16 +404,25 @@ export default function KanbanBoard({
         />
       )}
 
-      {/* WhatsApp Quick Action Modal */}
+      {/* WhatsApp Feedback Modal Oficial (23 Templates) */}
       {whatsAppCandidate && (
-        <WhatsAppQuickActionModal
+        <WhatsAppFeedbackModal
           isOpen={!!whatsAppCandidate}
           onClose={() => setWhatsAppCandidate(null)}
           applicationId={whatsAppCandidate.id}
-          candidateName={whatsAppCandidate.name}
-          candidatePhone={whatsAppCandidate.phone || null}
-          jobTitle={jobTitle}
-          companyName={companyName}
+          candidate={{
+            id: whatsAppCandidate.candidateId,
+            firstName: whatsAppCandidate.name.split(" ")[0],
+            lastName: whatsAppCandidate.name.split(" ").slice(1).join(" ") || "",
+            phone: whatsAppCandidate.phone,
+            email: whatsAppCandidate.email,
+          }}
+          job={{
+            id: "job-active",
+            title: jobTitle,
+            organizationName: companyName,
+          }}
+          stageName="Pipeline Kanban"
         />
       )}
 

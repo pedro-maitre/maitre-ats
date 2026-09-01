@@ -2,6 +2,7 @@
 
 import React from "react";
 import TenantSwitcher from "./TenantSwitcher";
+import MobileSidebarDrawer from "./MobileSidebarDrawer";
 import Link from "next/link";
 import {
   Building2,
@@ -15,9 +16,10 @@ export default function Topbar() {
   const { selectedTenant, selectedTenantId } = useTenant();
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 px-6 py-3.5 mb-8 -mx-8 -mt-8 flex items-center justify-between shadow-sm">
-      {/* Lado Esquerdo: Tenant Switcher e Indicador de Modo */}
-      <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-6 py-3.5 mb-8 -mx-4 sm:-mx-8 -mt-8 flex items-center justify-between shadow-sm">
+      {/* Lado Esquerdo: Botão Hambúrguer Mobile + Tenant Switcher */}
+      <div className="flex items-center gap-2 sm:gap-4">
+        <MobileSidebarDrawer />
         <TenantSwitcher />
 
         <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/60 border border-slate-700/50 text-[11px] font-medium text-slate-300">

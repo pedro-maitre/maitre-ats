@@ -18,6 +18,7 @@ import {
   BarChart3,
   Sparkles,
   Building2,
+  MessageSquare,
 } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -60,7 +61,7 @@ export default async function Sidebar() {
       : "bg-blue-500/15 text-blue-400 border border-blue-500/30";
 
   return (
-    <div className="w-64 h-screen bg-[#1d1e20] text-slate-300 flex flex-col fixed left-0 top-0 border-r border-slate-800 z-50">
+    <aside aria-label="Menu Principal" className="w-64 h-screen bg-[#1d1e20] text-slate-300 hidden lg:flex flex-col fixed left-0 top-0 border-r border-slate-800 z-50">
       {/* Brand Header */}
       <div className="p-5 border-b border-slate-800/80 shrink-0">
         <Link href={isHiringManager ? "/portal-gestor" : "/"} className="flex items-center gap-2">
@@ -161,6 +162,19 @@ export default async function Sidebar() {
               >
                 <Users size={14} className="text-slate-400 shrink-0" />
                 <span>Banco de Talentos</span>
+              </Link>
+
+              <Link
+                href="/feedbacks"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800/80 hover:text-white transition-colors text-xs font-semibold pl-7"
+              >
+                <MessageSquare size={14} className="text-emerald-400 shrink-0" />
+                <div className="flex items-center justify-between flex-1">
+                  <span>Feedbacks WhatsApp</span>
+                  <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded">
+                    23 Modelos
+                  </span>
+                </div>
               </Link>
 
               <Link
@@ -336,6 +350,6 @@ export default async function Sidebar() {
           <LogoutButton />
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

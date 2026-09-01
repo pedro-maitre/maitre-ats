@@ -106,7 +106,8 @@ export default function CandidateListTable({
                     {isAdmin && (
                       <button
                         onClick={() => setConfirmDeleteId(isConfirming ? null : c.id)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        aria-label={`Excluir candidato ${c.firstName} ${c.lastName}`}
+                        className="p-1.5 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         title="Excluir Candidato (Admin Master)"
                       >
                         <Trash2 size={16} />

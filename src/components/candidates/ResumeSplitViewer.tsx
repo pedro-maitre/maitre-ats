@@ -21,7 +21,7 @@ import {
   Minimize2,
 } from "lucide-react";
 import { getFitBadgeStyle, ApplicationEvaluation } from "@/lib/fit-evaluator";
-import WhatsAppQuickActionModal from "@/components/ui/WhatsAppQuickActionModal";
+import WhatsAppFeedbackModal from "@/components/feedback/WhatsAppFeedbackModal";
 
 interface ResumeSplitViewerProps {
   isOpen: boolean;
@@ -57,6 +57,19 @@ export default function ResumeSplitViewer({
   const [isMaximized, setIsMaximized] = useState(false);
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
 
+  // Suporte a fechamento com tecla Escape
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen || !candidate) return null;
 
   const tagsList = candidate.tags
@@ -70,7 +83,12 @@ export default function ResumeSplitViewer({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="resume-split-title"
+        className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
+      >
         <div
           className={`w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ${
             isMaximized ? "h-[98vh] max-w-[98vw]" : "h-[90vh] max-w-7xl"
@@ -84,7 +102,7 @@ export default function ResumeSplitViewer({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base font-black tracking-tight text-white flex items-center gap-2">
+                  <h2 id="resume-split-title" className="text-base font-black tracking-tight text-white flex items-center gap-2">
                     {candidate.name}
                   </h2>
                   {candidate.stageName && (
@@ -305,16 +323,27 @@ export default function ResumeSplitViewer({
         </div>
       </div>
 
-      {/* Modal de WhatsApp */}
-      <WhatsAppQuickActionModal
-        isOpen={isWhatsAppOpen}
-        onClose={() => setIsWhatsAppOpen(false)}
-        applicationId={candidate.id}
-        candidateName={candidate.name}
-        candidatePhone={candidate.phone}
-        jobTitle={jobTitle}
-        companyName={companyName}
-      />
+      {/* Modal Oficial de Feedbacks WhatsApp */}
+      {isWhatsAppOpen && (
+        <WhatsAppFeedbackModal
+          isOpen={isWhatsAppOpen}
+          onClose={() => setIsWhatsAppOpen(false)}
+          applicationId={candidate.id}
+          candidate={{
+            id: candidate.candidateId || candidate.id,
+            firstName: candidate.name.split(" ")[0],
+            lastName: candidate.name.split(" ").slice(1).join(" ") || "",
+            phone: candidate.phone,
+            email: candidate.email,
+          }}
+          job={{
+            id: "job-active",
+            title: jobTitle,
+            organizationName: companyName,
+          }}
+          stageName="Triagem Curricular"
+        />
+      )}
     </>
   );
 }

@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import ApplicationActionModal from "@/components/kanban/ApplicationActionModal";
 import ResumeSplitViewer from "@/components/candidates/ResumeSplitViewer";
-import WhatsAppQuickActionModal from "@/components/ui/WhatsAppQuickActionModal";
+import WhatsAppFeedbackModal from "@/components/feedback/WhatsAppFeedbackModal";
 import FinalistsComparatorModal from "@/components/jobs/FinalistsComparatorModal";
 import {
   batchMoveCandidates,
@@ -771,7 +771,8 @@ export default function SmartTriagemTable({
                         <button
                           type="button"
                           onClick={() => setSplitCandidate(c)}
-                          className="p-2 rounded-xl text-slate-500 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          aria-label={`Visualizar currículo de ${c.name}`}
+                          className="p-2 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-xl text-slate-500 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                           title="Visualizar Currículo (Split View)"
                         >
                           <FileText size={16} />
@@ -782,7 +783,8 @@ export default function SmartTriagemTable({
                           <button
                             type="button"
                             onClick={() => setWhatsAppCandidate(c)}
-                            className="p-2 rounded-xl text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
+                            aria-label={`Enviar feedback WhatsApp para ${c.name}`}
+                            className="p-2 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-xl text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
                             title="Mensagem WhatsApp 1-Click"
                           >
                             <MessageCircle size={16} />
@@ -793,6 +795,7 @@ export default function SmartTriagemTable({
                         <button
                           type="button"
                           onClick={() => setSelectedApp({ id: c.id, name: c.name })}
+                          aria-label={`Gerenciar entrevistas e propostas para ${c.name}`}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-maitre-gold/20 text-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:text-maitre-gold transition-colors"
                           title="Abrir Gestão de Entrevistas, Propostas e Contratação"
                         >
@@ -803,6 +806,7 @@ export default function SmartTriagemTable({
                         <Link
                           href={`/candidates/${c.candidateId}`}
                           target="_blank"
+                          aria-label={`Abrir perfil completo de ${c.name}`}
                           className="inline-flex items-center gap-1 text-xs font-bold text-maitre-gold hover:text-maitre-gold-hover hover:underline p-1"
                           title="Abrir perfil completo"
                         >
@@ -860,16 +864,32 @@ export default function SmartTriagemTable({
         />
       )}
 
-      {/* WhatsApp Quick Action Modal */}
+      {/* WhatsApp Feedback Modal Oficial (23 Templates) */}
       {whatsAppCandidate && (
-        <WhatsAppQuickActionModal
+        <WhatsAppFeedbackModal
           isOpen={!!whatsAppCandidate}
           onClose={() => setWhatsAppCandidate(null)}
           applicationId={whatsAppCandidate.id}
-          candidateName={whatsAppCandidate.name}
-          candidatePhone={whatsAppCandidate.phone}
-          jobTitle={job.title}
-          companyName={job.companyName || "Maître Conecta"}
+          candidate={{
+            id: whatsAppCandidate.candidateId,
+            firstName: whatsAppCandidate.name.split(" ")[0],
+            lastName: whatsAppCandidate.name.split(" ").slice(1).join(" ") || "",
+            phone: whatsAppCandidate.phone,
+            email: whatsAppCandidate.email,
+          }}
+          job={{
+            id: job.id,
+            title: job.title,
+            organizationName: job.companyName || "Maître Conecta",
+          }}
+          stageName={whatsAppCandidate.stageName || "Triagem Inteligente"}
+          defaultTemplateId={
+            whatsAppCandidate.evaluation?.fitCategory === "BAIXO_FIT"
+              ? "curriculo-nao-selecionado"
+              : whatsAppCandidate.evaluation?.fitCategory === "ALTO_FIT"
+              ? "aprovacao-proxima-etapa"
+              : "candidatura-em-analise"
+          }
         />
       )}
 

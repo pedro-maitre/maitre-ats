@@ -3,6 +3,17 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --maitre-gold: #9a6d2b;
+  --maitre-gold-hover: #845b20;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --maitre-gold: #c89650;
+    --maitre-gold-hover: #b08040;
+  }
 }
 
 @theme inline {
@@ -11,20 +22,19 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   
-  --color-maitre-gold: #c89650;
-  --color-maitre-gold-hover: #b08040;
-  --color-maitre-subtle: #fcfaf7; /* very light amber for backgrounds */
+  --color-maitre-gold: var(--maitre-gold, #c89650);
+  --color-maitre-gold-hover: var(--maitre-gold-hover, #b08040);
+  --color-maitre-subtle: #fcfaf7;
   --color-maitre-subtle-dark: rgba(200, 150, 80, 0.1);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+}
+
+/* Foco acessível com anel dourado contrastante */
+:focus-visible {
+  outline: 2px solid var(--color-maitre-gold);
+  outline-offset: 2px;
 }

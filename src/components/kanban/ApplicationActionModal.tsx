@@ -48,6 +48,17 @@ export default function ApplicationActionModal({
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Suporte a fechamento via tecla Escape
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   // Form States
   // 1. Entrevista
   const [interviewTitle, setInterviewTitle] = useState("Entrevista Técnica e Cultural");
@@ -266,7 +277,12 @@ export default function ApplicationActionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="application-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200"
+    >
       <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/40">
@@ -275,7 +291,7 @@ export default function ApplicationActionModal({
               {candidateName[0] || "C"}
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-white leading-tight">
+              <h2 id="application-modal-title" className="text-lg font-black text-slate-900 dark:text-white leading-tight">
                 {candidateName}
               </h2>
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">

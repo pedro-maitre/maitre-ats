@@ -43,7 +43,7 @@ export default async function DashboardLayout({
     <TenantProvider initialOrganizations={organizations}>
       <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-maitre-gold selection:text-slate-900">
         <Sidebar />
-        <main className="flex-1 ml-64 p-8">
+        <main className="flex-1 ml-0 lg:ml-64 p-4 sm:p-8 max-w-full overflow-x-hidden">
           <Topbar />
           {children}
         </main>
