@@ -221,7 +221,7 @@ export default function EmployeeTableClient({ conversions }: { conversions: any[
                     {/* Colaborador */}
                     <td className="p-4 pl-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-700 to-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
                           {cand.firstName[0]}
                           {cand.lastName?.[0] || ""}
                         </div>

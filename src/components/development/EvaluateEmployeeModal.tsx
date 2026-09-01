@@ -21,9 +21,11 @@ import {
 import {
   savePerformanceEvaluation,
   saveDevelopmentPlan,
-  calculateNineBoxPosition,
-  NineBoxPosition,
 } from "@/app/(dashboard)/development/actions";
+import {
+  calculateNineBoxPosition,
+  type NineBoxPosition,
+} from "@/lib/nineBox";
 
 export const NINE_BOX_CONFIG: Record<
   NineBoxPosition,

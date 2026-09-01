@@ -900,7 +900,7 @@ export default function JobEditForm({
               className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 status === "PAUSED"
                   ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  : "bg-amber-500 hover:bg-amber-600 text-slate-950"
+                  : "bg-amber-600 hover:bg-amber-700 text-white"
               }`}
             >
               {isTogglingStatus ? (

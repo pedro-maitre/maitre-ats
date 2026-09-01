@@ -261,7 +261,7 @@ export default function WhatsAppQuickActionModal({
                 className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-sans text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none resize-none leading-relaxed"
               />
             ) : (
-              <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-slate-800/60 border border-emerald-200/60 dark:border-slate-700/60 text-xs font-sans text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+              <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/40 text-xs font-sans text-emerald-950 dark:text-emerald-200 whitespace-pre-wrap leading-relaxed">
                 {currentText}
               </div>
             )}

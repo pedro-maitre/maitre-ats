@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import DevelopmentDashboardClient, {
   DevelopmentEmployeeItem,
 } from "@/components/development/DevelopmentDashboardClient";
-import { NineBoxPosition } from "./actions";
+import { type NineBoxPosition } from "@/lib/nineBox";
 
 export const dynamic = "force-dynamic";
 

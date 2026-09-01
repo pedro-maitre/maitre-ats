@@ -627,7 +627,7 @@ export default function InsightsDashboardClient({
 
             <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-1">
               <span className="text-xs font-bold text-slate-400 uppercase">Orçamento em Recrutamento</span>
-              <p className="text-2xl font-black text-purple-600 dark:text-purple-400">
+              <p className="text-2xl font-black text-maitre-gold">
                 {formatCurrency(
                   filteredJobs
                     .filter((j) => j.status === "ACTIVE" || j.status === "OPEN")

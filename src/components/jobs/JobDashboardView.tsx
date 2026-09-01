@@ -285,7 +285,7 @@ export default function JobDashboardView({
                           e.stopPropagation();
                           setConfirmDeleteId(isConfirming ? null : job.id);
                         }}
-                        className="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                         title="Excluir Vaga (Admin Master)"
                       >
                         <Trash2 size={16} />

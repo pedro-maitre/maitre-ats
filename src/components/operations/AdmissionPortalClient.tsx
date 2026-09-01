@@ -760,7 +760,7 @@ export default function AdmissionPortalClient({
                 type="button"
                 onClick={handleSavePersonalData}
                 disabled={isPending}
-                className="px-8 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                className="px-8 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/20 disabled:opacity-50"
               >
                 {isPending ? (
                   <>

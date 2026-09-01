@@ -28,7 +28,8 @@ import {
 import EvaluateEmployeeModal, {
   NINE_BOX_CONFIG,
 } from "./EvaluateEmployeeModal";
-import { NineBoxPosition, updatePdiStatus } from "@/app/(dashboard)/development/actions";
+import { updatePdiStatus } from "@/app/(dashboard)/development/actions";
+import { type NineBoxPosition } from "@/lib/nineBox";
 
 export interface DevelopmentEmployeeItem {
   candidateId: string;
@@ -192,11 +193,11 @@ export default function DevelopmentDashboardClient({
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-xs font-bold uppercase tracking-wider">Metas de PDI Ativas</span>
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <Target size={18} />
             </div>
           </div>
-          <p className="text-3xl font-black text-purple-600 dark:text-purple-400">{totalPdiCount}</p>
+          <p className="text-3xl font-black text-amber-600 dark:text-amber-400">{totalPdiCount}</p>
           <span className="text-xs font-medium text-slate-400">Planos de desenvolvimento em curso</span>
         </div>
 

@@ -224,7 +224,7 @@ export default function UserList({
                           type="button"
                           onClick={() => setUserToDelete(user)}
                           disabled={isSelf}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-colors cursor-pointer disabled:opacity-30 disabled:hover:text-slate-400 disabled:hover:bg-transparent"
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer disabled:opacity-30 disabled:hover:text-slate-400 disabled:hover:bg-transparent"
                           title={isSelf ? "Você não pode excluir sua própria conta" : "Excluir Usuário"}
                         >
                           <Trash2 size={16} />

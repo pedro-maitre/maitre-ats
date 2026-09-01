@@ -332,11 +332,11 @@ export default async function DashboardHomePage() {
           {/* 2. Conecta Pessoas */}
           <Link
             href="/employees"
-            className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-purple-500/50 transition-all flex flex-col justify-between group"
+            className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-maitre-gold/50 transition-all flex flex-col justify-between group"
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl bg-purple-500/15 text-purple-500 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
                   <UserCheck size={20} />
                 </div>
                 <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-500/20">
@@ -344,7 +344,7 @@ export default async function DashboardHomePage() {
                 </span>
               </div>
               <div>
-                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-purple-400 transition-colors">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-maitre-gold transition-colors">
                   Conecta Pessoas
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">Core HR, Matrículas e Vínculos</p>
@@ -373,7 +373,7 @@ export default async function DashboardHomePage() {
                 </span>
               </div>
               <div>
-                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-emerald-400 transition-colors">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
                   Conecta Operações
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">Admissão Digital, Termos & SHA-256</p>
@@ -402,7 +402,7 @@ export default async function DashboardHomePage() {
                 </span>
               </div>
               <div>
-                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-400 transition-colors">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
                   Conecta Insights
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">People Analytics & Indicadores</p>
@@ -419,19 +419,19 @@ export default async function DashboardHomePage() {
           {/* 5. Conecta Desenvolvimento */}
           <Link
             href="/development"
-            className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-indigo-500/50 transition-all flex flex-col justify-between group"
+            className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-amber-500/50 transition-all flex flex-col justify-between group"
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-500 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
                   <TrendingUp size={20} />
                 </div>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-indigo-500/15 text-indigo-400 rounded-full">
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded-full">
                   Fase P3
                 </span>
               </div>
               <div>
-                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-indigo-400 transition-colors">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-amber-500 dark:group-hover:text-amber-400 transition-colors">
                   Conecta Desenvolvimento
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">Competências, 9-Box e PDI</p>
@@ -446,19 +446,19 @@ export default async function DashboardHomePage() {
           {/* 6. Conecta Aprendizagem */}
           <Link
             href="/learning"
-            className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-cyan-500/50 transition-all flex flex-col justify-between group"
+            className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-sky-500/50 transition-all flex flex-col justify-between group"
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl bg-cyan-500/15 text-cyan-500 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-2xl bg-sky-500/15 text-sky-500 flex items-center justify-center font-bold">
                   <GraduationCap size={20} />
                 </div>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-cyan-500/15 text-cyan-400 rounded-full">
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-sky-500/15 text-sky-500 rounded-full">
                   Fase P4
                 </span>
               </div>
               <div>
-                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-cyan-400 transition-colors">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-sky-500 dark:group-hover:text-sky-400 transition-colors">
                   Conecta Aprendizagem
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">LMS, Treinamentos & Certificados</p>
@@ -480,12 +480,12 @@ export default async function DashboardHomePage() {
                 <div className="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center font-bold">
                   <HeartHandshake size={20} />
                 </div>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-rose-500/15 text-rose-400 rounded-full">
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-rose-500/15 text-rose-500 rounded-full">
                   Fase P4
                 </span>
               </div>
               <div>
-                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-rose-400 transition-colors">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors">
                   Conecta Cultura
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">Clima, eNPS e Rituais de Cultura</p>
@@ -500,19 +500,19 @@ export default async function DashboardHomePage() {
           {/* 8. Conecta Carreiras */}
           <Link
             href="/careers-hub"
-            className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-violet-500/50 transition-all flex flex-col justify-between group"
+            className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-amber-600/50 transition-all flex flex-col justify-between group"
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-2xl bg-violet-500/15 text-violet-500 flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-2xl bg-amber-600/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
                   <Compass size={20} />
                 </div>
-                <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-violet-500/15 text-violet-400 rounded-full">
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-amber-600/15 text-amber-600 dark:text-amber-400 rounded-full">
                   Fase P3
                 </span>
               </div>
               <div>
-                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-violet-400 transition-colors">
+                <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
                   Conecta Carreiras
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">Mobilidade & Mapa de Sucessão</p>

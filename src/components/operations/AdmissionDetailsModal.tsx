@@ -322,7 +322,7 @@ export default function AdmissionDetailsModal({
                       type="button"
                       onClick={handleSendRequirement}
                       disabled={isPending || !requirementText.trim()}
-                      className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center gap-1.5 transition-all disabled:opacity-50"
+                      className="px-4 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all disabled:opacity-50"
                     >
                       {isPending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
                       Notificar Candidato
@@ -547,7 +547,7 @@ export default function AdmissionDetailsModal({
                     type="button"
                     onClick={handleFinalize}
                     disabled={isPending}
-                    className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                    className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-600/20 disabled:opacity-50"
                   >
                     {isPending ? (
                       <>
