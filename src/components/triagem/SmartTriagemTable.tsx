@@ -35,6 +35,7 @@ import {
 import ApplicationActionModal from "@/components/kanban/ApplicationActionModal";
 import ResumeSplitViewer from "@/components/candidates/ResumeSplitViewer";
 import WhatsAppFeedbackModal from "@/components/feedback/WhatsAppFeedbackModal";
+import EmptyState from "@/components/ui/EmptyState";
 import FinalistsComparatorModal from "@/components/jobs/FinalistsComparatorModal";
 import {
   batchMoveCandidates,
@@ -820,16 +821,18 @@ export default function SmartTriagemTable({
 
               {filteredCandidates.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-12 text-center text-slate-500">
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <UserCheck size={36} className="text-slate-300 dark:text-slate-700" />
-                      <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                        Nenhum candidato encontrado nesta visão
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        Altere os filtros de pesquisa ou selecione outra aba acima.
-                      </p>
-                    </div>
+                  <td colSpan={8} className="p-8">
+                    <EmptyState
+                      icon={UserCheck}
+                      title="Nenhum candidato encontrado nesta visão"
+                      description="Altere os filtros de pesquisa ou selecione outra aba de avaliação."
+                      actionLabel="Limpar Filtros"
+                      onAction={() => {
+                        setSearchQuery("");
+                        setActiveTab("ALL");
+                        setSelectedStageFilter("ALL");
+                      }}
+                    />
                   </td>
                 </tr>
               )}

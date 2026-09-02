@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import Image from "next/image";
 import {
   FileCheck,
   ShieldCheck,
@@ -223,10 +224,12 @@ export default function AdmissionPortalClient({
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {data.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={data.logoUrl}
                 alt={data.companyName}
+                width={40}
+                height={40}
+                unoptimized
                 className="w-10 h-10 object-contain rounded-xl bg-white p-1"
               />
             ) : (

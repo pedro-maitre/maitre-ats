@@ -28,6 +28,7 @@ import {
   Award,
 } from "lucide-react";
 import { updateEmployeeOnboardingStatus, createDirectEmployee } from "./actions";
+import EmptyState from "@/components/ui/EmptyState";
 
 export default function EmployeeTableClient({ conversions }: { conversions: any[] }) {
   const [list, setList] = useState(conversions);
@@ -332,16 +333,26 @@ export default function EmployeeTableClient({ conversions }: { conversions: any[
 
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-12 text-center text-slate-400">
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <Users size={36} className="text-slate-300 dark:text-slate-700" />
-                      <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">
-                        Nenhum colaborador registrado no Core HR
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        Quando você autorizar contratações no Kanban ou clicar em "Admissão Direta", os colaboradores aparecerão aqui.
-                      </p>
-                    </div>
+                  <td colSpan={7} className="p-8">
+                    <EmptyState
+                      icon={Users}
+                      title="Nenhum colaborador encontrado"
+                      description={
+                        searchQuery || statusFilter !== "ALL" || departmentFilter !== "ALL"
+                          ? "Nenhum colaborador corresponde aos filtros aplicados."
+                          : "Quando você autorizar contratações no Kanban ou clicar em 'Admissão Direta', os colaboradores aparecerão aqui."
+                      }
+                      actionLabel={
+                        searchQuery || statusFilter !== "ALL" || departmentFilter !== "ALL"
+                          ? "Limpar Filtros"
+                          : undefined
+                      }
+                      onAction={() => {
+                        setSearchQuery("");
+                        setStatusFilter("ALL");
+                        setDepartmentFilter("ALL");
+                      }}
+                    />
                   </td>
                 </tr>
               )}

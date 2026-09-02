@@ -26,6 +26,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import WhatsAppFeedbackModal from "./WhatsAppFeedbackModal";
+import EmptyState from "@/components/ui/EmptyState";
 
 export default function FeedbackLibraryViewer() {
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
@@ -171,10 +172,23 @@ export default function FeedbackLibraryViewer() {
       </div>
 
       {/* Grade de Templates */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredTemplates.map((template) => {
-          const isExpanded = expandedTemplateId === template.id;
-          const isCopied = copiedTemplateId === template.id;
+      {filteredTemplates.length === 0 ? (
+        <div className="py-12 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl shadow-sm">
+          <EmptyState
+            title="Nenhum modelo de feedback encontrado"
+            description="Tente ajustar os termos de busca ou selecione outra categoria de processo seletivo."
+            actionLabel="Limpar Filtros"
+            onAction={() => {
+              setSearchQuery("");
+              setSelectedCategory("ALL");
+            }}
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredTemplates.map((template) => {
+            const isExpanded = expandedTemplateId === template.id;
+            const isCopied = copiedTemplateId === template.id;
 
           return (
             <div
@@ -293,6 +307,7 @@ export default function FeedbackLibraryViewer() {
           );
         })}
       </div>
+      )}
 
       {/* Modal de Envio e Personalização */}
       <WhatsAppFeedbackModal

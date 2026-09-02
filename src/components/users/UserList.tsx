@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import EditUserModal from "./EditUserModal";
 import CreateUserModal from "./CreateUserModal";
+import EmptyState from "@/components/ui/EmptyState";
 import { deleteUser } from "@/app/actions/delete-actions";
 
 export type UserData = {
@@ -237,14 +238,17 @@ export default function UserList({
 
               {filteredUsers.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-slate-500 space-y-2">
-                    <Users size={32} className="mx-auto text-slate-400" />
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      Nenhum usuário encontrado com os filtros atuais.
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      Tente buscar por outro termo ou limpar os filtros.
-                    </p>
+                  <td colSpan={6} className="p-8">
+                    <EmptyState
+                      icon={Users}
+                      title="Nenhum usuário encontrado"
+                      description="Tente buscar por outro termo ou limpe os filtros de pesquisa."
+                      actionLabel="Limpar Filtros"
+                      onAction={() => {
+                        setSearchQuery("");
+                        setRoleFilter("ALL");
+                      }}
+                    />
                   </td>
                 </tr>
               )}

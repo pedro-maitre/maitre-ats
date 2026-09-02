@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Building2, User, LogOut, Briefcase } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -46,10 +47,12 @@ export default async function CarreirasLayout({
           >
             {org.logoUrl ? (
               <div className="bg-white/10 p-1.5 rounded-xl border border-white/10 flex items-center justify-center max-w-[120px] max-h-[42px] overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={org.logoUrl}
                   alt={org.name}
+                  width={120}
+                  height={32}
+                  unoptimized
                   className="max-h-8 w-auto object-contain"
                 />
               </div>

@@ -602,15 +602,16 @@ Equipe Maître Consultoria`,
 ];
 
 /**
- * Sanitiza o número de telefone brasileiro e adiciona o DDI 55
+ * Sanitiza o número de telefone e garante DDI 55 para números brasileiros válidos (10 ou 11 dígitos)
  */
 export function sanitizeBrazilianPhone(phone: string | null | undefined): string {
   if (!phone) return "";
   const cleaned = phone.replace(/\D/g, "");
-  if (cleaned.startsWith("55") && cleaned.length >= 12) {
+  if (!cleaned) return "";
+  if (cleaned.startsWith("55") && cleaned.length >= 12 && cleaned.length <= 13) {
     return cleaned;
   }
-  if (cleaned.length >= 10 && cleaned.length <= 11) {
+  if (cleaned.length === 10 || cleaned.length === 11) {
     return `55${cleaned}`;
   }
   return cleaned;
