@@ -43,58 +43,72 @@ export default async function DashboardHomePage() {
   const session = await getServerSession(authOptions);
   const userName = session?.user?.name || "Administrador";
 
-  // Consultas agregadas em paralelo
-  const [
-    jobs,
-    candidates,
-    applications,
-    conversions,
-    documents,
-    stages,
-    recentAudits,
-  ] = await Promise.all([
-    prisma.job.findMany({
-      include: {
-        applications: {
-          include: { candidate: true, stage: true },
+  // Consultas agregadas em paralelo com fallback resiliente
+  let jobs: any[] = [];
+  let candidates: any[] = [];
+  let applications: any[] = [];
+  let conversions: any[] = [];
+  let documents: any[] = [];
+  let stages: any[] = [];
+  let recentAudits: any[] = [];
+  let dbError: string | null = null;
+
+  try {
+    const results = await Promise.all([
+      prisma.job.findMany({
+        include: {
+          applications: {
+            include: { candidate: true, stage: true },
+          },
         },
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.candidate.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    }),
-    prisma.application.findMany({
-      include: {
-        candidate: true,
-        job: true,
-        stage: true,
-        offers: true,
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.hireConversion.findMany({
-      include: {
-        application: {
-          include: { candidate: true, job: true, offers: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.candidate.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 5,
+      }),
+      prisma.application.findMany({
+        include: {
+          candidate: true,
+          job: true,
+          stage: true,
+          offers: true,
         },
-      },
-      orderBy: { convertedAt: "desc" },
-    }),
-    prisma.document.findMany({
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.stage.findMany({
-      include: {
-        _count: { select: { applications: true } },
-      },
-    }),
-    prisma.auditEvent.findMany({
-      take: 6,
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.hireConversion.findMany({
+        include: {
+          application: {
+            include: { candidate: true, job: true, offers: true },
+          },
+        },
+        orderBy: { convertedAt: "desc" },
+      }),
+      prisma.document.findMany({
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.stage.findMany({
+        include: {
+          _count: { select: { applications: true } },
+        },
+      }),
+      prisma.auditEvent.findMany({
+        take: 6,
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+
+    jobs = results[0];
+    candidates = results[1];
+    applications = results[2];
+    conversions = results[3];
+    documents = results[4];
+    stages = results[5];
+    recentAudits = results[6];
+  } catch (err: any) {
+    console.error("Erro ao carregar métricas do painel executivo:", err?.message || err);
+    dbError = "O banco de dados está sincronizando ou conectando. As informações serão atualizadas automaticamente.";
+  }
 
   // Cálculos & Métricas
   const totalJobs = jobs.length;
@@ -223,6 +237,14 @@ export default async function DashboardHomePage() {
         {/* Efeito Visual de Fundo */}
         <div className="absolute -right-16 -bottom-16 w-64 h-64 bg-maitre-gold/10 rounded-full blur-3xl pointer-events-none" />
       </div>
+
+      {/* Aviso de Sincronização / Cold Start do Banco se houver */}
+      {dbError && (
+        <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-500/30 flex items-center gap-3 text-xs text-amber-800 dark:text-amber-300">
+          <AlertTriangle size={18} className="shrink-0 text-amber-500" />
+          <span>{dbError}</span>
+        </div>
+      )}
 
       {/* SEÇÃO 1: CENTRAL DE ALERTAS & AÇÕES PENDENTES */}
       <div className="space-y-4">

@@ -77,6 +77,7 @@ export default function InsightsDashboardClient({
   const [selectedOrgId, setSelectedOrgId] = useState<string>("ALL");
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>("ALL"); // "30D" | "90D" | "180D" | "ALL"
   const [activeTab, setActiveTab] = useState<"overview" | "funnel" | "channels" | "budget">("overview");
+  const [currentTimestamp] = useState(() => Date.now());
 
   // Filtragem dinâmica
   const filteredApplications = useMemo(() => {
@@ -85,8 +86,7 @@ export default function InsightsDashboardClient({
 
       if (selectedTimeRange !== "ALL") {
         const appDate = new Date(app.createdAt).getTime();
-        const now = Date.now();
-        const days = (now - appDate) / (1000 * 3600 * 24);
+        const days = (currentTimestamp - appDate) / (1000 * 3600 * 24);
 
         if (selectedTimeRange === "30D" && days > 30) return false;
         if (selectedTimeRange === "90D" && days > 90) return false;
@@ -95,7 +95,7 @@ export default function InsightsDashboardClient({
 
       return true;
     });
-  }, [applications, selectedOrgId, selectedTimeRange]);
+  }, [applications, selectedOrgId, selectedTimeRange, currentTimestamp]);
 
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
@@ -115,12 +115,12 @@ export default function InsightsDashboardClient({
     if (hiredApps.length === 0) return 18; // Benchmark padrão de mercado
     const daysSum = hiredApps.reduce((acc, app) => {
       const start = new Date(app.createdAt).getTime();
-      const end = app.hiredAt ? new Date(app.hiredAt).getTime() : Date.now();
+      const end = app.hiredAt ? new Date(app.hiredAt).getTime() : currentTimestamp;
       const diffDays = Math.max(1, Math.round((end - start) / (1000 * 3600 * 24)));
       return acc + diffDays;
     }, 0);
     return Math.round(daysSum / hiredApps.length);
-  }, [hiredApps]);
+  }, [hiredApps, currentTimestamp]);
 
   // Folha Salarial Gerada & Média
   const totalPayroll = useMemo(() => {

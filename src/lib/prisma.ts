@@ -11,23 +11,36 @@ const connectionString = process.env.DATABASE_URL;
 const isSupabaseOrProd =
   Boolean(connectionString?.includes("supabase.com")) ||
   Boolean(connectionString?.includes("pooler.supabase.com")) ||
+  Boolean(connectionString?.includes("sslmode=require")) ||
   process.env.NODE_ENV === "production";
 
-// Configuração otimizada para Serverless / Next.js com SSL resiliente
-const pool =
-  globalForPrisma.pool ||
-  new Pool({
-    connectionString,
+// Configuração de Pool resiliente para Serverless / Vercel e instâncias em nuvem
+function getPool(): Pool {
+  if (globalForPrisma.pool) {
+    return globalForPrisma.pool;
+  }
+
+  const pool = new Pool({
+    connectionString: connectionString || undefined,
     ssl: isSupabaseOrProd ? { rejectUnauthorized: false } : undefined,
     max: process.env.NODE_ENV === "production" ? 10 : 5,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
+    connectionTimeoutMillis: 15000,
+    allowExitOnIdle: true,
   });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.pool = pool;
+  pool.on("error", (err) => {
+    console.error("Prisma Pg Pool Unexpected Error:", err.message);
+  });
+
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.pool = pool;
+  }
+
+  return pool;
 }
 
+const pool = getPool();
 const adapter = new PrismaPg(pool);
 
 export const prisma =

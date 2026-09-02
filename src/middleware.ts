@@ -19,7 +19,7 @@ const PROTECTED_PREFIXES = [
 ];
 
 export default withAuth(
-  function proxy(req) {
+  function middleware(req) {
     const token = req.nextauth.token;
     const isCandidate = token?.role === "CANDIDATE";
     const pathname = req.nextUrl.pathname;
@@ -56,4 +56,3 @@ export const config = {
     "/users/:path*",
   ],
 };
-

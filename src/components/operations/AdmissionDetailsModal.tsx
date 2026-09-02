@@ -100,6 +100,18 @@ export default function AdmissionDetailsModal({
   const [copiedLink, setCopiedLink] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  // Suporte a fechamento com a tecla Escape
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !dossier) return null;
 
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
@@ -168,17 +180,6 @@ export default function AdmissionDetailsModal({
       maximumFractionDigits: 0,
     }).format(val);
   };
-
-  // Suporte a fechamento com a tecla Escape
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
 
   return (
     <div

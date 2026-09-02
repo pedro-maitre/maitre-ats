@@ -16,11 +16,26 @@ export default async function CarreirasLayout({
   const { companySlug } = await params;
   const session = await getServerSession(authOptions);
 
-  const org = await prisma.organization.findUnique({
-    where: { slug: companySlug },
-  });
+  let org: any = null;
+  try {
+    org = await prisma.organization.findUnique({
+      where: { slug: companySlug },
+    });
+  } catch (err: any) {
+    console.error("Erro ao buscar organização no layout de carreiras:", err?.message || err);
+  }
 
-  if (!org) {
+  // Fallback seguro se a organização padrão 'maitre' ainda não tiver sido semeada no banco
+  if (!org && (companySlug === "maitre" || companySlug === "default")) {
+    org = {
+      id: "org-maitre-default",
+      name: "Maître Conecta",
+      slug: companySlug,
+      primaryColor: "#D4AF37",
+      logoUrl: null,
+      websiteUrl: "https://maitre.com.br",
+    };
+  } else if (!org) {
     notFound();
   }
 
