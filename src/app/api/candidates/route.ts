@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    const role = session?.user?.role;
+    const isAuthorized = role === "SUPER_ADMIN" || role === "ADMIN" || role === "RECRUITER";
+
+    if (!isAuthorized) {
+      return NextResponse.json(
+        { error: "Acesso não autorizado. Apenas recrutadores autenticados podem cadastrar ou editar candidatos diretamente." },
+        { status: 401 }
+      );
+    }
+
     const data = await req.json();
     const { firstName, lastName, email, phone, profileSummary, source, resumeUrl } = data;
 
@@ -10,13 +23,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nome e Email são obrigatórios." }, { status: 400 });
     }
 
-    let org = await prisma.organization.findFirst();
-    if (!org) {
-      org = await prisma.organization.create({
-        data: { name: "Maître", slug: "maitre" }
-      });
+    const cleanEmail = email.trim().toLowerCase();
+    const orgId = session?.user?.organizationId || (await prisma.organization.findFirst())?.id;
+
+    if (!orgId) {
+      return NextResponse.json({ error: "Organização não encontrada." }, { status: 400 });
     }
-    const orgId = org.id;
 
     // Upsert Candidate (if email exists, update, otherwise create)
     const candidate = await prisma.candidate.upsert({

@@ -3,11 +3,11 @@
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import { sendPasswordResetEmail } from "@/lib/email";
 
 export interface RequestResetResult {
   success: boolean;
   message: string;
-  resetLink?: string;
   email?: string;
   error?: string;
 }
@@ -28,7 +28,8 @@ export interface ResetPasswordResult {
 }
 
 /**
- * Solicita a recuperação de senha gerando um token de uso único com validade de 1 hora.
+ * Solicita a recuperação de senha gerando um token de uso único com validade de 1 hora
+ * e enviando o link exclusivamente por e-mail.
  */
 export async function requestPasswordReset(
   email: string,
@@ -46,10 +47,11 @@ export async function requestPasswordReset(
     });
 
     if (!user) {
-      // Retorna sucesso genérico para segurança (anti-enumeração)
+      // Retorna sucesso genérico para segurança (anti-enumeração de usuários)
       return {
         success: true,
-        message: "Se o e-mail estiver cadastrado em nossa base, o link de recuperação foi preparado com sucesso.",
+        message: "Se o e-mail estiver cadastrado em nossa base, as instruções de recuperação foram enviadas para sua caixa de entrada.",
+        email: cleanEmail,
       };
     }
 
@@ -73,12 +75,20 @@ export async function requestPasswordReset(
     const rootDomain = baseUrl || process.env.NEXTAUTH_URL || "";
     const resetLink = `${rootDomain}/redefinir-senha/${token}`;
 
-    console.log(`[AUTH] Link de recuperação gerado para ${cleanEmail}: ${resetLink}`);
+    // Envia o e-mail transacional de forma segura
+    await sendPasswordResetEmail({
+      userName: user.name || "Usuário",
+      userEmail: cleanEmail,
+      resetUrl: resetLink,
+    });
+
+    if (process.env.NODE_ENV === "development") {
+      console.log(`[AUTH-DEV] Link de recuperação gerado para ${cleanEmail}: ${resetLink}`);
+    }
 
     return {
       success: true,
-      message: "Link de recuperação gerado com sucesso! Utilize o link para criar sua nova senha com segurança.",
-      resetLink,
+      message: "Se o e-mail estiver cadastrado em nossa base, as instruções de recuperação foram enviadas para sua caixa de entrada.",
       email: cleanEmail,
     };
   } catch (error: any) {

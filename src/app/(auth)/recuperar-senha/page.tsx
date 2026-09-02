@@ -12,7 +12,6 @@ export default function RecuperarSenhaEquipePage() {
   const [error, setError] = useState("");
   const [successResult, setSuccessResult] = useState<{
     message: string;
-    resetLink?: string;
   } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +27,6 @@ export default function RecuperarSenhaEquipePage() {
       if (res.success) {
         setSuccessResult({
           message: res.message,
-          resetLink: res.resetLink,
         });
       } else {
         setError(res.message || "Não foi possível processar a recuperação de senha.");
@@ -66,34 +64,25 @@ export default function RecuperarSenhaEquipePage() {
 
         {successResult ? (
           <div className="space-y-5 animate-in fade-in zoom-in duration-300">
-            <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-5 text-center space-y-3">
+            <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-2xl p-6 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center">
                 <CheckCircle2 size={24} />
               </div>
               <h3 className="text-base font-bold text-emerald-900 dark:text-emerald-200">
-                Link de Redefinição Gerado
+                E-mail de Recuperação Enviado
               </h3>
               <p className="text-xs text-emerald-700 dark:text-emerald-300 leading-relaxed">
                 {successResult.message}
               </p>
-
-              {successResult.resetLink && (
-                <div className="pt-2">
-                  <Link
-                    href={successResult.resetLink}
-                    className="inline-flex items-center justify-center gap-2 w-full bg-[#1d1e20] text-white hover:bg-maitre-gold hover:text-slate-950 p-3 rounded-xl font-bold text-xs transition-all shadow-sm"
-                  >
-                    <span>Abrir Página de Redefinição</span>
-                    <ExternalLink size={14} />
-                  </Link>
-                </div>
-              )}
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+                Verifique sua caixa de entrada e pasta de spam. O link expira em 1 hora.
+              </p>
             </div>
 
             <div className="text-center pt-2">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-maitre-gold transition-colors"
+                className="inline-flex items-center justify-center gap-2 w-full bg-[#1d1e20] text-white hover:bg-maitre-gold hover:text-slate-950 p-3 rounded-xl font-bold text-xs transition-all shadow-sm"
               >
                 <ArrowLeft size={14} />
                 Voltar para o Login

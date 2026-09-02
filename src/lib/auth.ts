@@ -22,13 +22,13 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user || !user.password) {
-          throw new Error("Usuário não encontrado.");
+          throw new Error("E-mail ou senha incorretos.");
         }
 
         const isValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isValid) {
-          throw new Error("Senha incorreta.");
+          throw new Error("E-mail ou senha incorretos.");
         }
 
         return {

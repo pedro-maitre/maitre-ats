@@ -350,3 +350,40 @@ export async function sendAdmissionRequirementEmail(params: {
   });
 }
 
+// 6. Notificação de Recuperação / Redefinição de Senha Segura
+export async function sendPasswordResetEmail(params: {
+  userName: string;
+  userEmail: string;
+  resetUrl: string;
+}) {
+  const content = `
+    <h2 style="color:#ffffff;font-size:20px;font-weight:800;margin-top:0;">
+      Olá, ${params.userName || "Usuário"}!
+    </h2>
+    <p style="font-size:15px;line-height:1.6;color:#cbd5e1;">
+      Recebemos uma solicitação para redefinir a senha da sua conta no <strong style="color:#D4AF37;">Maître Conecta</strong>.
+    </p>
+    <p style="font-size:15px;line-height:1.6;color:#cbd5e1;">
+      Para cadastrar uma nova senha com segurança, clique no botão abaixo:
+    </p>
+
+    <div style="text-align:center;margin:30px 0;">
+      <a href="${params.resetUrl}" style="background:linear-gradient(135deg, #D4AF37 0%, #e5c07b 100%);color:#0f172a;text-decoration:none;padding:14px 32px;border-radius:12px;font-weight:800;font-size:15px;display:inline-block;" target="_blank">
+        🔒 Redefinir Minha Senha
+      </a>
+    </div>
+
+    <p style="font-size:13px;line-height:1.6;color:#94a3b8;">
+      Este link possui validade de <strong>1 hora</strong> e pode ser utilizado apenas uma vez.
+    </p>
+    <p style="font-size:12px;line-height:1.6;color:#64748b;margin-bottom:0;">
+      Se você não solicitou esta redefinição, por favor desconsidere este e-mail. Sua senha permanecerá inalterada.
+    </p>
+  `;
+
+  return sendEmail({
+    to: params.userEmail,
+    subject: `🔐 Recuperação de Senha - Maître Conecta`,
+    html: getBaseEmailTemplate("Recuperação de Senha", content),
+  });
+}

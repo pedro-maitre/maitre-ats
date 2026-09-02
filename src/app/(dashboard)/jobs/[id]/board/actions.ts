@@ -3,6 +3,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import crypto from "crypto";
 import { evaluateApplicationFit } from "@/lib/fit-evaluator";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -373,7 +374,7 @@ export async function authorizeHire(applicationId: string, employeeCode?: string
       return { success: false, error: "Candidatura não encontrada." };
     }
 
-    const admissionToken = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    const admissionToken = crypto.randomBytes(24).toString("hex");
 
     // Transação de Contratação + Outbox Event + Admissão Digital
     await prisma.$transaction(async (tx) => {

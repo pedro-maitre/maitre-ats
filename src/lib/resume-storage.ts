@@ -23,7 +23,7 @@ async function ensureBucket(client: any, bucketName: string = "resumes"): Promis
     const { error } = await client.storage.getBucket(bucketName);
     if (error && error.message?.includes("not found")) {
       await client.storage.createBucket(bucketName, {
-        public: true, // Ou privado com URLs assinadas
+        public: false, // Privado com URLs assinadas e controle de acesso
       });
     }
   } catch (err) {

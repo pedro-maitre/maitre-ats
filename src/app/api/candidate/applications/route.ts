@@ -74,8 +74,6 @@ export async function GET(req: NextRequest) {
         companyName: app.job.organization.name,
         companySlug: app.job.organization.slug,
         salaryExpectation: app.salaryExpectation,
-        fitCategory: app.fitCategory,
-        priority: app.priority,
         appliedAt: app.createdAt,
         currentStage: {
           id: app.stage.id,
