@@ -24,9 +24,9 @@ A auditoria técnica do ecossistema **Maître Conecta** avaliou o repositório, 
 | Verificação | Comando | Resultado | Evidência |
 |---|---|---|---|
 | **TypeScript Typecheck** | `npx tsc --noEmit` | ✅ **APROVADO** | 0 erros encontrados |
-| **Build de Produção** | `npm run build` | ✅ **APROVADO** | 50+ rotas estáticas/dinâmicas geradas em 30.6s |
-| **Testes Automatizados** | `npm test` (Vitest) | ✅ **APROVADO** | 17 testes passaram em 2 suítes (`fit-evaluator.test.ts` e `feedback-templates.test.ts`) |
-| **Linting** | `npm run lint` | ⚠️ **ALERTA LEVE** | Warning padrão de convenção de middleware Next.js (`proxy`) |
+| **Build de Produção** | `npm run build` | ✅ **APROVADO** | Rotas estáticas/dinâmicas geradas e Prisma Client em 10.2s |
+| **Testes Automatizados** | `npm test` (Vitest) | ✅ **APROVADO** | 17 testes passaram em 2 suítes (`fit-evaluator` e `feedback-templates`) |
+| **Linting** | `npm run lint` | ⚠️ **ALERTA LEVE** | Warning sobre convenção de middleware Next.js e variáveis não utilizadas (ex: ícones Lucide) |
 
 ---
 
