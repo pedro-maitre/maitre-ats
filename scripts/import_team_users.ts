@@ -84,6 +84,7 @@ async function importTeam() {
     const orgData = {
       name: "Maître Consultoria",
       slug: "maitre",
+      isMaster: true,
       legalName: "Maître Consultoria e Gestão de Pessoas Ltda.",
       cnpj: "48.123.456/0001-89",
       industry: "Consultoria em Recursos Humanos, Recrutamento & Executive Search",

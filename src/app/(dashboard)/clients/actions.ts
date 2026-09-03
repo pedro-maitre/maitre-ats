@@ -12,7 +12,11 @@ export async function getClients() {
     throw new Error("Não autorizado");
   }
 
+  // Busca exclusivamente as empresas clientes parceiras atendidas pela consultoria
   const clients = await prisma.organization.findMany({
+    where: {
+      isMaster: false,
+    },
     orderBy: { createdAt: "desc" },
     include: {
       _count: {
@@ -36,6 +40,33 @@ export async function getClients() {
   });
 
   return clients;
+}
+
+export async function getMasterOrganization() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return null;
+  }
+
+  const master = await prisma.organization.findFirst({
+    where: {
+      OR: [
+        { isMaster: true },
+        { slug: "maitre" },
+      ],
+    },
+    include: {
+      _count: {
+        select: {
+          jobs: true,
+          candidates: true,
+          users: true,
+        },
+      },
+    },
+  });
+
+  return master;
 }
 
 export async function createClient(formData: FormData) {
@@ -244,6 +275,13 @@ export async function deleteClient(id: string) {
 
     if (!org) {
       return { success: false, error: "Empresa não encontrada." };
+    }
+
+    if (org.isMaster || org.slug === "maitre") {
+      return {
+        success: false,
+        error: "A Empresa Master (Maître Consultoria) não pode ser excluída do sistema.",
+      };
     }
 
     if (org._count.jobs > 0 || org._count.candidates > 0) {

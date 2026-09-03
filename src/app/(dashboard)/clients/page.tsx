@@ -2,12 +2,12 @@ import React from "react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getClients } from "./actions";
+import { getClients, getMasterOrganization } from "./actions";
 import ClientListClient from "@/components/clients/ClientListClient";
 
 export const metadata = {
   title: "Empresas Clientes | Maître Conecta",
-  description: "Gestão de empresas clientes, contas corporativas e portais de carreiras white-label",
+  description: "Gestão de empresas clientes parceiras e portais de carreiras white-label",
 };
 
 export default async function ClientsPage() {
@@ -20,11 +20,15 @@ export default async function ClientsPage() {
   const role = session.user.role || "RECRUITER";
   const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
-  const clients = await getClients();
+  const [clients, masterOrg] = await Promise.all([
+    getClients(),
+    getMasterOrganization(),
+  ]);
 
   return (
     <ClientListClient
       initialClients={JSON.parse(JSON.stringify(clients))}
+      masterOrganization={masterOrg ? JSON.parse(JSON.stringify(masterOrg)) : null}
       isAdmin={isAdmin}
     />
   );

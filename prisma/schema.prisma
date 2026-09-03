@@ -16,6 +16,7 @@ model Organization {
   bannerSubheadline String?
   aboutUs           String?
   websiteUrl        String?
+  isMaster          Boolean  @default(false) // Define se é a Empresa Master/Mantenedora (Maître)
   
   // Dados Jurídicos & Institucionais
   legalName         String?  // Razão Social

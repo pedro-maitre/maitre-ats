@@ -19,6 +19,7 @@ import {
   Layers,
   HeartHandshake,
   Search,
+  Crown,
 } from "lucide-react";
 import { LinkedinIcon, InstagramIcon } from "@/components/ui/BrandIcons";
 import Link from "next/link";
@@ -28,6 +29,7 @@ export type OrgFormData = {
   name: string;
   slug: string;
   role: string;
+  isMaster?: boolean;
   legalName?: string;
   cnpj?: string;
   industry?: string;
@@ -151,6 +153,30 @@ export default function OrgForm({ initialData }: { initialData: OrgFormData }) {
       {!isAdmin && (
         <div className="p-4 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50 rounded-2xl text-xs font-semibold">
           Você não possui permissão de Administrador para editar estas informações.
+        </div>
+      )}
+
+      {/* Banner de Empresa Master */}
+      {initialData.isMaster && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-[#18191d] to-slate-950 border border-maitre-gold/30 shadow-md flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-maitre-gold/20 text-maitre-gold border border-maitre-gold/30 flex items-center justify-center shrink-0">
+              <Crown size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-black text-white">
+                  Empresa Master do Sistema
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-maitre-gold text-slate-950">
+                  Matriz
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Esta é a entidade mantenedora conectada ao macro do software, operando a gestão de todos os clientes corporativos parceiros.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

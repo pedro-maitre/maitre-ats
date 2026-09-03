@@ -34,6 +34,7 @@ export default async function OrganizationPage() {
         id: organization.id,
         name: organization.name,
         slug: organization.slug,
+        isMaster: organization.isMaster,
         role: user.role,
         legalName: organization.legalName || "",
         cnpj: organization.cnpj || "",

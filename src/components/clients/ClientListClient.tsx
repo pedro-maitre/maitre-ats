@@ -15,6 +15,7 @@ import {
   ChevronRight,
   TrendingUp,
   Palette,
+  Crown,
 } from "lucide-react";
 import Link from "next/link";
 import ClientModal from "./ClientModal";
@@ -50,9 +51,11 @@ interface ClientData {
 
 export default function ClientListClient({
   initialClients,
+  masterOrganization,
   isAdmin,
 }: {
   initialClients: ClientData[];
+  masterOrganization?: any | null;
   isAdmin: boolean;
 }) {
   const [clients, setClients] = useState<ClientData[]>(initialClients);
@@ -161,6 +164,46 @@ export default function ClientListClient({
           <button onClick={() => setFeedback(null)} className="text-slate-400 hover:text-white">
             ✕
           </button>
+        </div>
+      )}
+
+      {/* Card da Empresa Master (Mantenedora do Sistema) */}
+      {masterOrganization && (
+        <div className="bg-gradient-to-br from-[#1c1d21] via-slate-900 to-[#121316] border border-maitre-gold/30 rounded-3xl p-6 sm:p-7 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-maitre-gold/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-maitre-gold/30 to-amber-400/15 border border-maitre-gold/40 flex items-center justify-center text-maitre-gold shadow-md shrink-0">
+                <Crown size={28} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h2 className="text-xl font-black text-white">
+                    {masterOrganization.name}
+                  </h2>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-black tracking-wider bg-maitre-gold text-slate-950 shadow-sm uppercase">
+                    👑 Empresa Master
+                  </span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    (Operadora & Mantenedora da Plataforma)
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                  Conectada ao macro do software. A Maître gerencia todas as vagas, candidatos e os processos seletivos de todas as empresas clientes parceiras abaixo.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <Link
+                href="/settings/organization"
+                className="px-4 py-2.5 rounded-xl border border-maitre-gold/30 hover:border-maitre-gold bg-maitre-gold/10 hover:bg-maitre-gold/20 text-maitre-gold text-xs font-bold transition-all flex items-center gap-2"
+              >
+                <span>Configurações da Master</span>
+                <ChevronRight size={14} />
+              </Link>
+            </div>
+          </div>
         </div>
       )}
 
