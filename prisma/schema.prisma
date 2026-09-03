@@ -64,6 +64,7 @@ model Organization {
   departments            Department[]
   positions              Position[]
   employees              Employee[]
+  consultingProjects     ConsultingProject[]
 }
 
 model User {
@@ -665,5 +666,46 @@ model Employee {
   @@index([organizationId, status])
   @@index([email])
 }
+
+model ConsultingProject {
+  id              String               @id @default(cuid())
+  organizationId  String
+  title           String
+  category        String               @default("HUNTING_EXECUTIVO") // HUNTING_EXECUTIVO, CARGOS_SALARIOS, DIAGNOSTICO_CLIMA, DHO_TREINAMENTO, MENTORIA_LIDERANCA, GOVERNANCA_RH
+  description     String?
+  status          String               @default("IN_PROGRESS") // PLANNING, IN_PROGRESS, REVIEW, COMPLETED, PAUSED
+  progressPercent Int                  @default(0) // 0 a 100
+  startDate       DateTime             @default(now())
+  targetDate      DateTime?
+  completedAt     DateTime?
+  consultantName  String?              // Nome do consultor responsável (ex: "Adriana", "Erika", "Pedro")
+  consultantEmail String?
+  budget          Float?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  organization    Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deliverables    ProjectDeliverable[]
+
+  @@index([organizationId, status])
+  @@index([category])
+}
+
+model ProjectDeliverable {
+  id          String            @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  status      String            @default("PENDING") // PENDING, IN_PROGRESS, SUBMITTED, APPROVED
+  dueDate     DateTime?
+  documentUrl String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  project     ConsultingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+}
+
 
 

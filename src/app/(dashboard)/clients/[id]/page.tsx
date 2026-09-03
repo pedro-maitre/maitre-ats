@@ -70,11 +70,20 @@ export default async function ClientDetailPage({
           },
         },
       },
+      consultingProjects: {
+        include: {
+          deliverables: {
+            orderBy: { createdAt: "asc" },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
       _count: {
         select: {
           jobs: true,
           candidates: true,
           users: true,
+          consultingProjects: true,
         },
       },
     },
