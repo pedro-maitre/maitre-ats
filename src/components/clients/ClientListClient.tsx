@@ -295,9 +295,12 @@ export default function ClientListClient({
                         {client.name[0]?.toUpperCase() || "E"}
                       </div>
                       <div>
-                        <h3 className="font-extrabold text-base text-slate-900 dark:text-white group-hover:text-maitre-gold transition-colors leading-tight">
+                        <Link
+                          href={`/clients/${client.id}`}
+                          className="font-extrabold text-base text-slate-900 dark:text-white group-hover:text-maitre-gold transition-colors leading-tight hover:underline block"
+                        >
                           {client.name}
-                        </h3>
+                        </Link>
                         <span className="text-xs font-mono text-slate-400 block mt-0.5">
                           /carreiras/{client.slug}
                         </span>
@@ -409,13 +412,22 @@ export default function ClientListClient({
                     )}
                   </div>
 
-                  <button
-                    onClick={() => handleSelectAndNavigate(client.id)}
-                    className="flex items-center gap-1.5 text-xs font-bold bg-slate-900 dark:bg-slate-800 hover:bg-maitre-gold hover:text-slate-950 text-white py-1.5 px-3 rounded-xl border border-slate-700 hover:border-maitre-gold transition-all cursor-pointer shadow-sm"
-                  >
-                    <span>Ver Vagas</span>
-                    <ChevronRight size={13} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/clients/${client.id}`}
+                      className="flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 py-1.5 px-2.5 rounded-xl border border-slate-700/60 hover:border-slate-600 transition-all shadow-sm"
+                    >
+                      <span>Detalhes</span>
+                    </Link>
+
+                    <button
+                      onClick={() => handleSelectAndNavigate(client.id)}
+                      className="flex items-center gap-1.5 text-xs font-bold bg-slate-900 dark:bg-slate-800 hover:bg-maitre-gold hover:text-slate-950 text-white py-1.5 px-3 rounded-xl border border-slate-700 hover:border-maitre-gold transition-all cursor-pointer shadow-sm"
+                    >
+                      <span>Ver Vagas</span>
+                      <ChevronRight size={13} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );

@@ -61,6 +61,9 @@ model Organization {
   recognitions           CultureRecognition[]
   courses                Course[]
   courseEnrollments      CourseEnrollment[]
+  departments            Department[]
+  positions              Position[]
+  employees              Employee[]
 }
 
 model User {
@@ -588,4 +591,79 @@ model CourseEnrollment {
   @@index([organizationId, courseId])
   @@index([employeeEmail])
 }
+
+model Department {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  code           String?
+  description    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  positions      Position[]
+  employees      Employee[]
+
+  @@index([organizationId, name])
+}
+
+model Position {
+  id             String       @id @default(cuid())
+  organizationId String
+  departmentId   String?
+  title          String
+  cboCode        String?
+  level          String?      // JUNIOR, PLENO, SENIOR, ESPECIALISTA, LIDERANCA, DIRETORIA
+  baseSalary     Float?
+  description    String?
+  requirements   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department     Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  employees      Employee[]
+
+  @@index([organizationId, title])
+}
+
+model Employee {
+  id                 String       @id @default(cuid())
+  organizationId     String
+  userId             String?      @unique
+  candidateId        String?
+  registrationNumber String?      // Matrícula funcional
+  fullName           String
+  email              String
+  cpf                String?
+  rg                 String?
+  phone              String?
+  birthDate          DateTime?
+  gender             String?
+  status             String       @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, VACATION
+  employmentType     String       @default("CLT") // CLT, PJ, ESTAGIO, TEMPORARIO
+  admissionDate      DateTime     @default(now())
+  terminationDate    DateTime?
+  salary             Float?
+  departmentId       String?
+  positionId         String?
+  managerId          String?
+  workSchedule       String?      @default("08:00 - 18:00 (Seg a Sex)")
+  address            String?
+  bankDetails        String?      // JSON string com banco, agência, conta, PIX
+  notes              String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department         Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  position           Position?    @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  manager            Employee?    @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  subordinates       Employee[]   @relation("EmployeeManager")
+
+  @@index([organizationId, status])
+  @@index([email])
+}
+
 

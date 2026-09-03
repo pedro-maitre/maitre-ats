@@ -34,13 +34,24 @@ export async function updateEmployeeOnboardingStatus(
       },
     });
 
+    // Se houver um Employee correspondente por email, sincroniza o status
+    const candidateEmail = conversion.application.candidate.email;
+    if (candidateEmail) {
+      await prisma.employee.updateMany({
+        where: { email: candidateEmail },
+        data: {
+          status: newStatus === "OFFBOARDED" ? "TERMINATED" : "ACTIVE",
+        },
+      });
+    }
+
     await logAuditEvent({
       organizationId: conversion.application.job.organizationId,
       actorUserId: user.id,
       action: "CANDIDATE_UPDATE",
       resourceType: "HireConversion",
       resourceId: conversion.id,
-      afterData: { status: newStatus, candidate: conversion.application.candidate.email },
+      afterData: { status: newStatus, candidate: candidateEmail },
       reason: `Status de onboarding alterado para ${newStatus} por ${user.email}.`,
     });
 
@@ -53,7 +64,7 @@ export async function updateEmployeeOnboardingStatus(
 }
 
 /**
- * Cadastra um novo colaborador manual diretamente no Core HR.
+ * Cadastra um novo colaborador diretamente no Core HR (Modelos Employee, Department e Position).
  */
 export async function createDirectEmployee(formData: FormData) {
   try {
@@ -62,21 +73,108 @@ export async function createDirectEmployee(formData: FormData) {
 
     const firstName = (formData.get("firstName") as string)?.trim();
     const lastName = (formData.get("lastName") as string)?.trim() || "";
+    const fullName = `${firstName} ${lastName}`.trim();
     const email = (formData.get("email") as string)?.trim().toLowerCase();
-    const phone = (formData.get("phone") as string)?.trim();
+    const phone = (formData.get("phone") as string)?.trim() || null;
+    const cpf = (formData.get("cpf") as string)?.trim() || null;
     const jobTitle = (formData.get("jobTitle") as string)?.trim();
-    const department = (formData.get("department") as string)?.trim() || "Geral";
+    const departmentName = (formData.get("department") as string)?.trim() || "Geral";
     const salary = parseFloat((formData.get("salary") as string)?.replace(/[^0-9.]/g, "") || "0");
+    const employmentType = (formData.get("employmentType") as string)?.trim() || "CLT";
     const employeeCode = (formData.get("employeeCode") as string)?.trim() || `MC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
+    const targetOrgId = (formData.get("organizationId") as string)?.trim();
 
     if (!firstName || !email || !jobTitle) {
       throw new Error("Nome, E-mail e Cargo são obrigatórios.");
     }
 
-    const org = await prisma.organization.findFirst();
-    if (!org) throw new Error("Organização não configurada.");
+    let org: any = null;
+    if (targetOrgId) {
+      org = await prisma.organization.findUnique({ where: { id: targetOrgId } });
+    }
+    if (!org) {
+      org = await prisma.organization.findFirst({
+        where: { isMaster: true },
+      }) || (await prisma.organization.findFirst());
+    }
 
-    // Busca ou cria a vaga do cargo
+    if (!org) throw new Error("Organização não configurada no sistema.");
+
+    // 1. Busca ou cria o Departamento
+    let department = await prisma.department.findFirst({
+      where: {
+        organizationId: org.id,
+        name: { equals: departmentName, mode: "insensitive" },
+      },
+    });
+
+    if (!department) {
+      department = await prisma.department.create({
+        data: {
+          organizationId: org.id,
+          name: departmentName,
+        },
+      });
+    }
+
+    // 2. Busca ou cria o Cargo (Position)
+    let position = await prisma.position.findFirst({
+      where: {
+        organizationId: org.id,
+        title: { equals: jobTitle, mode: "insensitive" },
+      },
+    });
+
+    if (!position) {
+      position = await prisma.position.create({
+        data: {
+          organizationId: org.id,
+          departmentId: department.id,
+          title: jobTitle,
+          baseSalary: salary > 0 ? salary : null,
+        },
+      });
+    }
+
+    // 3. Cria ou atualiza o Colaborador na tabela Employee
+    const existingEmployee = await prisma.employee.findFirst({
+      where: { organizationId: org.id, email },
+    });
+
+    let employee: any;
+    if (existingEmployee) {
+      employee = await prisma.employee.update({
+        where: { id: existingEmployee.id },
+        data: {
+          fullName,
+          phone,
+          cpf,
+          salary: salary > 0 ? salary : existingEmployee.salary,
+          departmentId: department.id,
+          positionId: position.id,
+          employmentType,
+          status: "ACTIVE",
+        },
+      });
+    } else {
+      employee = await prisma.employee.create({
+        data: {
+          organizationId: org.id,
+          registrationNumber: employeeCode,
+          fullName,
+          email,
+          cpf,
+          phone,
+          salary,
+          employmentType,
+          status: "ACTIVE",
+          departmentId: department.id,
+          positionId: position.id,
+        },
+      });
+    }
+
+    // 4. Criação compatível de Candidate + Application + HireConversion para integridade com ATS legado
     let job = await prisma.job.findFirst({
       where: { title: jobTitle, organizationId: org.id },
       include: { stages: { orderBy: { order: "asc" } } },
@@ -86,8 +184,8 @@ export async function createDirectEmployee(formData: FormData) {
       job = await prisma.job.create({
         data: {
           title: jobTitle,
-          description: `Cargo cadastrado diretamente no Core HR para ${jobTitle}.`,
-          department,
+          description: `Cargo cadastrado no Core HR para ${jobTitle}.`,
+          department: departmentName,
           salaryMin: salary,
           salaryMax: salary,
           status: "CLOSED",
@@ -100,7 +198,6 @@ export async function createDirectEmployee(formData: FormData) {
       });
     }
 
-    // Cria ou atualiza o candidato
     const candidate = await prisma.candidate.upsert({
       where: { email },
       update: {
@@ -118,22 +215,31 @@ export async function createDirectEmployee(formData: FormData) {
       },
     });
 
-    // Cria aplicação
-    const app = await prisma.application.create({
-      data: {
-        candidateId: candidate.id,
-        jobId: job.id,
-        stageId: job.stages[0].id,
-        matchScore: 100,
-        fitCategory: "ALTO_FIT",
-        priority: "PRIORIZADO",
-        salaryExpectation: salary,
-      },
+    let app = await prisma.application.findFirst({
+      where: { candidateId: candidate.id, jobId: job.id },
     });
 
-    // Cria Conversão no Core HR
-    const conversion = await prisma.hireConversion.create({
-      data: {
+    if (!app) {
+      app = await prisma.application.create({
+        data: {
+          candidateId: candidate.id,
+          jobId: job.id,
+          stageId: job.stages[0]?.id || "",
+          matchScore: 100,
+          fitCategory: "ALTO_FIT",
+          priority: "PRIORIZADO",
+          salaryExpectation: salary,
+        },
+      });
+    }
+
+    await prisma.hireConversion.upsert({
+      where: { applicationId: app.id },
+      update: {
+        status: "ACTIVE",
+        employeeCode,
+      },
+      create: {
         applicationId: app.id,
         convertedBy: user.email || "SYSTEM",
         employeeCode,
@@ -141,20 +247,19 @@ export async function createDirectEmployee(formData: FormData) {
       },
     });
 
-    // Registra evento na Outbox
+    // 5. Auditoria e Outbox
     await prisma.integrationOutbox.create({
       data: {
         organizationId: org.id,
-        eventType: "candidate.hire_authorized.v1",
+        eventType: "employee.created.v1",
         payload: JSON.stringify({
-          applicationId: app.id,
-          candidateId: candidate.id,
-          candidateName: `${firstName} ${lastName}`,
-          candidateEmail: email,
-          jobId: job.id,
-          jobTitle,
+          employeeId: employee.id,
+          fullName,
+          email,
           employeeCode,
-          salaryOffered: salary,
+          department: departmentName,
+          position: jobTitle,
+          salary,
           authorizedBy: user.email,
           occurredAt: new Date().toISOString(),
         }),
@@ -165,13 +270,14 @@ export async function createDirectEmployee(formData: FormData) {
       organizationId: org.id,
       actorUserId: user.id,
       action: "HIRE_AUTHORIZED",
-      resourceType: "HireConversion",
-      resourceId: conversion.id,
-      afterData: { employeeCode, email, jobTitle },
+      resourceType: "Employee",
+      resourceId: employee.id,
+      afterData: { employeeCode, email, jobTitle, department: departmentName },
+      reason: `Colaborador cadastrado no Core HR por ${user.email}.`,
     });
 
     revalidatePath("/employees");
-    return { success: true };
+    return { success: true, employeeId: employee.id };
   } catch (err: any) {
     console.error("Erro ao cadastrar colaborador:", err);
     return { success: false, error: err.message || "Falha ao cadastrar colaborador." };

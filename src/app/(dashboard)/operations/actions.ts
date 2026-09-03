@@ -208,6 +208,77 @@ export async function finalizeAdmission(
       },
     });
 
+    // INTEGRAÇÃO CORE HR: Cria ou atualiza formalmente o colaborador na tabela Employee
+    try {
+      const candidate = app.candidate;
+      const orgId = app.job.organizationId;
+      const deptName = app.job.department || "Geral";
+
+      // 1. Garante Departamento
+      let department = await prisma.department.findFirst({
+        where: { organizationId: orgId, name: { equals: deptName, mode: "insensitive" } },
+      });
+      if (!department) {
+        department = await prisma.department.create({
+          data: { organizationId: orgId, name: deptName },
+        });
+      }
+
+      // 2. Garante Cargo (Position)
+      let position = await prisma.position.findFirst({
+        where: { organizationId: orgId, title: { equals: app.job.title, mode: "insensitive" } },
+      });
+      if (!position) {
+        position = await prisma.position.create({
+          data: {
+            organizationId: orgId,
+            departmentId: department.id,
+            title: app.job.title,
+            baseSalary: app.salaryExpectation || app.job.salaryMax || null,
+          },
+        });
+      }
+
+      // 3. Upsert em Employee
+      const existingEmp = await prisma.employee.findFirst({
+        where: { organizationId: orgId, email: candidate.email },
+      });
+
+      const fullName = `${candidate.firstName} ${candidate.lastName}`.trim();
+
+      if (existingEmp) {
+        await prisma.employee.update({
+          where: { id: existingEmp.id },
+          data: {
+            registrationNumber: finalCode,
+            status: "ACTIVE",
+            admissionDate: new Date(),
+            departmentId: department.id,
+            positionId: position.id,
+            candidateId: candidate.id,
+          },
+        });
+      } else {
+        await prisma.employee.create({
+          data: {
+            organizationId: orgId,
+            registrationNumber: finalCode,
+            fullName,
+            email: candidate.email,
+            phone: candidate.phone,
+            status: "ACTIVE",
+            admissionDate: new Date(),
+            departmentId: department.id,
+            positionId: position.id,
+            candidateId: candidate.id,
+            employmentType: "CLT",
+          },
+        });
+      }
+    } catch (coreHrErr) {
+      console.warn("Aviso ao sincronizar Core HR na admissão:", coreHrErr);
+    }
+
     // Auditoria
     await logAuditEvent({
       organizationId: app.job.organizationId,
