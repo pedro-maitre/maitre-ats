@@ -153,9 +153,19 @@ export default async function CarreirasLayout({
       {/* Footer */}
       <footer className="py-8 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-center text-sm text-slate-500 dark:text-slate-400 shrink-0">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="font-medium">
-            © {new Date().getFullYear()} {org.name}. Todos os direitos reservados.
-          </p>
+          <div className="text-center sm:text-left space-y-0.5">
+            <p className="font-semibold text-slate-800 dark:text-slate-200">
+              © {new Date().getFullYear()} {org.legalName || org.name}. Todos os direitos reservados.
+            </p>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 text-xs text-slate-400">
+              {org.cnpj && <span>CNPJ: {org.cnpj}</span>}
+              {org.addressCity && org.addressState && (
+                <span>
+                  {org.addressCity} - {org.addressState}
+                </span>
+              )}
+            </div>
+          </div>
           <p className="flex items-center gap-1 text-xs">
             Tecnologia e Gestão por{" "}
             <span className="font-bold text-slate-800 dark:text-slate-200">

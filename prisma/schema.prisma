@@ -16,6 +16,32 @@ model Organization {
   bannerSubheadline String?
   aboutUs           String?
   websiteUrl        String?
+  
+  // Dados Jurídicos & Institucionais
+  legalName         String?  // Razão Social
+  cnpj              String?  // CNPJ da empresa
+  industry          String?  // Ramo / Setor de atuação
+  companySize       String?  // Porte da empresa (ex: "1-10", "11-50", "51-200")
+  foundedYear       Int?     // Ano de fundação
+
+  // Comunicação & Redes
+  email             String?  // E-mail institucional de contato
+  phone             String?  // Telefone / WhatsApp comercial
+  linkedinUrl       String?  // LinkedIn institucional
+  instagramUrl      String?  // Instagram da empresa
+
+  // Endereço Corporativo
+  addressZipCode    String?  // CEP
+  addressStreet     String?  // Logradouro / Rua
+  addressNumber     String?  // Número
+  addressComplement String?  // Complemento
+  addressNeighborhood String? // Bairro
+  addressCity       String?  // Cidade
+  addressState      String?  // Estado (UF)
+
+  // Cultura & Propósito
+  cultureValues     String?  // Missão, Visão e Valores institucionais
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -42,6 +68,17 @@ model User {
   password       String?
   name           String?
   role           String       @default("CANDIDATE") // SUPER_ADMIN, ADMIN, RECRUITER, CANDIDATE
+  
+  // Perfil do Colaborador / Recrutador / Admin
+  jobTitle       String?      // Cargo / Função na Maître (ex: "Recrutadora Sênior", "Head de R&S", "Admin")
+  department     String?      // Departamento (ex: "Recursos Humanos", "Diretoria", "Tecnologia")
+  phone          String?      // WhatsApp / Telefone profissional
+  avatarUrl      String?      // Foto de perfil
+  linkedinUrl    String?      // Perfil no LinkedIn
+  bio            String?      // Resumo profissional / Minibio
+  status         String       @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
+  joinedAt       DateTime?    // Data de admissão / início na equipe
+
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
   

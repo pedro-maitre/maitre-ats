@@ -19,49 +19,97 @@ async function main() {
     where: { slug: "maitre" },
   });
 
+  const orgData = {
+    name: "Maître Consultoria",
+    slug: "maitre",
+    legalName: "Maître Consultoria e Gestão de Pessoas Ltda.",
+    cnpj: "48.123.456/0001-89",
+    industry: "Consultoria em Recursos Humanos, Recrutamento & Executive Search",
+    companySize: "11-50",
+    foundedYear: 2021,
+    email: "contato@maitrework.com.br",
+    phone: "(11) 99123-4567",
+    websiteUrl: "https://maitrework.com.br",
+    linkedinUrl: "https://www.linkedin.com/company/maitre-consultoria",
+    instagramUrl: "https://www.instagram.com/maitreconsultoria",
+    addressZipCode: "01310-100",
+    addressStreet: "Avenida Paulista",
+    addressNumber: "1000",
+    addressComplement: "Conjunto 1204 - Bela Vista",
+    addressNeighborhood: "Bela Vista",
+    addressCity: "São Paulo",
+    addressState: "SP",
+    primaryColor: "#D4AF37",
+    bannerHeadline: "Construa sua trajetória profissional com a Maître Consultoria",
+    bannerSubheadline: "Conectamos talentos extraordinários às melhores oportunidades do mercado.",
+    aboutUs: "A Maître Consultoria é referência na condução de processos seletivos estratégicos e hunting executivo.",
+    cultureValues: "Ética inegociável, assertividade, confidencialidade e inovação contínua.",
+  };
+
   if (!org) {
     org = await prisma.organization.create({
-      data: {
-        name: "Maître Consultoria",
-        slug: "maitre",
-      },
+      data: orgData,
     });
-    console.log("✓ Organização Maître Consultoria criada.");
+    console.log("✓ Organização Maître Consultoria criada com perfil completo.");
+  } else {
+    await prisma.organization.update({
+      where: { id: org.id },
+      data: orgData,
+    });
+    console.log("✓ Perfil da Maître Consultoria atualizado.");
   }
 
   const hashedPassword = await bcrypt.hash("123456", 10);
 
-  // 2. Usuários essenciais
+  // 2. Usuários e colaboradores essenciais
   const usersToEnsure = [
     {
       email: "admin@maitrework.com.br",
       name: "Admin",
       role: "SUPER_ADMIN",
+      jobTitle: "Administrador do Sistema",
+      department: "Tecnologia & Inovação",
+      phone: "(11) 99999-0000",
     },
     {
       email: "adriana@maitrework.com.br",
       name: "Adriana",
       role: "ADMIN",
+      jobTitle: "Diretora & Administradora de Operações",
+      department: "Diretoria & Sócios",
+      phone: "(11) 98111-2233",
     },
     {
       email: "pedro@maitrework.com.br",
       name: "Pedro",
       role: "RECRUITER",
+      jobTitle: "Tech Recruiter & Consultor de R&S",
+      department: "Tech Recruiting",
+      phone: "(11) 98555-6677",
     },
     {
       email: "erika@maitrework.com.br",
       name: "Erika",
       role: "RECRUITER",
+      jobTitle: "Recrutadora Sênior & Headhunter",
+      department: "Recursos Humanos / R&S",
+      phone: "(11) 98222-3344",
     },
     {
       email: "lauriana@maitrework.com.br",
       name: "Lauriana",
       role: "RECRUITER",
+      jobTitle: "Recrutadora Plena",
+      department: "Recursos Humanos / R&S",
+      phone: "(11) 98333-4455",
     },
     {
       email: "kheviany@maitrework.com.br",
       name: "Kheviany",
       role: "RECRUITER",
+      jobTitle: "Consultora de Atração & Seleção",
+      department: "Recursos Humanos / R&S",
+      phone: "(11) 98444-5566",
     },
   ];
 
@@ -76,11 +124,27 @@ async function main() {
           email: u.email,
           name: u.name,
           role: u.role,
+          jobTitle: u.jobTitle,
+          department: u.department,
+          phone: u.phone,
+          status: "ACTIVE",
           password: hashedPassword,
           organizationId: org.id,
         },
       });
       console.log(`✓ Usuário ${u.name} (${u.email}) criado com sucesso.`);
+    } else {
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          jobTitle: u.jobTitle,
+          department: u.department,
+          phone: u.phone,
+          status: "ACTIVE",
+          organizationId: org.id,
+        },
+      });
+      console.log(`✓ Colaborador ${u.name} sincronizado.`);
     }
   }
 

@@ -10,11 +10,32 @@ export type CreateUserInput = {
   name: string;
   email: string;
   password: string;
-  role: "SUPER_ADMIN" | "ADMIN" | "RECRUITER" | "CANDIDATE";
+  role: "SUPER_ADMIN" | "ADMIN" | "RECRUITER" | "CANDIDATE" | "HIRING_MANAGER";
+  jobTitle?: string | null;
+  department?: string | null;
+  phone?: string | null;
+  avatarUrl?: string | null;
+  linkedinUrl?: string | null;
+  bio?: string | null;
+  status?: string | null;
+  joinedAt?: string | Date | null;
+};
+
+export type UpdateUserInput = {
+  name: string;
+  role: string;
+  jobTitle?: string | null;
+  department?: string | null;
+  phone?: string | null;
+  avatarUrl?: string | null;
+  linkedinUrl?: string | null;
+  bio?: string | null;
+  status?: string | null;
+  joinedAt?: string | Date | null;
 };
 
 /**
- * Criação de novo usuário pela equipe administrativa.
+ * Criação de novo usuário / colaborador pela equipe administrativa.
  */
 export async function createUser(data: CreateUserInput) {
   const session = await getServerSession(authOptions);
@@ -29,7 +50,7 @@ export async function createUser(data: CreateUserInput) {
   const role = data.role || "RECRUITER";
 
   if (!name || !email || !password) {
-    return { success: false, error: "Todos os campos (Nome, E-mail e Senha) são obrigatórios." };
+    return { success: false, error: "Todos os campos obrigatórios (Nome, E-mail e Senha) devem ser preenchidos." };
   }
 
   if (password.length < 6) {
@@ -46,8 +67,16 @@ export async function createUser(data: CreateUserInput) {
       return { success: false, error: "Já existe um usuário cadastrado com este e-mail." };
     }
 
-    // 2. Obter ou criar organização padrão
-    let org = await prisma.organization.findFirst();
+    // 2. Obter ou criar organização padrão (Maître Consultoria)
+    let org = await prisma.organization.findFirst({
+      where: {
+        OR: [
+          { slug: "maitre" },
+          { name: { contains: "Maître", mode: "insensitive" } },
+        ]
+      }
+    });
+
     if (!org) {
       org = await prisma.organization.create({
         data: { name: "Maître Consultoria", slug: "maitre" },
@@ -57,13 +86,21 @@ export async function createUser(data: CreateUserInput) {
     // 3. Hash da senha
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Criar usuário
+    // 4. Criar usuário / colaborador
     const newUser = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
         role,
+        jobTitle: data.jobTitle?.trim() || null,
+        department: data.department?.trim() || null,
+        phone: data.phone?.trim() || null,
+        avatarUrl: data.avatarUrl?.trim() || null,
+        linkedinUrl: data.linkedinUrl?.trim() || null,
+        bio: data.bio?.trim() || null,
+        status: data.status?.trim() || "ACTIVE",
+        joinedAt: data.joinedAt ? new Date(data.joinedAt) : new Date(),
         organizationId: org.id,
       },
       include: {
@@ -80,6 +117,14 @@ export async function createUser(data: CreateUserInput) {
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
+        jobTitle: newUser.jobTitle,
+        department: newUser.department,
+        phone: newUser.phone,
+        avatarUrl: newUser.avatarUrl,
+        linkedinUrl: newUser.linkedinUrl,
+        bio: newUser.bio,
+        status: newUser.status,
+        joinedAt: newUser.joinedAt,
         organization: newUser.organization ? { name: newUser.organization.name } : null,
         createdAt: newUser.createdAt,
       },
@@ -91,11 +136,11 @@ export async function createUser(data: CreateUserInput) {
 }
 
 /**
- * Atualização dos dados e nível de acesso do usuário.
+ * Atualização dos dados e perfil profissional do colaborador.
  */
 export async function updateUser(
   userId: string,
-  data: { name: string; role: string }
+  data: UpdateUserInput
 ) {
   const session = await getServerSession(authOptions);
 
@@ -109,6 +154,14 @@ export async function updateUser(
       data: {
         name: data.name?.trim(),
         role: data.role,
+        jobTitle: data.jobTitle !== undefined ? (data.jobTitle?.trim() || null) : undefined,
+        department: data.department !== undefined ? (data.department?.trim() || null) : undefined,
+        phone: data.phone !== undefined ? (data.phone?.trim() || null) : undefined,
+        avatarUrl: data.avatarUrl !== undefined ? (data.avatarUrl?.trim() || null) : undefined,
+        linkedinUrl: data.linkedinUrl !== undefined ? (data.linkedinUrl?.trim() || null) : undefined,
+        bio: data.bio !== undefined ? (data.bio?.trim() || null) : undefined,
+        status: data.status !== undefined ? (data.status?.trim() || "ACTIVE") : undefined,
+        joinedAt: data.joinedAt ? new Date(data.joinedAt) : undefined,
       },
       include: {
         organization: true,
@@ -123,6 +176,14 @@ export async function updateUser(
         name: updated.name,
         email: updated.email,
         role: updated.role,
+        jobTitle: updated.jobTitle,
+        department: updated.department,
+        phone: updated.phone,
+        avatarUrl: updated.avatarUrl,
+        linkedinUrl: updated.linkedinUrl,
+        bio: updated.bio,
+        status: updated.status,
+        joinedAt: updated.joinedAt,
         organization: updated.organization ? { name: updated.organization.name } : null,
         createdAt: updated.createdAt,
       },

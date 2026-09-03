@@ -32,7 +32,33 @@ export async function updateProfile(formData: { name: string; email: string }) {
   return { success: true };
 }
 
-export async function updateOrganization(formData: { name: string; slug: string }) {
+export type UpdateOrganizationInput = {
+  name: string;
+  slug: string;
+  legalName?: string | null;
+  cnpj?: string | null;
+  industry?: string | null;
+  companySize?: string | null;
+  foundedYear?: number | null;
+  email?: string | null;
+  phone?: string | null;
+  websiteUrl?: string | null;
+  linkedinUrl?: string | null;
+  instagramUrl?: string | null;
+  addressZipCode?: string | null;
+  addressStreet?: string | null;
+  addressNumber?: string | null;
+  addressComplement?: string | null;
+  addressNeighborhood?: string | null;
+  addressCity?: string | null;
+  addressState?: string | null;
+  aboutUs?: string | null;
+  cultureValues?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+};
+
+export async function updateOrganization(formData: UpdateOrganizationInput) {
   const session = await getServerSession(authOptions);
   
   if (!session?.user?.id) {
@@ -53,8 +79,14 @@ export async function updateOrganization(formData: { name: string; slug: string 
   }
 
   // Check slug uniqueness
+  const cleanSlug = formData.slug
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/\s+/g, "-");
+
   const existingOrg = await prisma.organization.findUnique({
-    where: { slug: formData.slug }
+    where: { slug: cleanSlug }
   });
 
   if (existingOrg && existingOrg.id !== user.organizationId) {
@@ -64,8 +96,29 @@ export async function updateOrganization(formData: { name: string; slug: string 
   await prisma.organization.update({
     where: { id: user.organizationId },
     data: {
-      name: formData.name,
-      slug: formData.slug,
+      name: formData.name.trim(),
+      slug: cleanSlug,
+      legalName: formData.legalName?.trim() || null,
+      cnpj: formData.cnpj?.trim() || null,
+      industry: formData.industry?.trim() || null,
+      companySize: formData.companySize?.trim() || null,
+      foundedYear: formData.foundedYear ? Number(formData.foundedYear) : null,
+      email: formData.email?.trim() || null,
+      phone: formData.phone?.trim() || null,
+      websiteUrl: formData.websiteUrl?.trim() || null,
+      linkedinUrl: formData.linkedinUrl?.trim() || null,
+      instagramUrl: formData.instagramUrl?.trim() || null,
+      addressZipCode: formData.addressZipCode?.trim() || null,
+      addressStreet: formData.addressStreet?.trim() || null,
+      addressNumber: formData.addressNumber?.trim() || null,
+      addressComplement: formData.addressComplement?.trim() || null,
+      addressNeighborhood: formData.addressNeighborhood?.trim() || null,
+      addressCity: formData.addressCity?.trim() || null,
+      addressState: formData.addressState?.trim() || null,
+      aboutUs: formData.aboutUs?.trim() || null,
+      cultureValues: formData.cultureValues?.trim() || null,
+      logoUrl: formData.logoUrl?.trim() || null,
+      primaryColor: formData.primaryColor?.trim() || "#D4AF37",
     }
   });
 
