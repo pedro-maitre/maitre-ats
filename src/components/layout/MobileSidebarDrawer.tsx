@@ -70,7 +70,7 @@ export default function MobileSidebarDrawer({
         type="button"
         onClick={() => setIsOpen(true)}
         aria-label="Abrir menu de navegação"
-        className="lg:hidden p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center justify-center"
+        className="lg:hidden w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition-colors flex items-center justify-center cursor-pointer active:scale-95"
       >
         <Menu size={18} />
       </button>
@@ -102,7 +102,7 @@ export default function MobileSidebarDrawer({
                 type="button"
                 onClick={() => setIsOpen(false)}
                 aria-label="Fechar menu"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="w-10 h-10 min-h-[40px] min-w-[40px] rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors flex items-center justify-center cursor-pointer"
               >
                 <X size={18} />
               </button>

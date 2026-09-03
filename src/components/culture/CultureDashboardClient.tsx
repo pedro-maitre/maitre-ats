@@ -588,10 +588,12 @@ export default function CultureDashboardClient({
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => handleLike(rec.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/40 text-slate-600 hover:text-rose-600 dark:text-slate-300 dark:hover:text-rose-400 text-xs font-bold transition-colors group active:scale-90"
+                      aria-label={`Curtir reconhecimento para ${rec.receiverName}`}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[38px] rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all group active:scale-95 cursor-pointer shadow-sm"
                     >
-                      <ThumbsUp size={13} className="group-hover:text-rose-500 transition-colors" />
+                      <ThumbsUp size={14} className="text-rose-500 group-hover:scale-110 transition-transform" />
                       <span>{rec.likesCount}</span>
                     </button>
                   </div>
@@ -806,8 +808,10 @@ export default function CultureDashboardClient({
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-sm font-bold"
+                aria-label="Fechar modal de reconhecimento"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-2 text-sm font-bold transition-colors cursor-pointer"
               >
                 ✕
               </button>

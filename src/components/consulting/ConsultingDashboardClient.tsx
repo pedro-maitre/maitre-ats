@@ -361,7 +361,7 @@ export default function ConsultingDashboardClient({
                               <div
                                 className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] shrink-0 ${
                                   isDone
-                                    ? "bg-emerald-500 text-slate-950 font-bold"
+                                    ? "bg-emerald-600 text-white font-black shadow-sm"
                                     : "border border-slate-500"
                                 }`}
                               >
@@ -413,7 +413,12 @@ export default function ConsultingDashboardClient({
                   Vincule o projeto ao cliente e defina o escopo de entregáveis.
                 </p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                aria-label="Fechar modal de novo projeto"
+                className="text-slate-400 hover:text-white p-2 rounded-xl transition-colors cursor-pointer"
+              >
                 <X size={20} />
               </button>
             </div>

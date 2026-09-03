@@ -161,7 +161,12 @@ export default function ClientListClient({
           }`}
         >
           <span>{feedback.text}</span>
-          <button onClick={() => setFeedback(null)} className="text-slate-400 hover:text-white">
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            aria-label="Fechar notificação"
+            className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+          >
             ✕
           </button>
         </div>

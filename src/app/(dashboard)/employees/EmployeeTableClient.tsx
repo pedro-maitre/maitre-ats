@@ -412,6 +412,7 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
                             href={cand.resumeUrl}
                             target="_blank"
                             rel="noopener noreferrer"
+                            aria-label="Ver Currículo PDF Arquivado"
                             className="p-2 rounded-xl text-slate-400 hover:text-purple-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                             title="Ver Currículo PDF Arquivado"
                           >
@@ -489,7 +490,12 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
                   <span className="text-xs text-slate-400">Cadastro de colaborador sem processo seletivo</span>
                 </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 text-slate-400 hover:text-white">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                aria-label="Fechar modal de admissão direta"
+                className="p-2 text-slate-400 hover:text-white rounded-xl transition-colors cursor-pointer"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -628,11 +634,13 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setIsBatchModalOpen(false);
                   setBatchResult(null);
                 }}
-                className="text-slate-400 hover:text-white"
+                aria-label="Fechar modal de importação em lote"
+                className="text-slate-400 hover:text-white p-2 rounded-xl transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>

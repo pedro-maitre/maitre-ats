@@ -170,8 +170,9 @@ export default function CareersHubDashboardClient({
 
         {isAdmin && (
           <button
+            type="button"
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:brightness-105 shadow-md transition-all cursor-pointer shrink-0"
+            className="flex items-center gap-2 px-5 py-2.5 min-h-[42px] rounded-xl text-xs font-black bg-gradient-to-r from-amber-600 to-maitre-gold text-slate-950 hover:brightness-105 shadow-md transition-all cursor-pointer shrink-0"
           >
             <Plus size={16} />
             <span>Mapear Cadeira Crítica</span>
@@ -404,7 +405,12 @@ export default function CareersHubDashboardClient({
                   Identifique a posição estratégica e os riscos associados.
                 </p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                aria-label="Fechar modal de mapeamento de cadeira crítica"
+                className="text-slate-400 hover:text-white p-2 rounded-xl transition-colors cursor-pointer"
+              >
                 <X size={20} />
               </button>
             </div>
@@ -532,7 +538,12 @@ export default function CareersHubDashboardClient({
                   Cadeira: <strong className="text-violet-400">{selectedPlanForSuccessor.positionTitle}</strong>
                 </p>
               </div>
-              <button onClick={() => setIsAddSuccessorModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button
+                type="button"
+                onClick={() => setIsAddSuccessorModalOpen(false)}
+                aria-label="Fechar modal de adicionar sucessor"
+                className="text-slate-400 hover:text-white p-2 rounded-xl transition-colors cursor-pointer"
+              >
                 <X size={20} />
               </button>
             </div>
