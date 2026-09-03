@@ -28,28 +28,41 @@ export const metadata = {
 };
 
 export default async function EmployeesPage() {
-  // Busca todas as conversões de contratação
-  const conversions = await prisma.hireConversion.findMany({
-    include: {
-      application: {
-        include: {
-          candidate: true,
-          job: true,
-          offers: {
-            where: { status: "APPROVED" },
-            orderBy: { createdAt: "desc" },
-            take: 1,
-          },
-          interviews: {
-            include: {
-              scorecards: true,
+  const [conversions, formalEmployees, organizations] = await Promise.all([
+    prisma.hireConversion.findMany({
+      include: {
+        application: {
+          include: {
+            candidate: true,
+            job: true,
+            offers: {
+              where: { status: "APPROVED" },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+            },
+            interviews: {
+              include: {
+                scorecards: true,
+              },
             },
           },
         },
       },
-    },
-    orderBy: { convertedAt: "desc" },
-  });
+      orderBy: { convertedAt: "desc" },
+    }),
+    prisma.employee.findMany({
+      include: {
+        department: true,
+        position: true,
+        organization: true,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.organization.findMany({
+      select: { id: true, name: true, slug: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   // Métricas do Core HR
   const totalEmployees = conversions.length;
@@ -138,7 +151,11 @@ export default async function EmployeesPage() {
       </div>
 
       {/* Tabela Interativa de Colaboradores */}
-      <EmployeeTableClient conversions={conversions} />
+      <EmployeeTableClient
+        conversions={JSON.parse(JSON.stringify(conversions))}
+        formalEmployees={JSON.parse(JSON.stringify(formalEmployees))}
+        organizations={JSON.parse(JSON.stringify(organizations))}
+      />
     </div>
   );
 }

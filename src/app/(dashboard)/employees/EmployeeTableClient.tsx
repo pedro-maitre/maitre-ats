@@ -26,16 +26,61 @@ import {
   AlertTriangle,
   X,
   Award,
+  FileSpreadsheet,
+  Upload,
+  Download,
 } from "lucide-react";
-import { updateEmployeeOnboardingStatus, createDirectEmployee } from "./actions";
+import { updateEmployeeOnboardingStatus, createDirectEmployee, importEmployeesBatch } from "./actions";
 import EmptyState from "@/components/ui/EmptyState";
 
-export default function EmployeeTableClient({ conversions }: { conversions: any[] }) {
-  const [list, setList] = useState(conversions);
+interface EmployeeTableClientProps {
+  conversions: any[];
+  formalEmployees?: any[];
+  organizations?: Array<{ id: string; name: string; slug: string }>;
+}
+
+export default function EmployeeTableClient({
+  conversions,
+  formalEmployees = [],
+  organizations = [],
+}: EmployeeTableClientProps) {
+  // Mescla unificada: conversions + formalEmployees sem duplicação por e-mail
+  const conversionEmails = new Set(
+    conversions.map((c) => c.application?.candidate?.email?.toLowerCase()).filter(Boolean)
+  );
+
+  const directEmployeesUnified = formalEmployees
+    .filter((emp) => emp.email && !conversionEmails.has(emp.email.toLowerCase()))
+    .map((emp) => ({
+      id: emp.id,
+      employeeCode: emp.registrationNumber || "SEM_MATRICULA",
+      status: emp.status,
+      convertedAt: emp.admissionDate || emp.createdAt,
+      isCoreHrDirect: true,
+      application: {
+        candidate: {
+          firstName: emp.fullName?.split(" ")[0] || "Colaborador",
+          lastName: emp.fullName?.split(" ").slice(1).join(" ") || "",
+          email: emp.email,
+          phone: emp.phone,
+        },
+        job: {
+          title: emp.position?.title || "Colaborador",
+          department: emp.department?.name || "Geral",
+          organization: emp.organization,
+        },
+        offers: [{ salaryOffered: emp.salary }],
+      },
+    }));
+
+  const initialMergedList = [...conversions, ...directEmployeesUnified];
+
+  const [list, setList] = useState(initialMergedList);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [departmentFilter, setDepartmentFilter] = useState("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBatchModalOpen, setIsBatchModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -49,7 +94,13 @@ export default function EmployeeTableClient({ conversions }: { conversions: any[
     department: "Tecnologia",
     salary: "",
     employeeCode: "MC-2026-001",
+    organizationId: organizations[0]?.id || "",
   });
+
+  // Batch states
+  const [batchOrgId, setBatchOrgId] = useState(organizations[0]?.id || "");
+  const [batchCsvText, setBatchCsvText] = useState("");
+  const [batchResult, setBatchResult] = useState<{ count: number; total: number; errors: string[] } | null>(null);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat("pt-BR", {
@@ -59,7 +110,7 @@ export default function EmployeeTableClient({ conversions }: { conversions: any[
     }).format(val);
 
   const departments = Array.from(
-    new Set(list.map((c) => c.application.job.department).filter(Boolean))
+    new Set(list.map((c) => c.application?.job?.department).filter(Boolean))
   );
 
   const filtered = list.filter((item) => {
@@ -125,6 +176,47 @@ export default function EmployeeTableClient({ conversions }: { conversions: any[
     }
   };
 
+  const handleBatchSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setFeedback(null);
+    setBatchResult(null);
+
+    try {
+      const data = new FormData();
+      data.append("organizationId", batchOrgId);
+      data.append("csvContent", batchCsvText);
+
+      const res = await importEmployeesBatch(data);
+      if (!res.success) throw new Error(res.error);
+
+      setBatchResult({
+        count: res.count || 0,
+        total: res.total || 0,
+        errors: res.errors || [],
+      });
+
+      setFeedback({
+        type: "success",
+        text: `Sucesso! ${res.count} colaboradores importados/atualizados no Core HR.`,
+      });
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (err: any) {
+      setFeedback({ type: "error", text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sampleCsvData = `Nome Completo,E-mail,Cargo,Departamento,Matrícula,CPF,Salário,Regime
+Carlos Eduardo Ribeiro,carlos.ribeiro@empresa.com,Engenheiro de Software Sênior,Tecnologia,MC-2026-101,123.456.789-00,16500,CLT
+Mariana Souza Ramos,mariana.ramos@empresa.com,Gerente de Produtos (GPM),Produto,MC-2026-102,234.567.890-11,19000,CLT
+Felipe Castro Santos,felipe.castro@empresa.com,Tech Recruiter Pleno,Gente & Gestão,MC-2026-103,345.678.901-22,8500,CLT
+Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-104,456.789.012-33,9200,PJ`;
+
   return (
     <div className="space-y-6">
       {feedback && (
@@ -186,13 +278,23 @@ export default function EmployeeTableClient({ conversions }: { conversions: any[
           )}
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer transition-all shadow-md shrink-0"
-        >
-          <Plus size={16} />
-          <span>Admissão Direta</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsBatchModalOpen(true)}
+            className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer transition-all shrink-0"
+          >
+            <FileSpreadsheet size={16} className="text-emerald-500" />
+            <span>Importar em Lote (CSV)</span>
+          </button>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer transition-all shadow-md shrink-0"
+          >
+            <Plus size={16} />
+            <span>Admissão Direta</span>
+          </button>
+        </div>
       </div>
 
       {/* Tabela de Colaboradores */}
@@ -496,6 +598,123 @@ export default function EmployeeTableClient({ conversions }: { conversions: any[
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <UserCheck size={16} />}
                 <span>Concluir Admissão no Core HR</span>
               </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Importação em Lote (CSV) */}
+      {isBatchModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <FileSpreadsheet className="text-emerald-500" size={20} />
+                  <span>Importação em Lote de Colaboradores (CSV)</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Migre e cadastre centenas de funcionários de uma só vez para qualquer empresa parceira.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setIsBatchModalOpen(false);
+                  setBatchResult(null);
+                }}
+                className="text-slate-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleBatchSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 mb-1">
+                  Empresa Cliente de Destino *
+                </label>
+                <select
+                  value={batchOrgId}
+                  onChange={(e) => setBatchOrgId(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold outline-none text-slate-900 dark:text-white focus:border-purple-500"
+                  required
+                >
+                  {organizations.map((org) => (
+                    <option key={org.id} value={org.id}>
+                      {org.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-slate-400">
+                    Conteúdo CSV (com cabeçalho) *
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBatchCsvText(sampleCsvData)}
+                      className="text-[11px] font-bold text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Colar Modelo de Exemplo</span>
+                    </button>
+                  </div>
+                </div>
+
+                <textarea
+                  rows={8}
+                  placeholder={`Nome Completo,E-mail,Cargo,Departamento,Matrícula,CPF,Salário,Regime\nJoão Silva,joao@empresa.com,Analista Financeiro,Financeiro,MC-101,111.222.333-44,7500,CLT`}
+                  value={batchCsvText}
+                  onChange={(e) => setBatchCsvText(e.target.value)}
+                  className="w-full p-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-medium outline-none text-slate-900 dark:text-white focus:border-purple-500 leading-relaxed"
+                  required
+                />
+              </div>
+
+              {/* Dica de Formatação */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 space-y-1">
+                <p className="font-bold text-slate-700 dark:text-slate-300">📌 Colunas recomendadas:</p>
+                <p>
+                  <code className="text-purple-400">Nome</code>, <code className="text-purple-400">E-mail</code>, <code className="text-purple-400">Cargo</code>, <code className="text-purple-400">Departamento</code>, <code className="text-purple-400">Matrícula</code>, <code className="text-purple-400">CPF</code>, <code className="text-purple-400">Salário</code>, <code className="text-purple-400">Regime (CLT/PJ)</code>.
+                </p>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  * Separadores aceitos: vírgula (,) ou ponto-e-vírgula (;). Departamentos e cargos não existentes serão criados automaticamente.
+                </p>
+              </div>
+
+              {/* Resultado do Lote */}
+              {batchResult && (
+                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold space-y-1">
+                  <p>✓ {batchResult.count} de {batchResult.total} colaboradores importados com sucesso!</p>
+                  {batchResult.errors.length > 0 && (
+                    <ul className="text-[11px] text-rose-400 list-disc pl-4 font-normal mt-1">
+                      {batchResult.errors.map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsBatchModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || !batchCsvText.trim()}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {loading && <Loader2 size={14} className="animate-spin" />}
+                  <span>Executar Importação em Lote</span>
+                </button>
+              </div>
             </form>
           </div>
         </div>
