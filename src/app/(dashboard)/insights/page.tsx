@@ -53,7 +53,7 @@ export default async function InsightsPage() {
     salaryMax: job.salaryMax,
     organizationId: job.organizationId,
     organizationName: job.organization?.name || "Organização Desconhecida",
-    createdAt: job.createdAt.toISOString(),
+    createdAt: job.createdAt ? new Date(job.createdAt).toISOString() : new Date().toISOString(),
     applicationsCount: job.applications?.length || 0,
   }));
 
@@ -69,9 +69,9 @@ export default async function InsightsPage() {
     fitCategory: app.fitCategory,
     matchScore: app.matchScore,
     salaryExpectation: app.salaryExpectation,
-    createdAt: app.createdAt.toISOString(),
+    createdAt: app.createdAt ? new Date(app.createdAt).toISOString() : new Date().toISOString(),
     isHired: !!app.hireConversion,
-    hiredAt: app.hireConversion?.convertedAt ? app.hireConversion.convertedAt.toISOString() : null,
+    hiredAt: app.hireConversion?.convertedAt ? new Date(app.hireConversion.convertedAt).toISOString() : null,
     salaryOffered: app.offers?.[0]?.salaryOffered || null,
     employmentType: app.offers?.[0]?.employmentType || app.job?.employmentType || "CLT",
     interviewsCount: app.interviews?.length || 0,
