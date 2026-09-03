@@ -123,6 +123,7 @@ export default function EditUserModal({ user, onClose, onUserUpdated }: EditUser
               onChange={(e) => setRole(e.target.value)}
               className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-slate-900 dark:text-white text-sm font-semibold cursor-pointer"
             >
+              <option value="ADMIN">🛡️ Administrador (ADMIN)</option>
               <option value="RECRUITER">💼 Recrutador (RECRUITER)</option>
               <option value="SUPER_ADMIN">👑 Admin Master (SUPER_ADMIN)</option>
               <option value="CANDIDATE">👤 Candidato (CANDIDATE)</option>
