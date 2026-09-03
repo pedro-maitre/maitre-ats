@@ -242,6 +242,19 @@ export async function submitApplication(formData: FormData) {
     },
   });
 
+  // Compliance LGPD: Registro formal de consentimento do candidato (Art. 7º e 8º da Lei 13.709/2018)
+  try {
+    await prisma.candidateConsent.create({
+      data: {
+        candidateId: candidate.id,
+        purpose: "R&S_BANCO_TALENTOS",
+        granted: true,
+      },
+    });
+  } catch (consentErr: any) {
+    console.warn("Aviso ao registrar consentimento LGPD:", consentErr?.message);
+  }
+
   return { success: true, candidateId: candidate.id, applicationId: application.id };
 }
 

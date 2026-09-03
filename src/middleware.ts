@@ -32,6 +32,7 @@ export default withAuth(
     }
   },
   {
+    secret: process.env.NEXTAUTH_SECRET || "maitre-ats-production-secret-key-123",
     callbacks: {
       authorized: ({ token }) => !!token,
     },

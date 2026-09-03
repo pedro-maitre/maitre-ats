@@ -103,5 +103,18 @@ export async function submitApplication(formData: FormData) {
     }
   });
 
+  // Compliance LGPD: Registro formal de consentimento do candidato
+  try {
+    await prisma.candidateConsent.create({
+      data: {
+        candidateId: candidate.id,
+        purpose: "R&S_BANCO_TALENTOS",
+        granted: true,
+      },
+    });
+  } catch (consentErr: any) {
+    console.warn("Aviso ao registrar consentimento LGPD:", consentErr?.message);
+  }
+
   return { success: true };
 }

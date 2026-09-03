@@ -4,8 +4,29 @@ import { extractTextFromPdfBuffer, parseResumeWithAi } from "@/lib/resume-parser
 
 export const dynamic = "force-dynamic";
 
+// In-memory sliding rate limiter para contenção de custos e abuso de OpenAI/Storage
+const ipRequestMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX = 5; // máx 5 uploads por minuto por IP
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anonymous";
+    const now = Date.now();
+    const clientRecord = ipRequestMap.get(ip);
+
+    if (clientRecord && now < clientRecord.resetAt) {
+      if (clientRecord.count >= RATE_LIMIT_MAX) {
+        return NextResponse.json(
+          { error: "Limite de uploads excedido. Por favor, aguarde 1 minuto antes de enviar outro currículo." },
+          { status: 429 }
+        );
+      }
+      clientRecord.count++;
+    } else {
+      ipRequestMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    }
+
     const form = await req.formData();
     const file = form.get("resume") as File | null;
 

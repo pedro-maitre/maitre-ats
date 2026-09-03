@@ -1,7 +1,10 @@
 require('dotenv/config');
 const { Pool } = require('pg');
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 async function applyPolicies() {
   const client = await pool.connect();
@@ -14,6 +17,9 @@ async function applyPolicies() {
       DROP POLICY IF EXISTS "Public Select from resumes bucket" ON storage.objects;
       DROP POLICY IF EXISTS "Public Update on resumes bucket" ON storage.objects;
       DROP POLICY IF EXISTS "Allow all for resumes bucket" ON storage.objects;
+      DROP POLICY IF EXISTS "Allow public insert on resumes" ON storage.objects;
+      DROP POLICY IF EXISTS "Allow public select on resumes" ON storage.objects;
+      DROP POLICY IF EXISTS "Allow public update on resumes" ON storage.objects;
     `);
 
     // Create comprehensive policy for resumes bucket

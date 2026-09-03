@@ -24,15 +24,15 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const orgId = session?.user?.organizationId || (await prisma.organization.findFirst())?.id;
+    const orgId = session?.user?.organizationId || (role === "SUPER_ADMIN" ? (await prisma.organization.findFirst())?.id : null);
 
     if (!orgId) {
-      return NextResponse.json({ error: "Organização não encontrada." }, { status: 400 });
+      return NextResponse.json({ error: "Organização não informada ou não vinculada ao usuário." }, { status: 400 });
     }
 
     // Upsert Candidate (if email exists, update, otherwise create)
     const candidate = await prisma.candidate.upsert({
-      where: { email },
+      where: { email: cleanEmail },
       update: {
         firstName,
         lastName,

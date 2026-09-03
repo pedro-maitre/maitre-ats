@@ -31,17 +31,19 @@ export default function LoginPage() {
         setLoading(false);
       } else {
         // Fetch session to determine role
-        const sessionRes = await fetch("/api/auth/session");
-        const sessionData = await sessionRes.json();
+        try {
+          const sessionRes = await fetch("/api/auth/session");
+          const sessionData = await sessionRes.json();
 
-        if (sessionData?.user?.role === "CANDIDATE") {
-          // Redirect candidates to candidate portal
-          router.push("/carreiras/maitre/candidato");
-        } else {
-          // Recruiters and Admins go directly to the Master Executive Dashboard
-          router.push("/");
+          const targetUrl =
+            sessionData?.user?.role === "CANDIDATE"
+              ? "/carreiras/maitre/candidato"
+              : "/";
+
+          window.location.href = targetUrl;
+        } catch {
+          window.location.href = "/";
         }
-        router.refresh();
       }
     } catch (err: any) {
       setError(err.message || "Erro ao efetuar login.");

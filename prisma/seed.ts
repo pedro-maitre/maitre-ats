@@ -2,140 +2,133 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
+import bcrypt from "bcryptjs";
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("Seeding database...");
+  console.log("🌱 Semeando dados essenciais de forma não-destrutiva (sem apagar dados existentes)...");
 
-  // Clean existing data (optional, but good for rerunning)
-  await prisma.application.deleteMany();
-  await prisma.candidate.deleteMany();
-  await prisma.stage.deleteMany();
-  await prisma.job.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.organization.deleteMany();
-
-  // Create Organization
-  const org = await prisma.organization.create({
-    data: {
-      name: "Maître Consultoria",
-      slug: "maitre",
-    },
+  // 1. Organização Principal (Maître Consultoria)
+  let org = await prisma.organization.findFirst({
+    where: { slug: "maitre" },
   });
 
-  const bcrypt = require("bcryptjs");
+  if (!org) {
+    org = await prisma.organization.create({
+      data: {
+        name: "Maître Consultoria",
+        slug: "maitre",
+      },
+    });
+    console.log("✓ Organização Maître Consultoria criada.");
+  }
+
   const hashedPassword = await bcrypt.hash("123456", 10);
 
-  // Create Users
-  await prisma.user.create({
-    data: {
+  // 2. Usuários essenciais
+  const usersToEnsure = [
+    {
       email: "admin@maitrework.com.br",
       name: "Admin",
       role: "SUPER_ADMIN",
-      password: hashedPassword,
-      organizationId: org.id,
     },
-  });
-
-  const recruiter = await prisma.user.create({
-    data: {
-      email: "rh@maitre.com.br",
-      name: "Recruiter Patricia",
+    {
+      email: "adriana@maitrework.com.br",
+      name: "Adriana",
+      role: "ADMIN",
+    },
+    {
+      email: "pedro@maitrework.com.br",
+      name: "Pedro",
       role: "RECRUITER",
-      password: hashedPassword,
-      organizationId: org.id,
     },
-  });
-
-  // Create Job
-  const job = await prisma.job.create({
-    data: {
-      title: "Desenvolvedor Frontend Sênior",
-      description: "Vaga para desenvolvedor frontend com experiência em Next.js e React.",
-      department: "Tecnologia",
-      location: "Remoto",
-      status: "OPEN",
-      organizationId: org.id,
-      recruiterId: recruiter.id,
+    {
+      email: "erika@maitrework.com.br",
+      name: "Erika",
+      role: "RECRUITER",
     },
-  });
-
-  // Create Stages
-  const stages = [
-    { name: "Aplicado", order: 1 },
-    { name: "Triagem", order: 2 },
-    { name: "Entrevista", order: 3 },
-    { name: "Teste Técnico", order: 4 },
-    { name: "Proposta", order: 5 },
-    { name: "Contratado", order: 6 },
-    { name: "Rejeitado", order: 7 },
+    {
+      email: "lauriana@maitrework.com.br",
+      name: "Lauriana",
+      role: "RECRUITER",
+    },
+    {
+      email: "kheviany@maitrework.com.br",
+      name: "Kheviany",
+      role: "RECRUITER",
+    },
   ];
 
-  for (const s of stages) {
-    await prisma.stage.create({
-      data: {
-        name: s.name,
-        order: s.order,
-        jobId: job.id,
-      },
+  for (const u of usersToEnsure) {
+    const existing = await prisma.user.findFirst({
+      where: { email: { equals: u.email, mode: "insensitive" } },
     });
+
+    if (!existing) {
+      await prisma.user.create({
+        data: {
+          email: u.email,
+          name: u.name,
+          role: u.role,
+          password: hashedPassword,
+          organizationId: org.id,
+        },
+      });
+      console.log(`✓ Usuário ${u.name} (${u.email}) criado com sucesso.`);
+    }
   }
 
-  // Fetch created stages to use their IDs
-  const createdStages = await prisma.stage.findMany({ where: { jobId: job.id } });
-  const appliedStage = createdStages.find((s) => s.name === "Aplicado");
-  const screeningStage = createdStages.find((s) => s.name === "Triagem");
-
-  // Create Candidates
-  const c1 = await prisma.candidate.create({
-    data: {
-      firstName: "João",
-      lastName: "Silva",
-      email: "joao@example.com",
-      phone: "11999999999",
-      source: "LinkedIn",
-      tags: JSON.stringify(["React", "Next.js"]),
-      organizationId: org.id,
-    },
+  // 3. Vaga padrão se não houver nenhuma
+  const existingJob = await prisma.job.findFirst({
+    where: { organizationId: org.id },
   });
 
-  const c2 = await prisma.candidate.create({
-    data: {
-      firstName: "Maria",
-      lastName: "Souza",
-      email: "maria@example.com",
-      phone: "11888888888",
-      source: "Referral",
-      tags: JSON.stringify(["Vue", "Node.js"]),
-      organizationId: org.id,
-    },
-  });
+  if (!existingJob) {
+    const recruiter = await prisma.user.findFirst({
+      where: { role: "RECRUITER" },
+    });
 
-  // Create Applications
-  if (appliedStage && screeningStage) {
-    await prisma.application.create({
+    const job = await prisma.job.create({
       data: {
-        candidateId: c1.id,
-        jobId: job.id,
-        stageId: appliedStage.id,
-        matchScore: 85.5,
+        title: "Desenvolvedor Frontend Sênior",
+        description: "Vaga para desenvolvedor frontend com experiência em Next.js e React.",
+        department: "Tecnologia",
+        location: "Remoto",
+        status: "OPEN",
+        organizationId: org.id,
+        recruiterId: recruiter?.id || null,
       },
     });
 
-    await prisma.application.create({
-      data: {
-        candidateId: c2.id,
-        jobId: job.id,
-        stageId: screeningStage.id,
-        matchScore: 92.0,
-      },
-    });
+    const stages = [
+      { name: "Aplicado", order: 1 },
+      { name: "Triagem", order: 2 },
+      { name: "Entrevista", order: 3 },
+      { name: "Teste Técnico", order: 4 },
+      { name: "Proposta", order: 5 },
+      { name: "Contratado", order: 6 },
+      { name: "Rejeitado", order: 7 },
+    ];
+
+    for (const s of stages) {
+      await prisma.stage.create({
+        data: {
+          name: s.name,
+          order: s.order,
+          jobId: job.id,
+        },
+      });
+    }
+    console.log("✓ Vaga padrão e etapas criadas.");
   }
 
-  console.log("Seeding completed!");
+  console.log("🎉 Seed não-destrutivo concluído!");
 }
 
 main()
@@ -145,4 +138,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

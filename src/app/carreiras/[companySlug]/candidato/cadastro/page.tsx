@@ -72,10 +72,9 @@ export default function CandidateRegisterPage({
       });
 
       if (loginRes?.ok) {
-        router.push(`/carreiras/${companySlug}/candidato`);
-        router.refresh();
+        window.location.href = `/carreiras/${companySlug}/candidato`;
       } else {
-        router.push(`/carreiras/${companySlug}/candidato/login`);
+        window.location.href = `/carreiras/${companySlug}/candidato/login`;
       }
     } catch (err: any) {
       setError(err.message || "Erro ao criar conta.");

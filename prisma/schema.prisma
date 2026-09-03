@@ -29,6 +29,11 @@ model Organization {
   retentionPolicies RetentionPolicy[]
   performanceEvaluations PerformanceEvaluation[]
   developmentPlans       DevelopmentPlan[]
+  surveys                ClimateSurvey[]
+  surveyResponses        SurveyResponse[]
+  recognitions           CultureRecognition[]
+  courses                Course[]
+  courseEnrollments      CourseEnrollment[]
 }
 
 model User {
@@ -53,6 +58,8 @@ model User {
   
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
 }
 
 model OrganizationMembership {
@@ -95,6 +102,8 @@ model Job {
 
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
+
+  @@index([organizationId, status])
 }
 
 model Candidate {
@@ -124,6 +133,8 @@ model Candidate {
 
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
+
+  @@index([organizationId, createdAt])
 }
 
 model Stage {
@@ -176,6 +187,8 @@ model Application {
 
   createdAt        DateTime     @default(now()) // apply date
   updatedAt        DateTime     @updatedAt
+
+  @@index([jobId, stageId])
 }
 
 model ApplicationStageTransition {
@@ -440,3 +453,101 @@ model DevelopmentPlan {
 
   @@index([organizationId, candidateId])
 }
+
+model ClimateSurvey {
+  id             String           @id @default(cuid())
+  organizationId String
+  title          String
+  description    String?
+  status         String           @default("ACTIVE") // ACTIVE, CLOSED
+  startDate      DateTime         @default(now())
+  endDate        DateTime?
+  targetAudience String           @default("ALL") // ALL, LEADERSHIP, TECH, SALES
+  questions      String?          // JSON array of questions
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  responses      SurveyResponse[]
+
+  @@index([organizationId, status])
+}
+
+model SurveyResponse {
+  id             String        @id @default(cuid())
+  surveyId       String
+  organizationId String
+  department     String?
+  npsScore       Int           // 0 a 10
+  dimensionScores String?      // JSON string com notas Likert (ex: {"leadership": 4.5, "communication": 4.0})
+  feedback       String?
+  respondedAt    DateTime      @default(now())
+
+  survey         ClimateSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, surveyId])
+}
+
+model CultureRecognition {
+  id                 String       @id @default(cuid())
+  organizationId     String
+  senderId           String?
+  senderName         String
+  receiverName       String
+  receiverDepartment String?
+  valuePillar        String       // INOVACAO, EXCELENCIA, COLABORACAO, FOCO_NO_CLIENTE, RESPEITO
+  message            String
+  likesCount         Int          @default(0)
+  createdAt          DateTime     @default(now())
+
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+}
+
+model Course {
+  id                  String             @id @default(cuid())
+  organizationId      String
+  title               String
+  slug                String
+  description         String
+  category            String             // ONBOARDING, LIDERANCA, COMPLIANCE_LGPD, ATENDIMENTO, METODOLOGIA_MAITRE
+  coverUrl            String?
+  durationMinutes     Int                @default(60)
+  status              String             @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
+  modules             String             // JSON string de módulos e aulas
+  isOnboardingDefault Boolean            @default(false)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  organization        Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  enrollments         CourseEnrollment[]
+
+  @@index([organizationId, category])
+}
+
+model CourseEnrollment {
+  id              String       @id @default(cuid())
+  organizationId  String
+  courseId        String
+  userId          String?
+  candidateId     String?
+  employeeName    String
+  employeeEmail   String
+  progressPercent Int          @default(0) // 0 a 100
+  status          String       @default("IN_PROGRESS") // ENROLLED, IN_PROGRESS, COMPLETED
+  startedAt       DateTime     @default(now())
+  completedAt     DateTime?
+  certificateCode String?      @unique
+  score           Float?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  course          Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, courseId])
+  @@index([employeeEmail])
+}
+

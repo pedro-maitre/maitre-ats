@@ -16,7 +16,14 @@ export default async function OrganizationPage() {
     include: { organization: true }
   });
 
-  if (!user || !user.organization) redirect("/login");
+  let organization = user?.organization;
+  if (!organization) {
+    organization = await prisma.organization.findFirst();
+  }
+
+  if (!user || !organization) {
+    redirect("/");
+  }
 
   return (
     <div>
@@ -24,9 +31,9 @@ export default async function OrganizationPage() {
         Detalhes da Empresa
       </h2>
       <OrgForm initialData={{
-        id: user.organization.id,
-        name: user.organization.name,
-        slug: user.organization.slug,
+        id: organization.id,
+        name: organization.name,
+        slug: organization.slug,
         role: user.role,
       }} />
     </div>

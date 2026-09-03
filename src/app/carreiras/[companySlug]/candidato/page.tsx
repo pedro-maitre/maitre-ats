@@ -24,6 +24,7 @@ import {
   UploadCloud,
   AlertCircle,
   RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
 import { use } from "react";
 
@@ -179,6 +180,31 @@ export default function CandidateDashboardPage({
 
   return (
     <div className="animate-in fade-in duration-500 space-y-10">
+      {/* Banner de Acesso Administrativo se logado como ADMIN/RECRUITER */}
+      {session?.user?.role && session.user.role !== "CANDIDATE" && (
+        <div className="p-5 rounded-3xl bg-gradient-to-r from-maitre-gold/15 to-amber-500/10 border-2 border-maitre-gold/40 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-900 dark:text-white">
+          <div className="flex items-center gap-3.5">
+            <span className="w-10 h-10 rounded-2xl bg-maitre-gold text-slate-950 flex items-center justify-center font-bold shadow-md shrink-0">
+              <ShieldCheck size={22} />
+            </span>
+            <div>
+              <p className="text-sm font-black flex items-center gap-2">
+                Acesso Administrativo Detectado: <span className="px-2 py-0.5 rounded-full bg-maitre-gold text-slate-950 text-[10px] uppercase tracking-wider font-extrabold">{session.user.role}</span>
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Esta tela é o portal público de candidatos. Como administradora/recrutadora, você gerencia vagas, candidatos e operações no Painel Executivo.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/"
+            className="px-5 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 font-bold text-xs shadow-md transition-all whitespace-nowrap active:scale-95 shrink-0"
+          >
+            Acessar Painel de Gestão →
+          </Link>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 shadow-xl border border-slate-200/80 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex items-center gap-4">

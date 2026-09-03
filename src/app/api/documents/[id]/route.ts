@@ -32,13 +32,16 @@ export async function GET(
     const userRole = session.user.role || "";
     const userEmail = session.user.email.toLowerCase();
 
-    // Validação de Permissão (Anti-IDOR)
+    // Validação de Permissão Estrita (Anti-IDOR & Isolamento Multi-Tenancy)
     const isOwnerCandidate = Boolean(document.candidate?.email?.toLowerCase() === userEmail);
-    const isRecruiterOrAdmin = ["SUPER_ADMIN", "ADMIN", "RECRUITER"].includes(userRole);
+    const isSuperAdmin = userRole === "SUPER_ADMIN";
+    const isTenantRecruiter =
+      ["ADMIN", "RECRUITER"].includes(userRole) &&
+      Boolean(session.user.organizationId && session.user.organizationId === document.organizationId);
 
-    if (!isOwnerCandidate && !isRecruiterOrAdmin) {
+    if (!isOwnerCandidate && !isSuperAdmin && !isTenantRecruiter) {
       return NextResponse.json(
-        { error: "Acesso negado. Você não tem permissão para acessar este documento." },
+        { error: "Acesso negado. Você não tem permissão para acessar documentos desta organização." },
         { status: 403 }
       );
     }

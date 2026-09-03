@@ -1,3 +1,6 @@
+import * as dotenv from "dotenv";
+dotenv.config();
+
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -7,18 +10,18 @@ const globalForPrisma = global as unknown as {
   pool?: Pool;
 };
 
-const connectionString = process.env.DATABASE_URL;
-const isSupabaseOrProd =
-  Boolean(connectionString?.includes("supabase.com")) ||
-  Boolean(connectionString?.includes("pooler.supabase.com")) ||
-  Boolean(connectionString?.includes("sslmode=require")) ||
-  process.env.NODE_ENV === "production";
-
 // Configuração de Pool resiliente para Serverless / Vercel e instâncias em nuvem
 function getPool(): Pool {
   if (globalForPrisma.pool) {
     return globalForPrisma.pool;
   }
+
+  const connectionString = process.env.DATABASE_URL;
+  const isSupabaseOrProd =
+    Boolean(connectionString?.includes("supabase.com")) ||
+    Boolean(connectionString?.includes("pooler.supabase.com")) ||
+    Boolean(connectionString?.includes("sslmode=require")) ||
+    process.env.NODE_ENV === "production";
 
   const pool = new Pool({
     connectionString: connectionString || undefined,
@@ -40,16 +43,24 @@ function getPool(): Pool {
   return pool;
 }
 
-const pool = getPool();
-const adapter = new PrismaPg(pool);
+function getPrismaClient(): PrismaClient {
+  if (globalForPrisma.prisma) {
+    return globalForPrisma.prisma;
+  }
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
+  const pool = getPool();
+  const adapter = new PrismaPg(pool);
+
+  const client = new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = client;
+  }
+
+  return client;
 }
+
+export const prisma = getPrismaClient();

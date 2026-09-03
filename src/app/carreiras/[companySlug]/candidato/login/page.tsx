@@ -37,8 +37,17 @@ export default function CandidateLoginPage({
         setError(res.error || "E-mail ou senha incorretos.");
         setLoading(false);
       } else {
-        router.push(`/carreiras/${companySlug}/candidato`);
-        router.refresh();
+        try {
+          const sessionRes = await fetch("/api/auth/session");
+          const sessionData = await sessionRes.json();
+          if (sessionData?.user?.role && sessionData.user.role !== "CANDIDATE") {
+            window.location.href = "/";
+            return;
+          }
+        } catch {
+          // fallback
+        }
+        window.location.href = `/carreiras/${companySlug}/candidato`;
       }
     } catch (err: any) {
       setError(err.message || "Erro ao efetuar login.");

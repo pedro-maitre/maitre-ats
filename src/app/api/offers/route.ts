@@ -23,7 +23,11 @@ export async function GET(req: NextRequest) {
       where.application = { jobId };
     }
 
-    if (session.user.role === "HIRING_MANAGER" && session.user.organizationId) {
+    // Isolamento Estrito Multi-Tenant: Usuários não-SUPER_ADMIN só visualizam propostas de sua organização
+    if (session.user.role !== "SUPER_ADMIN") {
+      if (!session.user.organizationId) {
+        return NextResponse.json({ error: "Usuário não vinculado a uma organização." }, { status: 403 });
+      }
       where.application = {
         ...(typeof where.application === "object" && where.application !== null ? where.application : {}),
         job: { organizationId: session.user.organizationId },
@@ -89,9 +93,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Candidatura não encontrada." }, { status: 404 });
     }
 
-    // Trava para Hiring Manager
-    if (session.user.role === "HIRING_MANAGER" && session.user.organizationId !== app.job.organizationId) {
-      return NextResponse.json({ error: "Acesso não autorizado a esta vaga." }, { status: 403 });
+    // Isolamento Multi-Tenant: Apenas SUPER_ADMIN pode criar proposta fora da sua organização
+    if (session.user.role !== "SUPER_ADMIN" && session.user.organizationId !== app.job.organizationId) {
+      return NextResponse.json({ error: "Acesso não autorizado a esta organização." }, { status: 403 });
     }
 
     const offer = await prisma.$transaction(async (tx) => {
@@ -198,8 +202,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Proposta não encontrada." }, { status: 404 });
     }
 
-    if (session.user.role === "HIRING_MANAGER" && session.user.organizationId !== before.application.job.organizationId) {
-      return NextResponse.json({ error: "Acesso não autorizado a esta vaga." }, { status: 403 });
+    // Isolamento Multi-Tenant: Apenas SUPER_ADMIN pode alterar proposta fora da sua organização
+    if (session.user.role !== "SUPER_ADMIN" && session.user.organizationId !== before.application.job.organizationId) {
+      return NextResponse.json({ error: "Acesso não autorizado a esta organização." }, { status: 403 });
     }
 
     const updated = await prisma.offer.update({
