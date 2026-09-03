@@ -229,9 +229,11 @@ export async function sendHiringManagerInviteEmail(params: {
   managerName: string;
   managerEmail: string;
   companyName: string;
-  tempPassword: string;
+  tempPassword?: string;
+  initialPassword?: string;
   loginUrl: string;
 }) {
+  const passwordToDisplay = params.tempPassword || params.initialPassword;
   const content = `
     <h2 style="color:#ffffff;font-size:20px;font-weight:800;margin-top:0;">
       Bem-vindo(a) ao Portal do Gestor, ${params.managerName}!
@@ -245,7 +247,7 @@ export async function sendHiringManagerInviteEmail(params: {
         👤 <strong>Usuário:</strong> <span style="color:#ffffff;font-weight:bold;">${params.managerEmail}</span>
       </p>
       <p style="margin:0;font-size:14px;color:#94a3b8;">
-        🔑 <strong>Senha Temporária:</strong> <span style="color:#38bdf8;font-family:monospace;font-weight:bold;font-size:15px;">${params.tempPassword}</span>
+        🔑 <strong>Senha Temporária:</strong> <span style="color:#38bdf8;font-family:monospace;font-weight:bold;font-size:15px;">${passwordToDisplay}</span>
       </p>
     </div>
 
@@ -387,3 +389,46 @@ export async function sendPasswordResetEmail(params: {
     html: getBaseEmailTemplate("Recuperação de Senha", content),
   });
 }
+
+// 7. Notificação de Projeto de Consultoria Estratégica
+export async function sendConsultingProjectNotificationEmail(params: {
+  recipientEmail: string;
+  recipientName: string;
+  projectTitle: string;
+  companyName: string;
+  categoryLabel: string;
+  consultantName: string;
+  projectUrl: string;
+}) {
+  const content = `
+    <h2 style="color:#ffffff;font-size:20px;font-weight:800;margin-top:0;">
+      Olá, ${params.recipientName}!
+    </h2>
+    <p style="font-size:15px;line-height:1.6;color:#cbd5e1;">
+      Um novo projeto de consultoria estratégica foi formalizado na plataforma <strong style="color:#D4AF37;">Maître Conecta</strong>.
+    </p>
+
+    <div style="background-color:#0f172a;border-left:4px solid #D4AF37;padding:16px 20px;border-radius:8px;margin:25px 0;">
+      <p style="margin:0 0 6px 0;font-size:13px;color:#94a3b8;font-weight:600;text-transform:uppercase;">Resumo do Projeto:</p>
+      <p style="margin:0;font-size:14px;color:#f8fafc;">
+        <strong>Projeto:</strong> ${params.projectTitle}<br>
+        <strong>Cliente:</strong> ${params.companyName}<br>
+        <strong>Especialidade:</strong> ${params.categoryLabel}<br>
+        <strong>Consultor Responsável:</strong> ${params.consultantName}
+      </p>
+    </div>
+
+    <div style="text-align:center;margin:30px 0;">
+      <a href="${params.projectUrl}" style="background:linear-gradient(135deg, #D4AF37 0%, #e5c07b 100%);color:#0f172a;text-decoration:none;padding:14px 32px;border-radius:12px;font-weight:800;font-size:15px;display:inline-block;" target="_blank">
+        📊 Acompanhar Cronograma & Entregáveis
+      </a>
+    </div>
+  `;
+
+  return sendEmail({
+    to: params.recipientEmail,
+    subject: `📋 Projeto de Consultoria: ${params.projectTitle} - Maître Conecta`,
+    html: getBaseEmailTemplate("Conecta Consultoria", content),
+  });
+}
+

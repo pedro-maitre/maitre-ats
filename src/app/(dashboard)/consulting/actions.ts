@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { requireAuth } from "@/lib/security";
 import { logAuditEvent } from "@/lib/audit";
+import { sendConsultingProjectNotificationEmail } from "@/lib/email";
 
 /**
  * Busca todos os projetos de consultoria com entregáveis e organização cliente.
@@ -152,6 +153,29 @@ export async function createConsultingProject(formData: FormData) {
       afterData: { title, category, consultantName },
       reason: `Novo projeto de consultoria "${title}" criado por ${user.email}.`,
     });
+
+    // Disparo de notificação por e-mail transacional
+    if (consultantEmail) {
+      try {
+        const org = await prisma.organization.findUnique({
+          where: { id: organizationId },
+          select: { name: true },
+        });
+        const baseUrl = process.env.NEXTAUTH_URL || "https://maitreconecta.vercel.app";
+
+        sendConsultingProjectNotificationEmail({
+          recipientEmail: consultantEmail,
+          recipientName: consultantName,
+          projectTitle: title,
+          companyName: org?.name || "Cliente Parceiro",
+          categoryLabel: category.replace(/_/g, " "),
+          consultantName,
+          projectUrl: `${baseUrl}/consulting`,
+        }).catch((e) => console.error("Erro ao enviar e-mail de projeto:", e));
+      } catch (emailErr) {
+        console.warn("Aviso ao disparar e-mail de consultoria:", emailErr);
+      }
+    }
 
     revalidatePath("/consulting");
     revalidatePath(`/clients/${organizationId}`);
