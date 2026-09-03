@@ -114,16 +114,22 @@ export default function EmployeeTableClient({
   );
 
   const filtered = list.filter((item) => {
-    const candidate = item.application.candidate;
-    const job = item.application.job;
+    const candidate = item.application?.candidate || {};
+    const job = item.application?.job || {};
     const query = searchQuery.toLowerCase();
 
+    const firstName = candidate.firstName || "";
+    const lastName = candidate.lastName || "";
+    const email = candidate.email || "";
+    const code = item.employeeCode || "";
+    const jobTitle = job.title || "";
+
     const matchesSearch =
-      candidate.firstName.toLowerCase().includes(query) ||
-      candidate.lastName.toLowerCase().includes(query) ||
-      candidate.email.toLowerCase().includes(query) ||
-      (item.employeeCode && item.employeeCode.toLowerCase().includes(query)) ||
-      job.title.toLowerCase().includes(query);
+      firstName.toLowerCase().includes(query) ||
+      lastName.toLowerCase().includes(query) ||
+      email.toLowerCase().includes(query) ||
+      code.toLowerCase().includes(query) ||
+      jobTitle.toLowerCase().includes(query);
 
     const matchesStatus = statusFilter === "ALL" || item.status === statusFilter;
     const matchesDept = departmentFilter === "ALL" || job.department === departmentFilter;
@@ -314,10 +320,14 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
               {filtered.map((item) => {
-                const cand = item.application.candidate;
-                const job = item.application.job;
-                const offer = item.application.offers[0];
-                const salary = offer?.salaryOffered || item.application.salaryExpectation || job.salaryMax || 0;
+                const cand = item.application?.candidate || {};
+                const job = item.application?.job || {};
+                const offer = item.application?.offers?.[0];
+                const salary = offer?.salaryOffered || item.application?.salaryExpectation || job.salaryMax || 0;
+                const firstName = cand.firstName || "Colaborador";
+                const lastName = cand.lastName || "";
+                const initialFirst = firstName[0] || "C";
+                const initialLast = lastName[0] || "";
 
                 return (
                   <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
@@ -325,15 +335,15 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
                     <td className="p-4 pl-6">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-700 to-amber-500 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-                          {cand.firstName[0]}
-                          {cand.lastName?.[0] || ""}
+                          {initialFirst}
+                          {initialLast}
                         </div>
                         <div>
                           <p className="font-bold text-slate-900 dark:text-white text-sm">
-                            {cand.firstName} {cand.lastName}
+                            {firstName} {lastName}
                           </p>
                           <div className="flex items-center gap-2 text-slate-400 text-[11px] mt-0.5">
-                            <span>{cand.email}</span>
+                            <span>{cand.email || "-"}</span>
                             {cand.phone && (
                               <a
                                 href={`https://wa.me/${cand.phone.replace(/\D/g, "")}`}
@@ -361,7 +371,7 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
                     {/* Cargo & Depto */}
                     <td className="p-4">
                       <div>
-                        <p className="font-bold text-slate-900 dark:text-white">{job.title}</p>
+                        <p className="font-bold text-slate-900 dark:text-white">{job.title || "Cargo"}</p>
                         <p className="text-slate-400 text-[11px] flex items-center gap-1 mt-0.5">
                           <Building2 size={12} /> {job.department || "Geral"}
                         </p>
@@ -378,13 +388,13 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
 
                     {/* Data */}
                     <td className="p-4 text-slate-500 font-medium">
-                      {new Date(item.convertedAt).toLocaleDateString("pt-BR")}
+                      {item.convertedAt ? new Date(item.convertedAt).toLocaleDateString("pt-BR") : "-"}
                     </td>
 
                     {/* Status Onboarding */}
                     <td className="p-4">
                       <select
-                        value={item.status}
+                        value={item.status || "ACTIVE"}
                         onChange={(e) => handleStatusChange(item.id, e.target.value)}
                         className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
                       >

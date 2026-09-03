@@ -2,8 +2,10 @@ import React from "react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getClients, getMasterOrganization } from "./actions";
+import { prisma } from "@/lib/prisma";
 import ClientListClient from "@/components/clients/ClientListClient";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Empresas Clientes | Maître Conecta",
@@ -20,10 +22,57 @@ export default async function ClientsPage() {
   const role = session.user.role || "RECRUITER";
   const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
-  const [clients, masterOrg] = await Promise.all([
-    getClients(),
-    getMasterOrganization(),
-  ]);
+  let clients: any[] = [];
+  let masterOrg: any = null;
+
+  try {
+    const [clientsRes, masterRes] = await Promise.all([
+      prisma.organization.findMany({
+        where: {
+          isMaster: false,
+        },
+        orderBy: { createdAt: "desc" },
+        include: {
+          _count: {
+            select: {
+              jobs: true,
+              candidates: true,
+              users: true,
+            },
+          },
+          jobs: {
+            select: {
+              id: true,
+              title: true,
+              status: true,
+              department: true,
+            },
+            take: 5,
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      }),
+      prisma.organization.findFirst({
+        where: {
+          OR: [{ isMaster: true }, { slug: "maitre" }],
+        },
+        include: {
+          _count: {
+            select: {
+              jobs: true,
+              candidates: true,
+              users: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    clients = clientsRes || [];
+    masterOrg = masterRes || null;
+  } catch (error) {
+    console.error("Erro ao carregar empresas clientes na página:", error);
+  }
 
   return (
     <ClientListClient

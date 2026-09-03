@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import DevelopmentDashboardClient, {
   DevelopmentEmployeeItem,
@@ -14,120 +17,150 @@ export const metadata = {
 };
 
 export default async function DevelopmentPage() {
-  const [conversions, formalEmployees, candidates, organizations] = await Promise.all([
-    prisma.hireConversion.findMany({
-      include: {
-        application: {
-          include: {
-            candidate: {
-              include: {
-                performanceEvaluations: {
-                  orderBy: { evaluatedAt: "desc" },
-                  take: 1,
-                },
-                developmentPlans: {
-                  orderBy: { createdAt: "desc" },
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  let conversions: any[] = [];
+  let formalEmployees: any[] = [];
+  let candidates: any[] = [];
+  let organizations: any[] = [];
+
+  try {
+    const [convRes, formRes, candRes, orgRes] = await Promise.all([
+      prisma.hireConversion.findMany({
+        include: {
+          application: {
+            include: {
+              candidate: {
+                include: {
+                  performanceEvaluations: {
+                    orderBy: { evaluatedAt: "desc" },
+                    take: 1,
+                  },
+                  developmentPlans: {
+                    orderBy: { createdAt: "desc" },
+                  },
                 },
               },
-            },
-            job: {
-              include: {
-                organization: true,
+              job: {
+                include: {
+                  organization: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: { convertedAt: "desc" },
-    }),
-    prisma.employee.findMany({
-      include: {
-        department: true,
-        position: true,
-        organization: true,
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.candidate.findMany({
-      include: {
-        performanceEvaluations: {
-          orderBy: { evaluatedAt: "desc" },
-          take: 1,
+        orderBy: { convertedAt: "desc" },
+      }),
+      prisma.employee.findMany({
+        include: {
+          department: true,
+          position: true,
+          organization: true,
         },
-        developmentPlans: {
-          orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.candidate.findMany({
+        include: {
+          performanceEvaluations: {
+            orderBy: { evaluatedAt: "desc" },
+            take: 1,
+          },
+          developmentPlans: {
+            orderBy: { createdAt: "desc" },
+          },
         },
-      },
-    }),
-    prisma.organization.findMany({
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
-    }),
-  ]);
+      }),
+      prisma.organization.findMany({
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      }),
+    ]);
 
-  const candidateMap = new Map(candidates.map((c) => [c.id, c]));
-  const candidateEmailMap = new Map(candidates.map((c) => [c.email.toLowerCase(), c]));
+    conversions = convRes || [];
+    formalEmployees = formRes || [];
+    candidates = candRes || [];
+    organizations = orgRes || [];
+  } catch (err) {
+    console.error("Erro ao carregar dados de desenvolvimento:", err);
+  }
 
-  // Formata os colaboradores vindos do ATS (conversões de vaga)
-  const formattedEmployees: DevelopmentEmployeeItem[] = conversions.map((conv) => {
-    const app = conv.application;
-    const candidate = app.candidate;
-    const org = app.job.organization;
-    const latestEval = candidate.performanceEvaluations[0] || null;
-
-    let parsedCompetencies: Record<string, number> = {
-      leadership: 3.5,
-      communication: 4.0,
-      execution: 3.5,
-      resilience: 4.0,
-      autonomy: 3.5,
-    };
-
-    if (latestEval?.competencies) {
-      try {
-        parsedCompetencies = JSON.parse(latestEval.competencies);
-      } catch {
-        // fallback
-      }
+  const candidateMap = new Map<string, any>(candidates.map((c) => [c.id, c]));
+  const candidateEmailMap = new Map<string, any>();
+  for (const c of candidates) {
+    if (c.email) {
+      candidateEmailMap.set(c.email.toLowerCase(), c);
     }
+  }
 
-    return {
-      candidateId: candidate.id,
-      candidateName: `${candidate.firstName} ${candidate.lastName}`.trim(),
-      candidateEmail: candidate.email,
-      candidatePhone: candidate.phone,
-      jobTitle: app.job.title,
-      department: app.job.department,
-      organizationId: org.id,
-      organizationName: org.name,
-      employeeCode: conv.employeeCode,
-      status: conv.status,
-      hiredAt: conv.convertedAt.toISOString(),
-      currentEvaluation: latestEval
-        ? {
-            id: latestEval.id,
-            performanceScore: latestEval.performanceScore,
-            potentialScore: latestEval.potentialScore,
-            boxPosition: latestEval.boxPosition as NineBoxPosition,
-            competencies: parsedCompetencies,
-            strengths: latestEval.strengths,
-            improvements: latestEval.improvements,
-            evaluatedAt: latestEval.evaluatedAt.toISOString(),
-          }
-        : null,
-      pdiPlans: candidate.developmentPlans.map((p) => ({
-        id: p.id,
-        title: p.title,
-        description: p.description,
-        status: p.status,
-        category: p.category,
-        targetDate: p.targetDate ? p.targetDate.toISOString() : null,
-        completedAt: p.completedAt ? p.completedAt.toISOString() : null,
-      })),
-    };
-  });
+  // Formata os colaboradores vindos do ATS (conversões de vaga) com proteção contra nulos
+  const formattedEmployees: DevelopmentEmployeeItem[] = conversions
+    .filter((conv) => conv.application && conv.application.candidate)
+    .map((conv) => {
+      const app = conv.application || {};
+      const candidate = app.candidate || {};
+      const org = app.job?.organization || { id: "", name: "Empresa" };
+      const latestEval = candidate.performanceEvaluations?.[0] || null;
 
-  const conversionEmails = new Set(conversions.map((c) => c.application?.candidate?.email?.toLowerCase()).filter(Boolean));
+      let parsedCompetencies: Record<string, number> = {
+        leadership: 3.5,
+        communication: 4.0,
+        execution: 3.5,
+        resilience: 4.0,
+        autonomy: 3.5,
+      };
+
+      if (latestEval?.competencies) {
+        try {
+          parsedCompetencies = JSON.parse(latestEval.competencies);
+        } catch {
+          // fallback
+        }
+      }
+
+      return {
+        candidateId: candidate.id || "",
+        candidateName: `${candidate.firstName || ""} ${candidate.lastName || ""}`.trim() || "Colaborador",
+        candidateEmail: candidate.email || "",
+        candidatePhone: candidate.phone || null,
+        jobTitle: app.job?.title || "Cargo",
+        department: app.job?.department || "Geral",
+        organizationId: org.id || "",
+        organizationName: org.name || "Empresa",
+        employeeCode: conv.employeeCode || null,
+        status: conv.status || "ACTIVE",
+        hiredAt: conv.convertedAt ? new Date(conv.convertedAt).toISOString() : new Date().toISOString(),
+        currentEvaluation: latestEval
+          ? {
+              id: latestEval.id,
+              performanceScore: latestEval.performanceScore,
+              potentialScore: latestEval.potentialScore,
+              boxPosition: latestEval.boxPosition as NineBoxPosition,
+              competencies: parsedCompetencies,
+              strengths: latestEval.strengths || null,
+              improvements: latestEval.improvements || null,
+              evaluatedAt: latestEval.evaluatedAt ? new Date(latestEval.evaluatedAt).toISOString() : new Date().toISOString(),
+            }
+          : null,
+        pdiPlans: (candidate.developmentPlans || []).map((p: any) => ({
+          id: p.id,
+          title: p.title || "Meta de Desenvolvimento",
+          description: p.description || null,
+          status: p.status || "PLANNED",
+          category: p.category || "GENERAL",
+          targetDate: p.targetDate ? new Date(p.targetDate).toISOString() : null,
+          completedAt: p.completedAt ? new Date(p.completedAt).toISOString() : null,
+        })),
+      };
+    });
+
+  const conversionEmails = new Set(
+    conversions
+      .map((c) => c.application?.candidate?.email?.toLowerCase())
+      .filter(Boolean)
+  );
 
   // Integra colaboradores cadastrados diretamente no Core HR ou via importação em lote
   for (const emp of formalEmployees) {
@@ -136,7 +169,7 @@ export default async function DevelopmentPage() {
     const cand = (emp.candidateId ? candidateMap.get(emp.candidateId) : null) || candidateEmailMap.get(emp.email.toLowerCase());
     if (!cand) continue;
 
-    const latestEval = cand.performanceEvaluations[0] || null;
+    const latestEval = cand.performanceEvaluations?.[0] || null;
     let parsedCompetencies: Record<string, number> = {
       leadership: 3.5,
       communication: 4.0,
@@ -155,16 +188,16 @@ export default async function DevelopmentPage() {
 
     formattedEmployees.push({
       candidateId: cand.id,
-      candidateName: emp.fullName,
+      candidateName: emp.fullName || "Colaborador",
       candidateEmail: emp.email,
-      candidatePhone: emp.phone,
+      candidatePhone: emp.phone || null,
       jobTitle: emp.position?.title || "Colaborador",
       department: emp.department?.name || "Geral",
       organizationId: emp.organizationId,
       organizationName: emp.organization?.name || "Empresa",
       employeeCode: emp.registrationNumber || "SEM_MATRICULA",
-      status: emp.status,
-      hiredAt: emp.admissionDate ? emp.admissionDate.toISOString() : emp.createdAt.toISOString(),
+      status: emp.status || "ACTIVE",
+      hiredAt: emp.admissionDate ? new Date(emp.admissionDate).toISOString() : new Date(emp.createdAt).toISOString(),
       currentEvaluation: latestEval
         ? {
             id: latestEval.id,
@@ -172,27 +205,27 @@ export default async function DevelopmentPage() {
             potentialScore: latestEval.potentialScore,
             boxPosition: latestEval.boxPosition as NineBoxPosition,
             competencies: parsedCompetencies,
-            strengths: latestEval.strengths,
-            improvements: latestEval.improvements,
-            evaluatedAt: latestEval.evaluatedAt.toISOString(),
+            strengths: latestEval.strengths || null,
+            improvements: latestEval.improvements || null,
+            evaluatedAt: latestEval.evaluatedAt ? new Date(latestEval.evaluatedAt).toISOString() : new Date().toISOString(),
           }
         : null,
-      pdiPlans: cand.developmentPlans.map((p) => ({
+      pdiPlans: (cand.developmentPlans || []).map((p: any) => ({
         id: p.id,
-        title: p.title,
-        description: p.description,
-        status: p.status,
-        category: p.category,
-        targetDate: p.targetDate ? p.targetDate.toISOString() : null,
-        completedAt: p.completedAt ? p.completedAt.toISOString() : null,
+        title: p.title || "Meta de Desenvolvimento",
+        description: p.description || null,
+        status: p.status || "PLANNED",
+        category: p.category || "GENERAL",
+        targetDate: p.targetDate ? new Date(p.targetDate).toISOString() : null,
+        completedAt: p.completedAt ? new Date(p.completedAt).toISOString() : null,
       })),
     });
   }
 
   return (
     <DevelopmentDashboardClient
-      employees={formattedEmployees}
-      organizations={organizations}
+      employees={JSON.parse(JSON.stringify(formattedEmployees))}
+      organizations={JSON.parse(JSON.stringify(organizations))}
     />
   );
 }

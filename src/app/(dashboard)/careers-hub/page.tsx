@@ -4,7 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import CareersHubDashboardClient from "@/components/careers-hub/CareersHubDashboardClient";
-import { getSuccessionPlans } from "./actions";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Conecta Carreiras | Maître Conecta",
@@ -21,13 +22,33 @@ export default async function CareersHubPage() {
   const role = session.user.role || "RECRUITER";
   const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
-  const [plans, organizations] = await Promise.all([
-    getSuccessionPlans(),
-    prisma.organization.findMany({
-      select: { id: true, name: true, slug: true },
-      orderBy: { name: "asc" },
-    }),
-  ]);
+  let plans: any[] = [];
+  let organizations: any[] = [];
+
+  try {
+    const [plansRes, orgsRes] = await Promise.all([
+      prisma.successionPlan.findMany({
+        include: {
+          organization: {
+            select: { id: true, name: true, slug: true },
+          },
+          successors: {
+            orderBy: { performanceRating: "desc" },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.organization.findMany({
+        select: { id: true, name: true, slug: true },
+        orderBy: { name: "asc" },
+      }),
+    ]);
+
+    plans = plansRes || [];
+    organizations = orgsRes || [];
+  } catch (err) {
+    console.error("Erro ao carregar planos de sucessão:", err);
+  }
 
   return (
     <CareersHubDashboardClient

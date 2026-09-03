@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import {
   Users,
   UserCheck,
@@ -28,51 +30,77 @@ export const metadata = {
 };
 
 export default async function EmployeesPage() {
-  const [conversions, formalEmployees, organizations] = await Promise.all([
-    prisma.hireConversion.findMany({
-      include: {
-        application: {
-          include: {
-            candidate: true,
-            job: true,
-            offers: {
-              where: { status: "APPROVED" },
-              orderBy: { createdAt: "desc" },
-              take: 1,
-            },
-            interviews: {
-              include: {
-                scorecards: true,
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  let conversions: any[] = [];
+  let formalEmployees: any[] = [];
+  let organizations: any[] = [];
+
+  try {
+    const [convRes, formRes, orgsRes] = await Promise.all([
+      prisma.hireConversion.findMany({
+        include: {
+          application: {
+            include: {
+              candidate: true,
+              job: true,
+              offers: {
+                where: { status: "APPROVED" },
+                orderBy: { createdAt: "desc" },
+                take: 1,
+              },
+              interviews: {
+                include: {
+                  scorecards: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: { convertedAt: "desc" },
-    }),
-    prisma.employee.findMany({
-      include: {
-        department: true,
-        position: true,
-        organization: true,
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.organization.findMany({
-      select: { id: true, name: true, slug: true },
-      orderBy: { name: "asc" },
-    }),
-  ]);
+        orderBy: { convertedAt: "desc" },
+      }),
+      prisma.employee.findMany({
+        include: {
+          department: true,
+          position: true,
+          organization: true,
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.organization.findMany({
+        select: { id: true, name: true, slug: true },
+        orderBy: { name: "asc" },
+      }),
+    ]);
 
-  // Métricas do Core HR
-  const totalEmployees = conversions.length;
-  const activeCount = conversions.filter((c) => c.status === "ACTIVE" || c.status === "CONVERTED").length;
-  const pendingOnboarding = conversions.filter((c) => c.status === "PENDING_ONBOARDING").length;
+    conversions = convRes || [];
+    formalEmployees = formRes || [];
+    organizations = orgsRes || [];
+  } catch (err) {
+    console.error("Erro ao carregar dados de colaboradores:", err);
+  }
 
-  const totalPayroll = conversions.reduce((acc, c) => {
-    const salary = c.application.offers[0]?.salaryOffered || c.application.salaryExpectation || c.application.job.salaryMax || 0;
-    return acc + salary;
-  }, 0);
+  // Métricas do Core HR com fallbacks seguros contra nulos
+  const totalEmployees = conversions.length + formalEmployees.length;
+  const activeCount =
+    conversions.filter((c) => c.status === "ACTIVE" || c.status === "CONVERTED").length +
+    formalEmployees.filter((e) => e.status === "ACTIVE").length;
+  const pendingOnboarding =
+    conversions.filter((c) => c.status === "PENDING_ONBOARDING").length +
+    formalEmployees.filter((e) => e.status === "PENDING_ONBOARDING").length;
+
+  const totalPayroll =
+    conversions.reduce((acc, c) => {
+      const app = c.application || {};
+      const salary = app.offers?.[0]?.salaryOffered || app.salaryExpectation || app.job?.salaryMax || 0;
+      return acc + (typeof salary === "number" ? salary : 0);
+    }, 0) +
+    formalEmployees.reduce((acc, e) => {
+      return acc + (typeof e.salary === "number" ? e.salary : 0);
+    }, 0);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat("pt-BR", {
@@ -105,26 +133,26 @@ export default async function EmployeesPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Total Contratados</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Total Colaboradores</span>
             <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
               <Users size={18} />
             </div>
           </div>
           <p className="text-3xl font-black text-slate-900 dark:text-white">{totalEmployees}</p>
           <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-            ✓ 100% integrados via ATS
+            ✓ Core HR & ATS Unificados
           </span>
         </div>
 
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Colaboradores Ativos</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Ativos (Efetivados)</span>
             <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
               <UserCheck size={18} />
             </div>
           </div>
           <p className="text-3xl font-black text-slate-900 dark:text-white">{activeCount}</p>
-          <span className="text-xs font-medium text-slate-400">Em exercício das funções</span>
+          <span className="text-xs font-medium text-slate-400">Em plena atividade</span>
         </div>
 
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">

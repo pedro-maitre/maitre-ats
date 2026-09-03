@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import FeedbackLibraryViewer from "@/components/feedback/FeedbackLibraryViewer";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Central de Feedbacks & WhatsApp | Conecta Talentos",
   description: "Manual e Biblioteca com 23 Modelos Oficiais de Feedback para Processos Seletivos via WhatsApp",

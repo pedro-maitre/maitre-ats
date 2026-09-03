@@ -4,7 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ConsultingDashboardClient from "@/components/consulting/ConsultingDashboardClient";
-import { getConsultingProjects } from "./actions";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Conecta Consultoria | Maître Conecta",
@@ -21,14 +22,39 @@ export default async function ConsultingPage() {
   const role = session.user.role || "RECRUITER";
   const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
-  const [projects, organizations] = await Promise.all([
-    getConsultingProjects(),
-    prisma.organization.findMany({
-      where: { isMaster: false },
-      select: { id: true, name: true, slug: true },
-      orderBy: { name: "asc" },
-    }),
-  ]);
+  let projects: any[] = [];
+  let organizations: any[] = [];
+
+  try {
+    const [projectsRes, orgsRes] = await Promise.all([
+      prisma.consultingProject.findMany({
+        include: {
+          organization: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              logoUrl: true,
+              primaryColor: true,
+            },
+          },
+          deliverables: {
+            orderBy: { createdAt: "asc" },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.organization.findMany({
+        select: { id: true, name: true, slug: true, isMaster: true },
+        orderBy: [{ isMaster: "asc" }, { name: "asc" }],
+      }),
+    ]);
+
+    projects = projectsRes || [];
+    organizations = orgsRes || [];
+  } catch (err) {
+    console.error("Erro ao carregar projetos de consultoria:", err);
+  }
 
   return (
     <ConsultingDashboardClient
