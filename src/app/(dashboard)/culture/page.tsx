@@ -15,16 +15,25 @@ export const metadata = {
   description: "Pesquisas de Clima Organizacional, eNPS, Engajamento e Rituais de Cultura",
 };
 
-export default async function CulturePage() {
+export default async function CulturePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ orgId?: string }>;
+}) {
   const session = await getServerSession(authOptions);
   const role = session?.user?.role || "RECRUITER";
   const canManage = role === "SUPER_ADMIN" || role === "ADMIN" || role === "RECRUITER";
 
-  // Buscar organização ativa
-  let orgId = session?.user?.organizationId;
+  const resolvedParams = searchParams ? await searchParams : {};
+  const organizations = await prisma.organization.findMany({
+    select: { id: true, name: true, slug: true },
+    orderBy: { name: "asc" },
+  });
+
+  // Buscar organização ativa: searchParams > session > primeira do banco
+  let orgId = resolvedParams.orgId || session?.user?.organizationId;
   if (!orgId) {
-    const defaultOrg = await prisma.organization.findFirst();
-    orgId = defaultOrg?.id || "";
+    orgId = organizations[0]?.id || "";
   }
 
   // Buscar ciclo ativo de pesquisa de clima
@@ -103,6 +112,8 @@ export default async function CulturePage() {
       responses={responses}
       recognitions={recognitions}
       canManage={canManage}
+      organizations={JSON.parse(JSON.stringify(organizations))}
+      currentOrgId={orgId}
     />
   );
 }

@@ -14,21 +14,30 @@ export const metadata = {
   description: "Trilhas de Capacitação Corporativa, Cursos, Certificados e Onboarding",
 };
 
-export default async function LearningPage() {
+export default async function LearningPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ orgId?: string }>;
+}) {
   const session = await getServerSession(authOptions);
   const role = session?.user?.role || "RECRUITER";
   const canManage = role === "SUPER_ADMIN" || role === "ADMIN" || role === "RECRUITER";
   const currentUserName = session?.user?.name || "Colaborador";
   const currentUserEmail = session?.user?.email || "";
 
-  // Buscar organização ativa
-  let orgId = session?.user?.organizationId;
+  const resolvedParams = searchParams ? await searchParams : {};
+  const organizations = await prisma.organization.findMany({
+    select: { id: true, name: true, slug: true },
+    orderBy: { name: "asc" },
+  });
+
+  // Buscar organização ativa: searchParams > session > primeira do banco
+  let orgId = resolvedParams.orgId || session?.user?.organizationId;
   if (!orgId) {
-    const defaultOrg = await prisma.organization.findFirst();
-    orgId = defaultOrg?.id || "";
+    orgId = organizations[0]?.id || "";
   }
 
-  // Buscar cursos publicados
+  // Buscar cursos publicados da organização ou cursos gerais da Maître Master
   const coursesDb = await prisma.course.findMany({
     where: {
       status: "PUBLISHED",
@@ -91,6 +100,8 @@ export default async function LearningPage() {
       canManage={canManage}
       currentUserName={currentUserName}
       currentUserEmail={currentUserEmail}
+      organizations={JSON.parse(JSON.stringify(organizations))}
+      currentOrgId={orgId}
     />
   );
 }

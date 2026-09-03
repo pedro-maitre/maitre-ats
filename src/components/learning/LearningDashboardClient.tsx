@@ -18,6 +18,7 @@ import {
   Download,
   ShieldCheck,
   Users,
+  Building2,
 } from "lucide-react";
 import {
   enrollCourse,
@@ -68,6 +69,8 @@ interface LearningDashboardClientProps {
   canManage: boolean;
   currentUserName: string;
   currentUserEmail: string;
+  organizations?: Array<{ id: string; name: string }>;
+  currentOrgId?: string;
 }
 
 const CATEGORY_MAP: Record<
@@ -106,7 +109,10 @@ export default function LearningDashboardClient({
   canManage,
   currentUserName,
   currentUserEmail,
+  organizations = [],
+  currentOrgId = "",
 }: LearningDashboardClientProps) {
+  const [selectedOrg, setSelectedOrg] = useState(currentOrgId || (organizations[0]?.id || ""));
   const [activeTab, setActiveTab] = useState<"catalog" | "my_courses" | "certificates">("my_courses");
   const [enrollments, setEnrollments] = useState(initialEnrollments);
   const [searchQuery, setSearchQuery] = useState("");
@@ -238,6 +244,32 @@ export default function LearningDashboardClient({
             Capacitação contínua, onboarding de admitidos do Core HR e certificações executivas da Metodologia Maître.
           </p>
         </div>
+
+        {organizations && organizations.length > 0 && (
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2 px-3 rounded-2xl shadow-sm">
+            <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+              <Building2 size={14} className="text-cyan-500" />
+              <span className="hidden sm:inline">Empresa:</span>
+            </span>
+            <select
+              value={selectedOrg}
+              onChange={(e) => {
+                const newOrgId = e.target.value;
+                setSelectedOrg(newOrgId);
+                const url = new URL(window.location.href);
+                url.searchParams.set("orgId", newOrgId);
+                window.location.href = url.toString();
+              }}
+              className="bg-transparent text-xs font-bold text-slate-900 dark:text-white outline-none cursor-pointer"
+            >
+              {organizations.map((org) => (
+                <option key={org.id} value={org.id} className="bg-white dark:bg-slate-900">
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* KPI Cards */}

@@ -17,6 +17,7 @@ import {
   BarChart3,
   Flame,
   Star,
+  Building2,
 } from "lucide-react";
 import {
   submitSurveyResponse,
@@ -64,6 +65,8 @@ interface CultureDashboardClientProps {
   responses: ResponseItem[];
   recognitions: RecognitionItem[];
   canManage: boolean;
+  organizations?: Array<{ id: string; name: string }>;
+  currentOrgId?: string;
 }
 
 const PILLAR_MAP: Record<
@@ -111,7 +114,10 @@ export default function CultureDashboardClient({
   activeSurvey,
   responses,
   recognitions: initialRecognitions,
+  organizations = [],
+  currentOrgId = "",
 }: CultureDashboardClientProps) {
+  const [selectedOrg, setSelectedOrg] = useState(currentOrgId || (organizations[0]?.id || ""));
   const [activeTab, setActiveTab] = useState<
     "overview" | "mural" | "survey" | "comments"
   >("overview");
@@ -295,12 +301,40 @@ export default function CultureDashboardClient({
           </p>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-maitre-gold to-amber-600 text-slate-950 font-bold text-sm shadow-lg shadow-maitre-gold/20 hover:opacity-95 transition-all transform active:scale-95"
-        >
-          <Sparkles size={16} /> Reconhecer um Colega
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {organizations && organizations.length > 0 && (
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1.5 px-3 rounded-2xl shadow-sm">
+              <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                <Building2 size={14} className="text-rose-500" />
+                <span className="hidden sm:inline">Empresa:</span>
+              </span>
+              <select
+                value={selectedOrg}
+                onChange={(e) => {
+                  const newOrgId = e.target.value;
+                  setSelectedOrg(newOrgId);
+                  const url = new URL(window.location.href);
+                  url.searchParams.set("orgId", newOrgId);
+                  window.location.href = url.toString();
+                }}
+                className="bg-transparent text-xs font-bold text-slate-900 dark:text-white outline-none cursor-pointer"
+              >
+                {organizations.map((org) => (
+                  <option key={org.id} value={org.id} className="bg-white dark:bg-slate-900">
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-maitre-gold to-amber-600 text-slate-950 font-bold text-sm shadow-lg shadow-maitre-gold/20 hover:opacity-95 transition-all transform active:scale-95 cursor-pointer shrink-0"
+          >
+            <Sparkles size={16} /> Reconhecer um Colega
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards de eNPS & Clima */}
