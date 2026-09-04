@@ -12,11 +12,16 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("🌱 Semeando dados essenciais de forma não-destrutiva (sem apagar dados existentes)...");
+  console.log("🌱 Semeando base canônica limpa da Maître Consultoria...");
 
   // 1. Organização Principal (Maître Consultoria)
   let org = await prisma.organization.findFirst({
-    where: { slug: "maitre" },
+    where: {
+      OR: [
+        { slug: "maitre" },
+        { name: { contains: "Maître", mode: "insensitive" } },
+      ],
+    },
   });
 
   const orgData = {
@@ -42,163 +47,334 @@ async function main() {
     addressState: "SP",
     primaryColor: "#D4AF37",
     bannerHeadline: "Construa sua trajetória profissional com a Maître Consultoria",
-    bannerSubheadline: "Conectamos talentos extraordinários às melhores oportunidades do mercado.",
-    aboutUs: "A Maître Consultoria é referência na condução de processos seletivos estratégicos e hunting executivo.",
-    cultureValues: "Ética inegociável, assertividade, confidencialidade e inovação contínua.",
+    bannerSubheadline: "Conectamos talentos extraordinários às melhores oportunidades do mercado com excelência e propósito.",
+    aboutUs: "A Maître Consultoria é referência na condução de processos seletivos estratégicos, hunting executivo e soluções personalizadas de Recursos Humanos, unindo tecnologia de ponta e profundo olhar humano.",
+    cultureValues: "Ética inegociável, assertividade, relacionamento de confiança, transparência e inovação contínua na gestão de pessoas.",
   };
 
   if (!org) {
     org = await prisma.organization.create({
       data: orgData,
     });
-    console.log("✓ Organização Maître Consultoria criada com perfil completo.");
+    console.log(`✓ Organização Maître Consultoria criada: ${org.name} (${org.id})`);
   } else {
-    await prisma.organization.update({
+    org = await prisma.organization.update({
       where: { id: org.id },
       data: orgData,
     });
-    console.log("✓ Perfil da Maître Consultoria atualizado.");
+    console.log(`✓ Perfil da Maître Consultoria consolidado: ${org.name}`);
   }
 
-  const hashedPassword = await bcrypt.hash("123456", 10);
+  // 2. Departamentos Oficiais
+  const departmentsData = [
+    { name: "Diretoria & Sócios", code: "DIR", description: "Liderança executiva, governança institucional e gestão estratégica" },
+    { name: "Operações & Consultoria", code: "OPC", description: "Gestão operacional, consultoria de processos e hunting corporativo" },
+    { name: "Tech Recruiting", code: "TRC", description: "Hunting especializado em tecnologia, engenharia de software e liderança técnica" },
+    { name: "Recursos Humanos & R&S", code: "RHS", description: "Atração, seleção, triagem de talentos, relações humanas e DHO" },
+    { name: "Tecnologia & Inovação", code: "TEC", description: "Infraestrutura de tecnologia, suporte, segurança e plataforma ATS" },
+  ];
 
-  // 2. Usuários e colaboradores essenciais
-  const usersToEnsure = [
+  const deptMap = new Map<string, string>();
+  for (const d of departmentsData) {
+    let dept = await prisma.department.findFirst({
+      where: { organizationId: org.id, name: d.name },
+    });
+    if (!dept) {
+      dept = await prisma.department.create({
+        data: {
+          organizationId: org.id,
+          name: d.name,
+          code: d.code,
+          description: d.description,
+        },
+      });
+    }
+    deptMap.set(d.name, dept.id);
+  }
+  console.log("✓ Departamentos oficiais sincronizados.");
+
+  // 3. Cargos Oficiais
+  const positionsData = [
+    { title: "Sócia-Diretora / Founder", dept: "Diretoria & Sócios", level: "DIRETORIA", salary: 18000 },
+    { title: "Tech Recruiter & DHO", dept: "Tech Recruiting", level: "SENIOR", salary: 9500 },
+    { title: "Recrutadora Sênior & Consultora de R&S", dept: "Operações & Consultoria", level: "SENIOR", salary: 8800 },
+    { title: "Recrutadora Plena", dept: "Operações & Consultoria", level: "PLENO", salary: 6200 },
+    { title: "Consultora de Atração & Seleção", dept: "Recursos Humanos & R&S", level: "PLENO", salary: 5500 },
+    { title: "Consultor de Processos", dept: "Operações & Consultoria", level: "SENIOR", salary: 8000 },
+    { title: "Administrador de Sistemas", dept: "Tecnologia & Inovação", level: "ESPECIALISTA", salary: 12000 },
+  ];
+
+  const posMap = new Map<string, string>();
+  for (const p of positionsData) {
+    let pos = await prisma.position.findFirst({
+      where: { organizationId: org.id, title: p.title },
+    });
+    if (!pos) {
+      pos = await prisma.position.create({
+        data: {
+          organizationId: org.id,
+          departmentId: deptMap.get(p.dept),
+          title: p.title,
+          level: p.level,
+          baseSalary: p.salary,
+          description: `Posição oficial da equipe Maître Consultoria em ${p.dept}.`,
+        },
+      });
+    }
+    posMap.set(p.title, pos.id);
+  }
+  console.log("✓ Cargos oficiais sincronizados.");
+
+  // 4. Usuários e Colaboradores Reais da Maître Consultoria
+  const defaultPassword = "123456";
+  const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+  const teamMembers = [
     {
-      email: "admin@maitrework.com.br",
-      name: "Admin",
-      role: "SUPER_ADMIN",
-      jobTitle: "Administrador do Sistema",
-      department: "Tecnologia & Inovação",
-      phone: "(11) 99999-0000",
-    },
-    {
+      name: "Adriana Pinheiro",
       email: "adriana@maitrework.com.br",
-      name: "Adriana",
       role: "ADMIN",
-      jobTitle: "Diretora & Administradora de Operações",
+      jobTitle: "Sócia-Diretora / Founder",
       department: "Diretoria & Sócios",
+      registrationNumber: "MTR-001",
       phone: "(11) 98111-2233",
+      admissionDate: new Date("2021-01-15T09:00:00.000Z"),
+      salary: 18000,
+      gender: "Feminino",
+      bio: "Sócia-Diretora e Founder da Maître Consultoria. Liderança executiva, novos negócios e governança institucional.",
+      notes: "Sócia fundadora da Maître Consultoria. Acesso administrativo pleno ao sistema.",
     },
     {
+      name: "Pedro Atuan",
       email: "pedro@maitrework.com.br",
-      name: "Pedro",
       role: "RECRUITER",
-      jobTitle: "Tech Recruiter & Consultor de R&S",
+      jobTitle: "Tech Recruiter & DHO",
       department: "Tech Recruiting",
+      registrationNumber: "MTR-002",
       phone: "(11) 98555-6677",
+      admissionDate: new Date("2022-05-10T09:00:00.000Z"),
+      salary: 9500,
+      gender: "Masculino",
+      bio: "Tech Recruiter e Desenvolvimento Humano Organizacional (DHO). Hunting de talentos técnicos e cultura organizacional.",
+      notes: "Responsável pelo núcleo de Tech Recruiting e programas de DHO.",
     },
     {
+      name: "Erika Carla",
       email: "erika@maitrework.com.br",
-      name: "Erika",
       role: "RECRUITER",
-      jobTitle: "Recrutadora Sênior & Headhunter",
-      department: "Recursos Humanos / R&S",
+      jobTitle: "Recrutadora Sênior & Consultora de R&S",
+      department: "Operações & Consultoria",
+      registrationNumber: "MTR-003",
       phone: "(11) 98222-3344",
+      admissionDate: new Date("2022-08-01T09:00:00.000Z"),
+      salary: 8800,
+      gender: "Feminino",
+      bio: "Recrutadora Sênior e Consultora de R&S. Especialista em hunting executivo, processos estratégicos e relacionamento corporativo.",
+      notes: "Liderança de operações e condução de posições sêniores e executivas.",
     },
     {
+      name: "Lauriana Ferreira",
       email: "lauriana@maitrework.com.br",
-      name: "Lauriana",
       role: "RECRUITER",
       jobTitle: "Recrutadora Plena",
-      department: "Recursos Humanos / R&S",
+      department: "Operações & Consultoria",
+      registrationNumber: "MTR-004",
       phone: "(11) 98333-4455",
+      admissionDate: new Date("2023-03-15T09:00:00.000Z"),
+      salary: 6200,
+      gender: "Feminino",
+      bio: "Recrutadora Plena. Condução ágil de processos seletivos ponta a ponta e excelência na experiência do candidato.",
+      notes: "Atuação no fluxo de hunting, entrevistas por competências e alinhamento com clientes.",
     },
     {
+      name: "Kheviany Ramos",
       email: "kheviany@maitrework.com.br",
-      name: "Kheviany",
-      role: "RECRUITER",
+      role: "HIRING_MANAGER",
       jobTitle: "Consultora de Atração & Seleção",
-      department: "Recursos Humanos / R&S",
+      department: "Recursos Humanos & R&S",
+      registrationNumber: "MTR-005",
       phone: "(11) 98444-5566",
+      admissionDate: new Date("2023-10-02T09:00:00.000Z"),
+      salary: 5500,
+      gender: "Feminino",
+      bio: "Consultora de Atração & Seleção. Triagem comportamental, hunting de talentos e comunicação assertiva.",
+      notes: "Foco em candidate experience e triagem especializada.",
+    },
+    {
+      name: "Emidio",
+      email: "emidio@maitrework.com.br",
+      role: "RECRUITER",
+      jobTitle: "Consultor de Processos",
+      department: "Operações & Consultoria",
+      registrationNumber: "MTR-006",
+      phone: "(11) 98777-8899",
+      admissionDate: new Date("2024-01-10T09:00:00.000Z"),
+      salary: 8000,
+      gender: "Masculino",
+      bio: "Consultor de Processos. Mapeamento, otimização de fluxos operacionais e governança de entregas.",
+      notes: "Consultoria de processos e melhoria contínua de operações.",
+    },
+    {
+      name: "Admin",
+      email: "admin@maitrework.com.br",
+      role: "SUPER_ADMIN",
+      jobTitle: "Administrador de Sistemas",
+      department: "Tecnologia & Inovação",
+      registrationNumber: "MTR-000",
+      phone: "(11) 99999-0000",
+      admissionDate: new Date("2021-01-01T09:00:00.000Z"),
+      salary: 12000,
+      gender: "Masculino",
+      bio: "Administrador de Sistemas & Suporte Técnico Master da plataforma Maître Conecta.",
+      notes: "Conta técnica de suporte e governança de permissões da plataforma.",
     },
   ];
 
-  for (const u of usersToEnsure) {
-    const existing = await prisma.user.findFirst({
-      where: { email: { equals: u.email, mode: "insensitive" } },
+  for (const m of teamMembers) {
+    let user = await prisma.user.findFirst({
+      where: { email: { equals: m.email, mode: "insensitive" } },
     });
 
-    if (!existing) {
-      await prisma.user.create({
+    if (!user) {
+      user = await prisma.user.create({
         data: {
-          email: u.email,
-          name: u.name,
-          role: u.role,
-          jobTitle: u.jobTitle,
-          department: u.department,
-          phone: u.phone,
+          email: m.email,
+          name: m.name,
+          role: m.role,
+          jobTitle: m.jobTitle,
+          department: m.department,
+          phone: m.phone,
+          bio: m.bio,
           status: "ACTIVE",
           password: hashedPassword,
           organizationId: org.id,
         },
       });
-      console.log(`✓ Usuário ${u.name} (${u.email}) criado com sucesso.`);
+      console.log(`✓ Usuário criado: ${user.name} (${user.email}) | Role: ${user.role}`);
     } else {
-      await prisma.user.update({
-        where: { id: existing.id },
+      user = await prisma.user.update({
+        where: { id: user.id },
         data: {
-          jobTitle: u.jobTitle,
-          department: u.department,
-          phone: u.phone,
+          name: m.name,
+          role: m.role,
+          jobTitle: m.jobTitle,
+          department: m.department,
+          phone: m.phone,
+          bio: m.bio,
           status: "ACTIVE",
           organizationId: org.id,
         },
       });
-      console.log(`✓ Colaborador ${u.name} sincronizado.`);
+      console.log(`✓ Usuário sincronizado: ${user.name} (${user.email})`);
+    }
+
+    let emp = await prisma.employee.findFirst({
+      where: { email: { equals: m.email, mode: "insensitive" } },
+    });
+
+    const empData = {
+      organizationId: org.id,
+      userId: user.id,
+      registrationNumber: m.registrationNumber,
+      fullName: m.name,
+      email: m.email,
+      phone: m.phone,
+      gender: m.gender,
+      status: "ACTIVE",
+      employmentType: "CLT",
+      admissionDate: m.admissionDate,
+      salary: m.salary,
+      departmentId: deptMap.get(m.department) || null,
+      positionId: posMap.get(m.jobTitle) || null,
+      workSchedule: "08:30 - 18:00 (Seg a Sex)",
+      address: "São Paulo - SP",
+      notes: m.notes,
+    };
+
+    if (!emp) {
+      emp = await prisma.employee.create({ data: empData });
+      console.log(`✓ Colaborador cadastrado no Core HR: [${emp.registrationNumber}] ${emp.fullName}`);
+    } else {
+      emp = await prisma.employee.update({
+        where: { id: emp.id },
+        data: empData,
+      });
+      console.log(`✓ Colaborador sincronizado no Core HR: [${emp.registrationNumber}] ${emp.fullName}`);
     }
   }
 
-  // 3. Vaga padrão se não houver nenhuma
-  const existingJob = await prisma.job.findFirst({
-    where: { organizationId: org.id },
-  });
+  // 5. Cursos Institucionais Oficiais
+  const coursesData = [
+    {
+      title: "Onboarding Institucional & Cultura Maître Consultoria",
+      slug: "onboarding-cultura-maitre",
+      description: "História, valores inegociáveis, padrões de excelência e governança em hunting executivo da Maître.",
+      category: "ONBOARDING",
+      durationMinutes: 120,
+      isOnboardingDefault: true,
+      modules: JSON.stringify([
+        { title: "Nossa Origem & Missão de Conectar Talentos", duration: 30 },
+        { title: "Valores: Ética, Sigilo e Assertividade", duration: 30 },
+        { title: "Padrões Operacionais do Ecossistema Maître Conecta", duration: 60 },
+      ]),
+    },
+    {
+      title: "Metodologia de Hunting Estratégico & Fit 3D",
+      slug: "metodologia-hunting-fit-3d",
+      description: "Critérios avançados de triagem tridimensional (Técnico, Comportamental e Cultural) assistidos por IA.",
+      category: "METODOLOGIA_MAITRE",
+      durationMinutes: 90,
+      isOnboardingDefault: false,
+      modules: JSON.stringify([
+        { title: "Os 3 Pilares do Fit Tridimensional", duration: 30 },
+        { title: "Condução de Entrevistas por Competências", duration: 30 },
+        { title: "Construção de Shortlists Executivos para Clientes", duration: 30 },
+      ]),
+    },
+    {
+      title: "Compliance, LGPD & Sigilo em Processos de R&S",
+      slug: "compliance-lgpd-res",
+      description: "Boas práticas jurídicas, consentimento, retenção e privacidade de dados de candidatos e empresas.",
+      category: "COMPLIANCE_LGPD",
+      durationMinutes: 60,
+      isOnboardingDefault: true,
+      modules: JSON.stringify([
+        { title: "A LGPD aplicada ao Recrutamento & Seleção", duration: 30 },
+        { title: "Gestão Segura de Documentos no Maître Conecta", duration: 30 },
+      ]),
+    },
+  ];
 
-  if (!existingJob) {
-    const recruiter = await prisma.user.findFirst({
-      where: { role: "RECRUITER" },
+  for (const c of coursesData) {
+    let course = await prisma.course.findFirst({
+      where: { organizationId: org.id, slug: c.slug },
     });
 
-    const job = await prisma.job.create({
-      data: {
-        title: "Desenvolvedor Frontend Sênior",
-        description: "Vaga para desenvolvedor frontend com experiência em Next.js e React.",
-        department: "Tecnologia",
-        location: "Remoto",
-        status: "OPEN",
-        organizationId: org.id,
-        recruiterId: recruiter?.id || null,
-      },
-    });
-
-    const stages = [
-      { name: "Aplicado", order: 1 },
-      { name: "Triagem", order: 2 },
-      { name: "Entrevista", order: 3 },
-      { name: "Teste Técnico", order: 4 },
-      { name: "Proposta", order: 5 },
-      { name: "Contratado", order: 6 },
-      { name: "Rejeitado", order: 7 },
-    ];
-
-    for (const s of stages) {
-      await prisma.stage.create({
+    if (!course) {
+      course = await prisma.course.create({
         data: {
-          name: s.name,
-          order: s.order,
-          jobId: job.id,
+          organizationId: org.id,
+          title: c.title,
+          slug: c.slug,
+          description: c.description,
+          category: c.category,
+          durationMinutes: c.durationMinutes,
+          isOnboardingDefault: c.isOnboardingDefault,
+          modules: c.modules,
+          status: "PUBLISHED",
         },
       });
+      console.log(`✓ Curso oficial publicado: ${c.title}`);
     }
-    console.log("✓ Vaga padrão e etapas criadas.");
   }
 
-  console.log("🎉 Seed não-destrutivo concluído!");
+  console.log("\n🎉 Seed canônico da Maître Consultoria concluído com sucesso!");
+  console.log("ℹ️ Módulo de Vagas e Candidatos mantido 100% limpo, pronto para cadastros reais.");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("Erro no seed:", e);
     process.exit(1);
   })
   .finally(async () => {
