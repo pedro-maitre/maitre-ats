@@ -69,7 +69,8 @@ export default async function DashboardHomePage() {
   let conversions: any[] = [];
   let documents: any[] = [];
   let stages: any[] = [];
-  let recentAudits: any[] = [];
+  let formalEmployees: any[] = [];
+  let recentActivities: any[] = [];
   let dbError: string | null = null;
 
   try {
@@ -111,9 +112,17 @@ export default async function DashboardHomePage() {
           _count: { select: { applications: true } },
         },
       }),
-      prisma.auditEvent.findMany({
+      prisma.employee.findMany({
+        include: {
+          department: true,
+          position: true,
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.activity.findMany({
         take: 6,
         orderBy: { createdAt: "desc" },
+        include: { actor: true },
       }),
     ]);
 
@@ -123,7 +132,8 @@ export default async function DashboardHomePage() {
     conversions = results[3];
     documents = results[4];
     stages = results[5];
-    recentAudits = results[6];
+    formalEmployees = results[6];
+    recentActivities = results[7];
   } catch (err: any) {
     console.error("Erro ao carregar métricas do painel executivo:", err?.message || err);
     dbError = "O banco de dados está sincronizando ou conectando. As informações serão atualizadas automaticamente.";
@@ -131,10 +141,10 @@ export default async function DashboardHomePage() {
 
   // Cálculos & Métricas
   const totalJobs = jobs.length;
-  const activeJobs = jobs.filter((j) => j.status === "ACTIVE").length;
+  const activeJobs = jobs.filter((j) => j.status === "OPEN" || j.status === "ACTIVE").length;
   const totalCandidates = candidates.length;
   const totalApplications = applications.length;
-  const totalHires = conversions.length;
+  const totalHires = conversions.length + formalEmployees.length;
   const totalDocs = documents.length;
 
   const altoFitApps = applications.filter((a) => a.fitCategory === "ALTO_FIT");
@@ -143,14 +153,18 @@ export default async function DashboardHomePage() {
   );
   const pendingOnboarding = conversions.filter((c) => c.status === "PENDING_ONBOARDING");
 
-  const totalPayroll = conversions.reduce((acc, c) => {
-    const salary =
-      c.application.offers[0]?.salaryOffered ||
-      c.application.salaryExpectation ||
-      c.application.job.salaryMax ||
-      0;
-    return acc + salary;
-  }, 0);
+  const totalPayroll =
+    conversions.reduce((acc, c) => {
+      const salary =
+        c.application?.offers?.[0]?.salaryOffered ||
+        c.application?.salaryExpectation ||
+        c.application?.job?.salaryMax ||
+        0;
+      return acc + (typeof salary === "number" ? salary : 0);
+    }, 0) +
+    formalEmployees.reduce((acc, e) => {
+      return acc + (typeof e.salary === "number" ? e.salary : 0);
+    }, 0);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat("pt-BR", {
@@ -653,23 +667,23 @@ export default async function DashboardHomePage() {
           </div>
 
           <div className="space-y-3">
-            {recentAudits.length > 0 ? (
-              recentAudits.map((aud) => (
+            {recentActivities.length > 0 ? (
+              recentActivities.map((act: any) => (
                 <div
-                  key={aud.id}
+                  key={act.id}
                   className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800 text-xs"
                 >
                   <div className="flex items-center gap-2.5">
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                     <div>
                       <span className="font-bold text-slate-900 dark:text-white">
-                        {aud.action}
+                        {act.description || act.type}
                       </span>
-                      <p className="text-[10px] text-slate-400">{aud.resourceType}</p>
+                      <p className="text-[10px] text-slate-400">{act.actor?.name || "Sistema"}</p>
                     </div>
                   </div>
                   <span className="text-[10px] text-slate-400">
-                    {new Date(aud.createdAt).toLocaleTimeString("pt-BR", {
+                    {new Date(act.createdAt).toLocaleTimeString("pt-BR", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}

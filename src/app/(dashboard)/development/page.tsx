@@ -167,9 +167,8 @@ export default async function DevelopmentPage() {
     if (!emp.email || conversionEmails.has(emp.email.toLowerCase())) continue;
 
     const cand = (emp.candidateId ? candidateMap.get(emp.candidateId) : null) || candidateEmailMap.get(emp.email.toLowerCase());
-    if (!cand) continue;
 
-    const latestEval = cand.performanceEvaluations?.[0] || null;
+    const latestEval = cand?.performanceEvaluations?.[0] || null;
     let parsedCompetencies: Record<string, number> = {
       leadership: 3.5,
       communication: 4.0,
@@ -187,7 +186,7 @@ export default async function DevelopmentPage() {
     }
 
     formattedEmployees.push({
-      candidateId: cand.id,
+      candidateId: cand?.id || emp.id,
       candidateName: emp.fullName || "Colaborador",
       candidateEmail: emp.email,
       candidatePhone: emp.phone || null,
@@ -210,7 +209,7 @@ export default async function DevelopmentPage() {
             evaluatedAt: latestEval.evaluatedAt ? new Date(latestEval.evaluatedAt).toISOString() : new Date().toISOString(),
           }
         : null,
-      pdiPlans: (cand.developmentPlans || []).map((p: any) => ({
+      pdiPlans: (cand?.developmentPlans || []).map((p: any) => ({
         id: p.id,
         title: p.title || "Meta de Desenvolvimento",
         description: p.description || null,
