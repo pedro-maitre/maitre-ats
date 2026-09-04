@@ -26,9 +26,9 @@ function getPool(): Pool {
   const pool = new Pool({
     connectionString: connectionString || undefined,
     ssl: isSupabaseOrProd ? { rejectUnauthorized: false } : undefined,
-    max: process.env.NODE_ENV === "production" ? 10 : 5,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 15000,
+    max: 3, // Em ambiente Serverless (Vercel Lambdas), manter número pequeno de conexões por instância
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 10000,
     allowExitOnIdle: true,
   });
 
@@ -36,9 +36,8 @@ function getPool(): Pool {
     console.error("Prisma Pg Pool Unexpected Error:", err.message);
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.pool = pool;
-  }
+  // Reutiliza em instâncias warm tanto em dev quanto em prod
+  globalForPrisma.pool = pool;
 
   return pool;
 }
@@ -56,9 +55,7 @@ function getPrismaClient(): PrismaClient {
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = client;
-  }
+  globalForPrisma.prisma = client;
 
   return client;
 }
