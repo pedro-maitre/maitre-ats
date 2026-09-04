@@ -1,7 +1,7 @@
 import { Session } from "next-auth";
 import { prisma } from "@/lib/prisma";
 
-export type Role = "SUPER_ADMIN" | "ADMIN" | "RECRUITER" | "CANDIDATE";
+export type Role = "SUPER_ADMIN" | "ADMIN" | "RECRUITER" | "HIRING_MANAGER" | "CANDIDATE";
 
 export class UnauthorizedError extends Error {
   constructor(message: string = "Acesso não autorizado.") {
@@ -15,6 +15,29 @@ export class ForbiddenError extends Error {
     super(message);
     this.name = "ForbiddenError";
   }
+}
+
+/**
+ * Funções auxiliares para verificação de permissão e hierarquia.
+ */
+export function isSuperAdmin(role?: string | null): boolean {
+  return role === "SUPER_ADMIN";
+}
+
+export function isAdminOrAbove(role?: string | null): boolean {
+  return role === "SUPER_ADMIN" || role === "ADMIN";
+}
+
+export function isRecruiterOrAbove(role?: string | null): boolean {
+  return role === "SUPER_ADMIN" || role === "ADMIN" || role === "RECRUITER";
+}
+
+export function isHiringManager(role?: string | null): boolean {
+  return role === "HIRING_MANAGER";
+}
+
+export function isCandidate(role?: string | null): boolean {
+  return role === "CANDIDATE";
 }
 
 /**

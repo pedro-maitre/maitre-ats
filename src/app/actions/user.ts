@@ -49,6 +49,14 @@ export async function createUser(data: CreateUserInput) {
   const password = data.password?.trim();
   const role = data.role || "RECRUITER";
 
+  // Anti-Privilege Escalation: Apenas SUPER_ADMIN pode criar outro SUPER_ADMIN
+  if (role === "SUPER_ADMIN" && session.user.role !== "SUPER_ADMIN") {
+    return {
+      success: false,
+      error: "Não autorizado. Apenas o Admin Master (SUPER_ADMIN) pode criar usuários com perfil Super Administrador.",
+    };
+  }
+
   if (!name || !email || !password) {
     return { success: false, error: "Todos os campos obrigatórios (Nome, E-mail e Senha) devem ser preenchidos." };
   }
@@ -148,7 +156,34 @@ export async function updateUser(
     return { success: false, error: "Não autorizado. Apenas Administradores podem editar usuários." };
   }
 
+  const currentRole = session.user.role;
+
   try {
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true, email: true },
+    });
+
+    if (!targetUser) {
+      return { success: false, error: "Usuário não encontrado." };
+    }
+
+    // Apenas SUPER_ADMIN pode editar a conta de outro SUPER_ADMIN
+    if (targetUser.role === "SUPER_ADMIN" && currentRole !== "SUPER_ADMIN") {
+      return {
+        success: false,
+        error: "Não autorizado. Apenas o Admin Master (SUPER_ADMIN) pode alterar dados de um Super Administrador.",
+      };
+    }
+
+    // Apenas SUPER_ADMIN pode promover alguém para SUPER_ADMIN
+    if (data.role === "SUPER_ADMIN" && currentRole !== "SUPER_ADMIN") {
+      return {
+        success: false,
+        error: "Não autorizado. Apenas o Admin Master (SUPER_ADMIN) pode conceder o papel de Super Administrador.",
+      };
+    }
+
     const updated = await prisma.user.update({
       where: { id: userId },
       data: {

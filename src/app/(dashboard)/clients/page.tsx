@@ -22,6 +22,10 @@ export default async function ClientsPage() {
   const role = session.user.role || "RECRUITER";
   const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
+  if (!isAdmin) {
+    redirect(role === "HIRING_MANAGER" ? "/portal-gestor" : "/jobs");
+  }
+
   let clients: any[] = [];
   let masterOrg: any = null;
 

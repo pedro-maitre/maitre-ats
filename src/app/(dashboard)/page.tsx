@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,25 @@ export const metadata = {
 
 export default async function DashboardHomePage() {
   const session = await getServerSession(authOptions);
-  const userName = session?.user?.name || "Administrador";
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  const role = session.user.role;
+
+  // Redirecionamento estrito por papel: apenas administradores acessam o Painel Executivo Geral
+  if (role === "CANDIDATE") {
+    redirect("/carreiras/maitre/candidato");
+  }
+  if (role === "HIRING_MANAGER") {
+    redirect("/portal-gestor");
+  }
+  if (role === "RECRUITER") {
+    redirect("/jobs");
+  }
+
+  const userName = session.user.name || "Administrador";
 
   // Consultas agregadas em paralelo com fallback resiliente
   let jobs: any[] = [];

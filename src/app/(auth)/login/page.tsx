@@ -34,11 +34,16 @@ export default function LoginPage() {
         try {
           const sessionRes = await fetch("/api/auth/session");
           const sessionData = await sessionRes.json();
+          const role = sessionData?.user?.role;
 
-          const targetUrl =
-            sessionData?.user?.role === "CANDIDATE"
-              ? "/carreiras/maitre/candidato"
-              : "/";
+          let targetUrl = "/";
+          if (role === "CANDIDATE") {
+            targetUrl = "/carreiras/maitre/candidato";
+          } else if (role === "HIRING_MANAGER") {
+            targetUrl = "/portal-gestor";
+          } else if (role === "RECRUITER") {
+            targetUrl = "/jobs";
+          }
 
           window.location.href = targetUrl;
         } catch {

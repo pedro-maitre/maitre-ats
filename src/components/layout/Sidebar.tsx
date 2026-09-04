@@ -76,7 +76,7 @@ export default async function Sidebar() {
 
       {/* Navigation Scrollable */}
       <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto custom-scrollbar">
-        {/* DASHBOARD GERAL / PORTAL DO GESTOR */}
+        {/* DASHBOARD GERAL / PORTAL DO GESTOR / ATALHOS */}
         <div className="space-y-1">
           {isHiringManager ? (
             <Link
@@ -91,7 +91,7 @@ export default async function Sidebar() {
                 </span>
               </div>
             </Link>
-          ) : (
+          ) : isAdmin ? (
             <>
               <Link
                 href="/"
@@ -132,7 +132,7 @@ export default async function Sidebar() {
                 </div>
               </Link>
             </>
-          )}
+          ) : null}
         </div>
 
         {/* GRUPO 1: ATRAÇÃO & CORE */}
@@ -274,21 +274,23 @@ export default async function Sidebar() {
                 </div>
               </Link>
 
-              <Link
-                href="/consulting"
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800/80 hover:text-white transition-colors text-xs font-semibold"
-              >
-                <Sparkles size={16} className="text-maitre-gold shrink-0" />
-                <div className="flex items-center justify-between flex-1">
-                  <span>Conecta Consultoria</span>
-                </div>
-              </Link>
+              {isAdmin && (
+                <Link
+                  href="/consulting"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800/80 hover:text-white transition-colors text-xs font-semibold"
+                >
+                  <Sparkles size={16} className="text-maitre-gold shrink-0" />
+                  <div className="flex items-center justify-between flex-1">
+                    <span>Conecta Consultoria</span>
+                  </div>
+                </Link>
+              )}
             </div>
 
-            {/* GRUPO 4: ADMINISTRAÇÃO */}
+            {/* GRUPO 4: ADMINISTRAÇÃO / CONTA */}
             <div className="space-y-1 pt-2 border-t border-slate-800/50">
               <span className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                Administração
+                {isAdmin ? "Administração" : "Minha Conta"}
               </span>
 
               {isAdmin && (
@@ -307,11 +309,11 @@ export default async function Sidebar() {
               )}
 
               <Link
-                href="/settings"
+                href={isAdmin ? "/settings" : "/settings/profile"}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800/80 hover:text-white transition-colors text-xs font-semibold"
               >
                 <Settings size={16} className="text-slate-400 shrink-0" />
-                <span>Configurações</span>
+                <span>{isAdmin ? "Configurações" : "Meu Perfil"}</span>
               </Link>
             </div>
           </>

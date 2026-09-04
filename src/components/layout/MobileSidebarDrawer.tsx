@@ -18,6 +18,7 @@ import {
   Building2,
   Settings,
   ShieldCheck,
+  UserCog,
 } from "lucide-react";
 import LogoutButton from "./LogoutButton";
 import { useSession } from "next-auth/react";
@@ -111,27 +112,40 @@ export default function MobileSidebarDrawer({
             {/* Links */}
             <nav className="flex-1 px-3 py-4 space-y-3 overflow-y-auto">
               <div className="space-y-1">
-                <Link
-                  href={isHiringManager ? "/portal-gestor" : "/"}
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/90 text-white text-xs font-bold"
-                >
-                  <LayoutDashboard size={15} className="text-maitre-gold" />
-                  <span>{isHiringManager ? "Portal do Gestor" : "Painel Executivo"}</span>
-                </Link>
-                <Link
-                  href="/clients"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
-                >
-                  <Building2 size={15} className="text-cyan-400" />
-                  <span>Empresas Clientes</span>
-                </Link>
+                {isHiringManager ? (
+                  <Link
+                    href="/portal-gestor"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/90 text-white text-xs font-bold"
+                  >
+                    <LayoutDashboard size={15} className="text-maitre-gold" />
+                    <span>Portal do Gestor</span>
+                  </Link>
+                ) : isAdmin ? (
+                  <>
+                    <Link
+                      href="/"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800/90 text-white text-xs font-bold"
+                    >
+                      <LayoutDashboard size={15} className="text-maitre-gold" />
+                      <span>Painel Executivo</span>
+                    </Link>
+                    <Link
+                      href="/clients"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
+                    >
+                      <Building2 size={15} className="text-cyan-400" />
+                      <span>Empresas Clientes</span>
+                    </Link>
+                  </>
+                ) : null}
               </div>
 
               <div className="space-y-1 pt-2 border-t border-slate-800/60">
                 <span className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                  R&S & Gestão
+                  {isHiringManager ? "Processos Seletivos" : "R&S & Gestão"}
                 </span>
                 <Link
                   href="/jobs"
@@ -139,69 +153,103 @@ export default function MobileSidebarDrawer({
                   className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
                 >
                   <Briefcase size={15} className="text-maitre-gold" />
-                  <span>Conecta Talentos (ATS)</span>
+                  <span>{isHiringManager ? "Minhas Vagas" : "Conecta Talentos (ATS)"}</span>
                 </Link>
-                <Link
-                  href="/candidates"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold pl-6"
-                >
-                  <Users size={14} className="text-slate-400" />
-                  <span>Banco de Talentos</span>
-                </Link>
-                <Link
-                  href="/feedbacks"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold pl-6"
-                >
-                  <MessageSquare size={14} className="text-emerald-400" />
-                  <span>Feedbacks WhatsApp</span>
-                </Link>
-                <Link
-                  href="/employees"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
-                >
-                  <UserCheck size={15} className="text-purple-400" />
-                  <span>Conecta Pessoas (Core HR)</span>
-                </Link>
+
+                {!isHiringManager && (
+                  <>
+                    <Link
+                      href="/candidates"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold pl-6"
+                    >
+                      <Users size={14} className="text-slate-400" />
+                      <span>Banco de Talentos</span>
+                    </Link>
+                    <Link
+                      href="/feedbacks"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold pl-6"
+                    >
+                      <MessageSquare size={14} className="text-emerald-400" />
+                      <span>Feedbacks WhatsApp</span>
+                    </Link>
+                    <Link
+                      href="/employees"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
+                    >
+                      <UserCheck size={15} className="text-purple-400" />
+                      <span>Conecta Pessoas (Core HR)</span>
+                    </Link>
+                  </>
+                )}
               </div>
 
+              {!isHiringManager && (
+                <div className="space-y-1 pt-2 border-t border-slate-800/60">
+                  <span className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                    Operações & DHO
+                  </span>
+                  <Link
+                    href="/operations"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
+                  >
+                    <FileCheck size={15} className="text-emerald-400" />
+                    <span>Conecta Operações</span>
+                  </Link>
+                  <Link
+                    href="/development"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
+                  >
+                    <Award size={15} className="text-pink-400" />
+                    <span>Conecta Desenvolvimento</span>
+                  </Link>
+                  <Link
+                    href="/learning"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
+                  >
+                    <GraduationCap size={15} className="text-cyan-400" />
+                    <span>Conecta Aprendizagem</span>
+                  </Link>
+                  <Link
+                    href="/culture"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
+                  >
+                    <HeartHandshake size={15} className="text-rose-400" />
+                    <span>Conecta Cultura</span>
+                  </Link>
+                </div>
+              )}
+
+              {/* Administração / Minha Conta */}
               <div className="space-y-1 pt-2 border-t border-slate-800/60">
                 <span className="px-3 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                  Operações & DHO
+                  {isAdmin ? "Administração" : "Minha Conta"}
                 </span>
+
+                {isAdmin && (
+                  <Link
+                    href="/users"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
+                  >
+                    <UserCog size={15} className="text-purple-400" />
+                    <span>Usuários (Admin)</span>
+                  </Link>
+                )}
+
                 <Link
-                  href="/operations"
+                  href={isAdmin ? "/settings" : "/settings/profile"}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
                 >
-                  <FileCheck size={15} className="text-emerald-400" />
-                  <span>Conecta Operações</span>
-                </Link>
-                <Link
-                  href="/development"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
-                >
-                  <Award size={15} className="text-pink-400" />
-                  <span>Conecta Desenvolvimento</span>
-                </Link>
-                <Link
-                  href="/learning"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
-                >
-                  <GraduationCap size={15} className="text-cyan-400" />
-                  <span>Conecta Aprendizagem</span>
-                </Link>
-                <Link
-                  href="/culture"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
-                >
-                  <HeartHandshake size={15} className="text-rose-400" />
-                  <span>Conecta Cultura</span>
+                  <Settings size={15} className="text-slate-400" />
+                  <span>{isAdmin ? "Configurações" : "Meu Perfil"}</span>
                 </Link>
               </div>
             </nav>

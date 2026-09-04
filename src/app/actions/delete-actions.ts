@@ -115,6 +115,23 @@ export async function deleteUser(userId: string) {
     return { success: false, error: "Você não pode excluir sua própria conta enquanto estiver logado." };
   }
 
+  const targetUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true, email: true },
+  });
+
+  if (!targetUser) {
+    return { success: false, error: "Usuário não encontrado." };
+  }
+
+  // Apenas SUPER_ADMIN pode excluir outros ADMINs ou SUPER_ADMINs
+  if ((targetUser.role === "SUPER_ADMIN" || targetUser.role === "ADMIN") && session?.user?.role !== "SUPER_ADMIN") {
+    return {
+      success: false,
+      error: "Não autorizado. Apenas o Admin Master (SUPER_ADMIN) pode excluir administradores.",
+    };
+  }
+
   try {
     await prisma.$transaction(async (tx) => {
       // 1. Desvincular vagas atribuídas ao recrutador ou gestor
