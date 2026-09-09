@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-09T14:48:40.000Z",
+  "title": "Design System: Maître Conecta",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Dourado Maître",
+        "canonical": "#c89650",
+        "tonalRamp": [
+          "#3a2810",
+          "#5e411b",
+          "#845b20",
+          "#9a6d2b",
+          "#b08040",
+          "#c89650",
+          "#ddb375",
+          "#fcfaf7"
+        ]
+      },
+      "surface-sidebar": {
+        "role": "neutral",
+        "displayName": "Grafite Atelier",
+        "canonical": "#1d1e20",
+        "tonalRamp": [
+          "#0d0e0f",
+          "#141517",
+          "#1d1e20",
+          "#27292c",
+          "#383a3e",
+          "#52555a",
+          "#767a81",
+          "#9ea2aa"
+        ]
+      },
+      "canvas-dark": {
+        "role": "neutral",
+        "displayName": "Canvas Escuro Profundo",
+        "canonical": "#0a0a0a",
+        "tonalRamp": [
+          "#020202",
+          "#060606",
+          "#0a0a0a",
+          "#121212",
+          "#1e1e1e",
+          "#2e2e2e",
+          "#4a4a4a",
+          "#6e6e6e"
+        ]
+      },
+      "surface-card": {
+        "role": "neutral",
+        "displayName": "Superfície de Cartão",
+        "canonical": "#0f172a",
+        "tonalRamp": [
+          "#020617",
+          "#090e1c",
+          "#0f172a",
+          "#1e293b",
+          "#334155",
+          "#475569",
+          "#64748b",
+          "#94a3b8"
+        ]
+      },
+      "accent-emerald": {
+        "role": "functional",
+        "displayName": "Esmeralda Sucesso",
+        "canonical": "#10b981",
+        "tonalRamp": [
+          "#022c22",
+          "#064e3b",
+          "#065f46",
+          "#047857",
+          "#059669",
+          "#10b981",
+          "#34d399",
+          "#d1fae5"
+        ]
+      },
+      "accent-amber": {
+        "role": "functional",
+        "displayName": "Âmbar Atenção",
+        "canonical": "#f59e0b",
+        "tonalRamp": [
+          "#451a03",
+          "#78350f",
+          "#92400e",
+          "#b45309",
+          "#d97706",
+          "#f59e0b",
+          "#fbbf24",
+          "#fef3c7"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display Executivo",
+        "purpose": "Títulos de grande impacto institucional e métricas principais."
+      },
+      "headline": {
+        "displayName": "Headline de Seção",
+        "purpose": "Cabeçalhos de módulos, páginas e títulos de modais."
+      },
+      "title": {
+        "displayName": "Título de Registro",
+        "purpose": "Cartões de demandas, nomes de vagas e colaboradores."
+      },
+      "body": {
+        "displayName": "Corpo & Descrições",
+        "purpose": "Textos operacionais, comentários, históricos e instruções."
+      },
+      "label": {
+        "displayName": "Rótulo & Metadados",
+        "purpose": "Pílulas de status, prazos relativos e tags de filtros."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-ambient",
+        "value": "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
+        "purpose": "Profundidade elegante sobre superfícies ardósia sem borrão excessivo."
+      },
+      {
+        "name": "modal-overlay",
+        "value": "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+        "purpose": "Destaca diálogos de criação e inspeção profunda de demandas."
+      },
+      {
+        "name": "focus-glow",
+        "value": "0 0 0 2px #c89650",
+        "purpose": "Anel de foco acessível contrastante em elementos interativos."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Transição padrão para abertura de gavetas, modais e transições de abas."
+      },
+      {
+        "name": "duration-short",
+        "value": "200ms",
+        "purpose": "Feedback tátil imediato em estados hover e cliques de botões."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Botão dourado com alto contraste para ações afirmativas primárias.",
+      "html": "<button class=\"ds-btn-primary\">Nova Demanda</button>",
+      "css": ".ds-btn-primary { background: #c89650; color: #451a03; font-family: Outfit, sans-serif; font-size: 13px; font-weight: 700; padding: 8px 16px; border: none; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(200, 150, 80, 0.2); transition: background-color 0.2s, transform 0.1s; } .ds-btn-primary:hover { background: #e5c07b; } .ds-btn-primary:active { transform: scale(0.98); } .ds-btn-primary:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Botão neutro escuro com borda de ardósia para ações secundárias ou fechamento.",
+      "html": "<button class=\"ds-btn-secondary\">Cancelar</button>",
+      "css": ".ds-btn-secondary { background: #1e293b; color: #cbd5e1; font-family: Outfit, sans-serif; font-size: 13px; font-weight: 600; padding: 8px 14px; border: 1px solid #334155; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background-color 0.2s, color 0.2s; } .ds-btn-secondary:hover { background: #334155; color: #ffffff; } .ds-btn-secondary:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Card Panel",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Container base de painéis, tabelas e visualização de itens operacionais.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-header\"><span class=\"ds-card-title\">Alinhamento Semanal</span><span class=\"ds-card-badge\">Segunda 15h30</span></div><p class=\"ds-card-desc\">Pauta estruturada com pendências, bloqueios e novas demandas da consultoria.</p></div>",
+      "css": ".ds-card { background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); font-family: Outfit, sans-serif; color: #f8fafc; } .ds-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; } .ds-card-title { font-size: 15px; font-weight: 700; color: #ffffff; } .ds-card-badge { font-size: 10px; font-weight: 800; text-transform: uppercase; background: rgba(200, 150, 80, 0.15); color: #c89650; border: 1px solid rgba(200, 150, 80, 0.3); border-radius: 9999px; padding: 2px 8px; } .ds-card-desc { font-size: 12px; color: #94a3b8; line-height: 1.5; margin: 0; }"
+    },
+    {
+      "name": "Status Badge (Em Andamento)",
+      "kind": "chip",
+      "refersTo": "badge-in-progress",
+      "description": "Indicador translúcido de demanda em execução ativa.",
+      "html": "<span class=\"ds-badge-in-progress\">Em Andamento</span>",
+      "css": ".ds-badge-in-progress { display: inline-flex; align-items: center; font-family: Outfit, sans-serif; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 9999px; padding: 3px 9px; }"
+    },
+    {
+      "name": "Status Badge (Concluído)",
+      "kind": "chip",
+      "refersTo": "badge-completed",
+      "description": "Indicador translúcido de entrega homologada e finalizada.",
+      "html": "<span class=\"ds-badge-completed\">Concluída</span>",
+      "css": ".ds-badge-completed { display: inline-flex; align-items: center; font-family: Outfit, sans-serif; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 9999px; padding: 3px 9px; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-text",
+      "description": "Campo de texto escuro com anel de foco dourado Maître.",
+      "html": "<input type=\"text\" class=\"ds-input\" placeholder=\"Buscar demandas ou projetos...\" />",
+      "css": ".ds-input { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 10px 14px; font-family: Outfit, sans-serif; font-size: 12px; color: #ffffff; outline: none; width: 100%; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; } .ds-input::placeholder { color: #64748b; } .ds-input:focus { border-color: #c89650; box-shadow: 0 0 0 1px #c89650; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "O Atelier Executivo",
+    "overview": "O Maître Conecta combina a sobriedade de uma consultoria de alta gestão estratégica com a agilidade de um ecossistema digital moderno de Recursos Humanos e Operações. O design expressa sofisticação contida: superfícies escuras texturizadas em ardósia nobre (#1d1e20, #0f172a), elementos iluminados com o Dourado Maître (#c89650 / #9a6d2b) e toques de cores funcionais cuidadosamente calibradas para tomada de decisão rápida e sem sobrecarga cognitiva.",
+    "keyCharacteristics": [
+      "Foco em alta legibilidade executiva com tipografia geométrica humanista (Outfit)",
+      "Paleta noturna acolhedora com fundo grafite/ardósia escuro e acentos em dourado nobre",
+      "Hierarquia estrita de estados com badges translúcidos com borda definida",
+      "Acessibilidade visual com suporte nativo a prefers-reduced-motion e anéis dourados em :focus-visible",
+      "Isolamento intencional entre fluxos internos da consultoria e portais de empresas clientes"
+    ],
+    "rules": [
+      {
+        "name": "The Dignified Accent Rule",
+        "body": "O Dourado Maître é reservado para intenções de alto valor (chamadas à ação primárias, indicadores-chave e identidade de marca). Em formulários ou botões sobrepostos em dourado, utilize exclusivamente tipografia em tom escuro de alto contraste (text-amber-950 font-bold), nunca cinza opaco.",
+        "section": "colors"
+      },
+      {
+        "name": "The Scanning Rhythm Rule",
+        "body": "Todo cartão ou linha de tabela deve ser escaneável em menos de 2 segundos: etiqueta de status visível no topo direito, título em peso forte e metadados secundários (responsável e prazo) alinhados na base.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do utilizar tipografia em tom escuro contrastante (text-amber-950 font-bold) sobre botões e badges em fundo dourado Maître.",
+      "Do manter a borda sutil border-slate-800 em todos os cartões sobre o canvas escuro para assegurar definição visual em monitores com calibrações variadas.",
+      "Do agrupar metadados de demandas (responsável, prazo e prioridade) com ícones compactos de 13–14px para facilitar leitura rápida.",
+      "Do respeitar o fuso horário local (America/Fortaleza) na formatação de datas e na agenda semanal.",
+      "Do fornecer feedback imediato (loading spinner ou mensagem de confirmação) para ações do servidor."
+    ],
+    "donts": [
+      "Don't utilizar cinza médio desbotado (text-slate-950 ou text-slate-500) sobre botões coloridos de destaque.",
+      "Don't aplicar sombras pretas borradas e difusas que causem sensação de interface pesada ou suja.",
+      "Don't inventar gradientes púrpuras ou azuis genéricos que descaracterizem a identidade visual da Maître Consultoria.",
+      "Don't expor scores ou notas punitivas de produtividade em painéis operacionais da equipe.",
+      "Don't mesclar a visualização interna de impedimentos operacionais da equipe com os portais de clientes externos."
+    ]
+  }
+}
