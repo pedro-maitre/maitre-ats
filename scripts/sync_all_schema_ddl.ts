@@ -46,6 +46,18 @@ async function main() {
         CONSTRAINT "CultureActionPlan_surveyId_fkey" FOREIGN KEY ("surveyId") REFERENCES "ClimateSurvey"("id") ON DELETE CASCADE ON UPDATE CASCADE
       );`,
       `CREATE INDEX IF NOT EXISTS "CultureActionPlan_organizationId_surveyId_idx" ON "CultureActionPlan"("organizationId", "surveyId");`,
+      `ALTER TABLE "CultureActionPlan" ADD COLUMN IF NOT EXISTS "ownerName" TEXT DEFAULT 'Responsável';`,
+      `ALTER TABLE "CultureActionPlan" ADD COLUMN IF NOT EXISTS "ownerEmail" TEXT;`,
+      `ALTER TABLE "CultureActionPlan" ADD COLUMN IF NOT EXISTS "targetDate" TIMESTAMP(3);`,
+      `ALTER TABLE "CultureActionPlan" ADD COLUMN IF NOT EXISTS "kpiSuccessIndicator" TEXT;`,
+      `DO $$ BEGIN
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='CultureActionPlan' AND column_name='responsible') THEN
+          ALTER TABLE "CultureActionPlan" ALTER COLUMN "responsible" DROP NOT NULL;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='CultureActionPlan' AND column_name='dueDate') THEN
+          ALTER TABLE "CultureActionPlan" ALTER COLUMN "dueDate" DROP NOT NULL;
+        END IF;
+      END $$;`,
 
       // 4. Course e CourseEnrollment colunas extras
       `ALTER TABLE "Course" ADD COLUMN IF NOT EXISTS "quizQuestions" TEXT;`,
@@ -78,6 +90,7 @@ async function main() {
         CONSTRAINT "TrainingClass_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE CASCADE ON UPDATE CASCADE
       );`,
       `CREATE INDEX IF NOT EXISTS "TrainingClass_organizationId_courseId_idx" ON "TrainingClass"("organizationId", "courseId");`,
+      `ALTER TABLE "TrainingClass" ADD COLUMN IF NOT EXISTS "locationOrUrl" TEXT;`,
 
       `CREATE TABLE IF NOT EXISTS "CourseQuiz" (
         "id" TEXT NOT NULL,
