@@ -465,7 +465,7 @@ export default function ConsultingDashboardClient({
                       <td className="p-3.5 text-slate-300 max-w-xs truncate">{ts.activityDescription}</td>
                       <td className="p-3.5">
                         <span
-                          className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${
+                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
                             ts.status === "APPROVED"
                               ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                               : "bg-amber-500/20 text-amber-300 border-amber-500/30"
@@ -516,7 +516,7 @@ export default function ConsultingDashboardClient({
               <div key={deliv.id} className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
                 <div className="flex items-center justify-between">
                   <span
-                    className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${
+                    className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
                       deliv.approvedByClient
                         ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                         : "bg-amber-500/20 text-amber-300 border-amber-500/30"
@@ -528,7 +528,7 @@ export default function ConsultingDashboardClient({
                 <h4 className="text-sm font-bold text-white">{deliv.title}</h4>
                 <p className="text-xs text-slate-400">{deliv.description || "Entregável do projeto."}</p>
                 {deliv.clientFeedback && (
-                  <p className="text-[11px] text-slate-300 italic pt-2 border-t border-slate-800">
+                  <p className="text-xs text-slate-300 italic pt-2 border-t border-slate-800">
                     Feedback do Cliente: "{deliv.clientFeedback}"
                   </p>
                 )}

@@ -184,14 +184,14 @@ export default function WeeklyMeetingHub({
   return (
     <div className="space-y-6">
       {/* Banner da Reunião Semanal */}
-      <div className="bg-gradient-to-r from-purple-950/40 via-slate-900 to-slate-900 border border-purple-500/30 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-amber-950/30 via-slate-900 to-slate-900 border border-maitre-gold/30 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Clock size={20} className="text-purple-400" />
+            <Clock size={20} className="text-maitre-gold" />
             <h2 className="text-lg font-bold text-white tracking-tight">
               Ritual Semanal de Alinhamento — Segundas às {config?.weeklyMeetingTime || "15:30"}
             </h2>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-maitre-gold/15 text-maitre-gold border border-maitre-gold/30">
               Fuso: {config?.defaultTimezone || "America/Fortaleza"}
             </span>
           </div>
@@ -246,10 +246,10 @@ export default function WeeklyMeetingHub({
 
             {/* Tópico 1: Entregas Recentes */}
             <div className="space-y-1.5 text-xs">
-              <span className="font-bold text-emerald-400 flex items-center gap-1 text-[11px]">
+              <span className="font-bold text-emerald-400 flex items-center gap-1">
                 <CheckCircle2 size={13} /> 1. Entregas Recentes ({smartAgenda.recentlyCompleted.length})
               </span>
-              <div className="pl-4 space-y-1 text-[11px] text-slate-400">
+              <div className="pl-4 space-y-1 text-slate-400">
                 {smartAgenda.recentlyCompleted.length === 0 ? (
                   <p className="italic text-slate-600">Nenhuma entrega recente registrada.</p>
                 ) : (
@@ -264,10 +264,10 @@ export default function WeeklyMeetingHub({
 
             {/* Tópico 2: Bloqueios e Impedimentos */}
             <div className="space-y-1.5 text-xs pt-2 border-t border-slate-800/60">
-              <span className="font-bold text-amber-400 flex items-center gap-1 text-[11px]">
+              <span className="font-bold text-amber-400 flex items-center gap-1">
                 <Lock size={13} /> 2. Pendências & Bloqueios ({smartAgenda.blocked.length})
               </span>
-              <div className="pl-4 space-y-1 text-[11px] text-slate-400">
+              <div className="pl-4 space-y-1 text-slate-400">
                 {smartAgenda.blocked.length === 0 ? (
                   <p className="italic text-slate-600">Sem bloqueios ativos no momento.</p>
                 ) : (
@@ -282,10 +282,10 @@ export default function WeeklyMeetingHub({
 
             {/* Tópico 3: Prazos e Atrasos */}
             <div className="space-y-1.5 text-xs pt-2 border-t border-slate-800/60">
-              <span className="font-bold text-rose-400 flex items-center gap-1 text-[11px]">
+              <span className="font-bold text-rose-400 flex items-center gap-1">
                 <AlertTriangle size={13} /> 3. Prazos Críticos ({smartAgenda.overdue.length})
               </span>
-              <div className="pl-4 space-y-1 text-[11px] text-slate-400">
+              <div className="pl-4 space-y-1 text-slate-400">
                 {smartAgenda.overdue.length === 0 ? (
                   <p className="italic text-slate-600">Sem atrasos pendentes.</p>
                 ) : (
@@ -300,10 +300,10 @@ export default function WeeklyMeetingHub({
 
             {/* Tópico 4: Aprovações em Análise */}
             <div className="space-y-1.5 text-xs pt-2 border-t border-slate-800/60">
-              <span className="font-bold text-purple-400 flex items-center gap-1 text-[11px]">
+              <span className="font-bold text-cyan-400 flex items-center gap-1">
                 <FileCheck2 size={13} /> 4. Aprovações Pendentes ({smartAgenda.inReview.length})
               </span>
-              <div className="pl-4 space-y-1 text-[11px] text-slate-400">
+              <div className="pl-4 space-y-1 text-slate-400">
                 {smartAgenda.inReview.length === 0 ? (
                   <p className="italic text-slate-600">Nenhuma entrega em revisão.</p>
                 ) : (

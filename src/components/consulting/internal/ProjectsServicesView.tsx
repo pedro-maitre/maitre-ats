@@ -157,11 +157,11 @@ export default function ProjectsServicesView({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${
+                      className={`text-[10px] font-black uppercase px-2 py-0.5 rounded border ${
                         isRecurring
                           ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30"
                           : isInternal
-                          ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                          ? "bg-violet-500/15 text-violet-300 border-violet-500/30"
                           : "bg-maitre-gold/20 text-maitre-gold border-maitre-gold/30"
                       }`}
                     >
@@ -195,7 +195,7 @@ export default function ProjectsServicesView({
 
                   {/* Status das Tarefas Conectadas */}
                   <div className="space-y-1.5 pt-2 border-t border-slate-800">
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="flex items-center justify-between text-xs text-slate-400">
                       <span>Demandas: {projectTasks.length} total</span>
                       <span className="text-emerald-400 font-bold">{completedTasks} concluída(s)</span>
                     </div>
@@ -211,7 +211,7 @@ export default function ProjectsServicesView({
                   </div>
                 </div>
 
-                <div className="pt-4 mt-4 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                <div className="pt-4 mt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
                   <span>Resp: <strong className="text-slate-300">{project.consultantName || "Equipe Maître"}</strong></span>
                   {blockedTasks > 0 && (
                     <span className="text-amber-400 font-bold text-[10px] bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">

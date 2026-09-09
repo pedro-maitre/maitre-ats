@@ -202,12 +202,12 @@ export default function MyWorkView({
           onClick={() => setFilterSection("in_review")}
           className={`p-3 rounded-xl border text-left transition-all ${
             filterSection === "in_review"
-              ? "bg-purple-500/20 border-purple-500/50 text-white"
+              ? "bg-violet-500/20 border-violet-500/50 text-white"
               : "bg-slate-900/70 border-slate-800 text-slate-400 hover:bg-slate-800/80"
           }`}
         >
-          <span className="text-[10px] font-bold block uppercase tracking-wider text-purple-300">Em Revisão</span>
-          <span className="text-xl font-black text-purple-400">{myInReviewTasks.length}</span>
+          <span className="text-[10px] font-bold block uppercase tracking-wider text-violet-300">Em Revisão</span>
+          <span className="text-xl font-black text-violet-400">{myInReviewTasks.length}</span>
         </button>
 
         <button
@@ -260,14 +260,14 @@ export default function MyWorkView({
                   >
                     <div className="flex items-center gap-2 flex-wrap">
                       {task.isBlocked && (
-                        <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
                           <Lock size={10} />
                           Bloqueada
                         </span>
                       )}
 
                       <span
-                        className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${
+                        className={`px-2 py-0.5 rounded text-[10px] font-black uppercase border ${
                           task.priority === "URGENT"
                             ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
                             : task.priority === "HIGH"
@@ -279,11 +279,11 @@ export default function MyWorkView({
                       </span>
 
                       <span
-                        className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${
+                        className={`px-2 py-0.5 rounded text-[10px] font-black uppercase border ${
                           task.status === "IN_PROGRESS"
                             ? "bg-maitre-gold/20 text-maitre-gold border-maitre-gold/40"
                             : task.status === "IN_REVIEW"
-                            ? "bg-purple-500/20 text-purple-300 border-purple-500/40"
+                            ? "bg-violet-500/15 text-violet-300 border-violet-500/30"
                             : task.status === "COMPLETED"
                             ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
                             : "bg-slate-800 text-slate-400 border-slate-700"
@@ -302,7 +302,7 @@ export default function MyWorkView({
                     </div>
 
                     {task.isBlocked && task.blockReason && (
-                      <p className="text-[11px] text-amber-300/90 italic font-medium">
+                      <p className="text-xs text-amber-300/90 italic font-medium">
                         Motivo do bloqueio: {task.blockReason}
                       </p>
                     )}
@@ -362,7 +362,7 @@ export default function MyWorkView({
                         {task.requiresApproval ? (
                           <button
                             onClick={() => onQuickUpdateStatus(task.id, "IN_REVIEW")}
-                            className="px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-500/40 transition-colors"
+                            className="px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-500/20 text-violet-300 hover:bg-violet-500/30 border border-violet-500/40 transition-colors"
                           >
                             Enviar p/ Revisão
                           </button>

@@ -109,7 +109,7 @@ export default function InternalSettingsView({
         {/* Sessão 1: Reunião Semanal de Alinhamento */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-800">
-            <Clock size={16} className="text-purple-400" />
+            <Clock size={16} className="text-maitre-gold" />
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">
               Ritual Semanal da Equipe
             </h3>

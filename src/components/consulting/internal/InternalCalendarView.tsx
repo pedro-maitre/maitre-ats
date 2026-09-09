@@ -108,7 +108,7 @@ export default function InternalCalendarView({
       {/* Legenda de Distinção */}
       <div className="flex items-center gap-6 text-xs text-slate-400 px-2">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+          <div className="w-3 h-3 rounded-full bg-maitre-gold"></div>
           <span>Compromisso com Horário (Reunião)</span>
         </div>
         <div className="flex items-center gap-2">
@@ -156,7 +156,7 @@ export default function InternalCalendarView({
                     </p>
                   </div>
                   {isToday && (
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-maitre-gold/20 text-maitre-gold border border-maitre-gold/40">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-maitre-gold/20 text-maitre-gold border border-maitre-gold/40">
                       Hoje
                     </span>
                   )}
@@ -165,18 +165,18 @@ export default function InternalCalendarView({
                 <div className="space-y-2">
                   {/* Reunião Semanal fixa nas Segundas-feiras */}
                   {isMonday && (
-                    <div className="p-2 rounded-xl bg-purple-500/15 border border-purple-500/40 text-purple-200 text-xs space-y-1">
+                    <div className="p-2.5 rounded-xl bg-maitre-gold/15 border border-maitre-gold/40 text-amber-200 text-xs space-y-1.5 shadow-sm">
                       <div className="flex items-center justify-between font-bold">
-                        <span className="flex items-center gap-1">
-                          <Clock size={12} className="text-purple-300" />
+                        <span className="flex items-center gap-1.5 text-maitre-gold">
+                          <Clock size={12} className="text-maitre-gold" />
                           {config?.weeklyMeetingTime || "15:30"}
                         </span>
-                        <span className="text-[9px] uppercase tracking-wider bg-purple-500/20 px-1 rounded">
+                        <span className="text-[10px] uppercase tracking-wider bg-maitre-gold/25 text-maitre-gold font-bold px-1.5 py-0.5 rounded">
                           Alinhamento
                         </span>
                       </div>
-                      <p className="font-bold text-white text-[11px]">Reunião Geral da Equipe</p>
-                      <p className="text-[10px] text-purple-300/80">Facilitadora: Adriana Pinheiro</p>
+                      <p className="font-bold text-white text-xs">Reunião Geral da Equipe</p>
+                      <p className="text-[10px] text-maitre-gold/90 font-medium">Facilitadora: Adriana Pinheiro</p>
                     </div>
                   )}
 
@@ -197,11 +197,11 @@ export default function InternalCalendarView({
                             : "bg-slate-800/90 border-slate-700 text-slate-200"
                         }`}
                       >
-                        <div className="flex items-center justify-between text-[9px] font-bold">
+                        <div className="flex items-center justify-between text-[10px] font-bold">
                           <span>Prazo Entrega</span>
                           {t.isBlocked && <Lock size={10} className="text-amber-400" />}
                         </div>
-                        <p className="font-semibold text-white truncate text-[11px]">{t.title}</p>
+                        <p className="font-semibold text-white truncate text-xs">{t.title}</p>
                         <p className="text-[10px] text-slate-400">{t.assignee?.name || "Sem dono"}</p>
                       </div>
                     );

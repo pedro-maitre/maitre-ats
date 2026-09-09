@@ -91,7 +91,7 @@ export default function InternalHubHeader({
       label: "Reunião Semanal",
       icon: Clock,
       badge: "Seg 15h30",
-      badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+      badgeColor: "bg-maitre-gold/20 text-maitre-gold border-maitre-gold/40",
     },
     {
       id: "approvals" as InternalTabType,
@@ -111,7 +111,7 @@ export default function InternalHubHeader({
       label: "Notificações",
       icon: Bell,
       badge: counts.unreadNotifications > 0 ? `${counts.unreadNotifications}` : null,
-      badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+      badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
     },
     {
       id: "settings" as InternalTabType,

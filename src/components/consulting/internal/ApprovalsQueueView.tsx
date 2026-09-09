@@ -118,7 +118,7 @@ export default function ApprovalsQueueView({
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-violet-500/15 text-violet-300 border border-violet-500/30">
                           {task.status === "IN_REVIEW" ? "Aguardando Parecer" : "Em Andamento"}
                         </span>
                         <h3 className="text-sm font-bold text-white">{task.title}</h3>
@@ -166,7 +166,7 @@ export default function ApprovalsQueueView({
         {/* Formulário Lateral de Emissão de Parecer */}
         <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 shadow-xl h-fit space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-800">
-            <ShieldCheck size={18} className="text-purple-400" />
+            <ShieldCheck size={18} className="text-maitre-gold" />
             <h3 className="text-xs font-bold text-white uppercase tracking-wider">
               Painel de Avaliação Formal
             </h3>
@@ -181,7 +181,7 @@ export default function ApprovalsQueueView({
               <div>
                 <span className="text-[10px] text-slate-400 block uppercase font-bold">Entrega Selecionada</span>
                 <p className="text-sm font-bold text-white mt-0.5">{selectedTask.title}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Resp: {selectedTask.assignee?.name}</p>
+                <p className="text-xs text-slate-400 mt-0.5">Resp: {selectedTask.assignee?.name}</p>
               </div>
 
               <div className="space-y-1">

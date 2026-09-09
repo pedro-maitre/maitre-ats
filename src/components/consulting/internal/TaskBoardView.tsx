@@ -49,8 +49,8 @@ const COLUMNS: { id: TaskStatus; title: string; color: string; badge: string }[]
   {
     id: "IN_REVIEW",
     title: "Em Revisão",
-    color: "border-purple-500/40 bg-purple-500/5",
-    badge: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+    color: "border-violet-500/40 bg-violet-500/5",
+    badge: "bg-violet-500/15 text-violet-300 border-violet-500/30",
   },
   {
     id: "COMPLETED",
@@ -273,7 +273,7 @@ export default function TaskBoardView({
                                   {/* Badges de Topo */}
                                   <div className="flex items-center justify-between gap-1 mb-2">
                                     <span
-                                      className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${
+                                      className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded border ${
                                         task.priority === "URGENT"
                                           ? "bg-rose-500/20 text-rose-300 border-rose-500/30"
                                           : task.priority === "HIGH"
@@ -285,7 +285,7 @@ export default function TaskBoardView({
                                     </span>
 
                                     {task.isBlocked && (
-                                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
+                                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
                                         <Lock size={10} /> Bloqueada
                                       </span>
                                     )}
@@ -367,7 +367,7 @@ export default function TaskBoardView({
                       </td>
                       <td className="p-3.5">
                         <span
-                          className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${
+                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
                             COLUMNS.find((c) => c.id === task.status)?.badge || "bg-slate-800 text-slate-300"
                           }`}
                         >
@@ -376,7 +376,7 @@ export default function TaskBoardView({
                       </td>
                       <td className="p-3.5">
                         <span
-                          className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${
+                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
                             task.priority === "URGENT"
                               ? "bg-rose-500/20 text-rose-300 border-rose-500/30"
                               : task.priority === "HIGH"

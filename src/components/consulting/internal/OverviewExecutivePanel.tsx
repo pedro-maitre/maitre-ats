@@ -317,19 +317,19 @@ export default function OverviewExecutivePanel({
         {/* Card 6: Reunião Semanal */}
         <div
           onClick={() => onNavigateTab("meetings")}
-          className="cursor-pointer bg-slate-900/90 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-4 transition-all duration-200 shadow-md group relative overflow-hidden"
+          className="cursor-pointer bg-slate-900/90 border border-slate-800 hover:border-maitre-gold/50 rounded-2xl p-4 transition-all duration-200 shadow-md group relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none"></div>
+          <div className="absolute top-0 right-0 w-24 h-24 bg-maitre-gold/5 rounded-full blur-xl pointer-events-none"></div>
           <div className="flex items-center justify-between text-slate-400 mb-2">
             <span className="text-xs font-semibold">Ritual Semanal</span>
-            <Calendar size={16} className="text-purple-400 group-hover:scale-110 transition-transform" />
+            <Calendar size={16} className="text-maitre-gold group-hover:scale-110 transition-transform" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-black text-purple-400">Seg 15h30</span>
+            <span className="text-lg font-black text-maitre-gold">Seg 15h30</span>
           </div>
           <p className="text-[10px] text-slate-400 mt-2 flex items-center justify-between">
             <span>Pauta inteligente</span>
-            <ArrowUpRight size={12} className="text-slate-500 group-hover:text-purple-400 transition-colors" />
+            <ArrowUpRight size={12} className="text-slate-500 group-hover:text-maitre-gold transition-colors" />
           </p>
         </div>
       </div>
@@ -370,14 +370,14 @@ export default function OverviewExecutivePanel({
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
                           Bloqueada
                         </span>
                         <h3 className="text-xs font-bold text-white group-hover:text-maitre-gold transition-colors">
                           {t.title}
                         </h3>
                       </div>
-                      <p className="text-[11px] text-amber-200/90 font-medium italic">
+                      <p className="text-xs text-amber-200/90 font-medium italic">
                         Motivo: {t.blockReason || "Impedimento operacional registrado."}
                       </p>
                       <div className="flex items-center gap-3 text-[10px] text-slate-400 pt-1">
@@ -400,7 +400,7 @@ export default function OverviewExecutivePanel({
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/40">
                             Atrasada
                           </span>
                           <h3 className="text-xs font-bold text-white group-hover:text-maitre-gold transition-colors">
@@ -481,7 +481,7 @@ export default function OverviewExecutivePanel({
                   </div>
 
                   {/* Barra de progresso visual */}
-                  <div className="w-full bg-slate-700/60 rounded-full h-1.5 overflow-hidden flex">
+                  <div className="w-full bg-slate-700/40 rounded-full h-2 overflow-hidden flex shadow-inner">
                     <div
                       className="bg-emerald-400 h-full transition-all duration-300"
                       style={{

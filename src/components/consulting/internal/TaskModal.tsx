@@ -193,7 +193,7 @@ export default function TaskModal({
                 </span>
               )}
               {task.originType === "WEEKLY_MEETING" && (
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-maitre-gold/20 text-maitre-gold border border-maitre-gold/30">
                   Origem: Reunião Semanal
                 </span>
               )}
@@ -385,14 +385,14 @@ export default function TaskModal({
 
             {/* Aprovação / Parecer Formal do Revisor */}
             {task.requiresApproval && (
-              <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 space-y-3">
+              <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/30 space-y-3">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck size={18} className="text-purple-400" />
+                  <ShieldCheck size={18} className="text-violet-400" />
                   <div>
                     <h4 className="text-xs font-bold text-white">Revisão e Aprovação Obrigatória</h4>
                     <p className="text-[10px] text-slate-400">
                       Revisor designado:{" "}
-                      <strong className="text-purple-300">
+                      <strong className="text-violet-300">
                         {task.reviewer?.name || "Não atribuído"}
                       </strong>
                     </p>
@@ -400,8 +400,8 @@ export default function TaskModal({
                 </div>
 
                 {isReviewerOrAdmin && task.status === "IN_REVIEW" && (
-                  <div className="pt-2 border-t border-purple-500/20 space-y-2">
-                    <label className="text-[10px] font-bold text-purple-300 uppercase block">
+                  <div className="pt-2 border-t border-violet-500/20 space-y-2">
+                    <label className="text-[10px] font-bold text-violet-300 uppercase block">
                       Parecer da Revisão:
                     </label>
                     <textarea
@@ -409,7 +409,7 @@ export default function TaskModal({
                       value={reviewComments}
                       onChange={(e) => setReviewComments(e.target.value)}
                       placeholder="Insira comentários, feedback ou justificativa da aprovação/ajuste..."
-                      className="w-full bg-slate-900 border border-purple-500/40 rounded-lg p-2 text-xs text-white focus:outline-none"
+                      className="w-full bg-slate-900 border border-violet-500/40 rounded-lg p-2 text-xs text-white focus:outline-none"
                     />
 
                     <div className="flex items-center gap-2 pt-1">
@@ -444,13 +444,13 @@ export default function TaskModal({
 
                 {/* Histórico de Decisões */}
                 {task.reviews && task.reviews.length > 0 && (
-                  <div className="space-y-1.5 pt-2 border-t border-purple-500/20">
+                  <div className="space-y-1.5 pt-2 border-t border-slate-800">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">
                       Decisões Registradas:
                     </span>
                     {task.reviews.map((r: any) => (
-                      <div key={r.id} className="text-[11px] text-slate-300 bg-slate-900/60 p-2 rounded-lg">
-                        <span className="font-bold text-purple-300">
+                      <div key={r.id} className="text-xs text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80">
+                        <span className={`font-bold ${r.decision === "APPROVED" ? "text-emerald-400" : "text-amber-400"}`}>
                           {r.decision === "APPROVED" ? "Aprovado" : "Ajustes Solicitados"}
                         </span>{" "}
                         por {r.reviewer?.name} em {new Date(r.decidedAt).toLocaleDateString("pt-BR")}:
@@ -471,7 +471,7 @@ export default function TaskModal({
 
               <div className="space-y-2.5 max-h-48 overflow-y-auto custom-scrollbar pr-1">
                 {task.comments?.length === 0 ? (
-                  <p className="text-slate-500 text-[11px] italic">
+                  <p className="text-slate-500 text-xs italic">
                     Nenhum comentário registrado ainda.
                   </p>
                 ) : (
