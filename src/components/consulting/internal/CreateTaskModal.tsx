@@ -38,13 +38,11 @@ export default function CreateTaskModal({
   onTaskCreated,
   originMeetingId,
 }: CreateTaskModalProps) {
-  if (!isOpen) return null;
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [projectId, setProjectId] = useState("");
   const [clientOrganizationId, setClientOrganizationId] = useState("");
-  const [assigneeId, setAssigneeId] = useState(userCtx.userId || "");
+  const [assigneeId, setAssigneeId] = useState(userCtx?.userId || "");
   const [reviewerId, setReviewerId] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("MEDIUM");
   const [dueDate, setDueDate] = useState("");
@@ -73,6 +71,7 @@ export default function CreateTaskModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!title.trim()) {
       setError("O título da demanda é obrigatório.");
       return;
@@ -82,12 +81,12 @@ export default function CreateTaskModal({
     setError(null);
 
     const res = await createInternalTask({
-      title,
-      description,
+      title: title.trim(),
+      description: description.trim() || undefined,
       projectId: projectId || undefined,
       clientOrganizationId: clientOrganizationId || undefined,
       assigneeId: assigneeId || undefined,
-      reviewerId: reviewerId || undefined,
+      reviewerId: requiresApproval && reviewerId ? reviewerId : undefined,
       priority,
       dueDate: dueDate || undefined,
       startDate: startDate || undefined,
@@ -101,10 +100,21 @@ export default function CreateTaskModal({
     if (res.success) {
       onTaskCreated();
       onClose();
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setProjectId("");
+      setClientOrganizationId("");
+      setDueDate("");
+      setStartDate("");
+      setRequiresApproval(false);
+      setChecklists([""]);
     } else {
       setError(res.error || "Falha ao criar demanda.");
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Lock,
@@ -32,7 +32,7 @@ import {
 } from "@/app/(dashboard)/consulting/internal-actions";
 
 interface TaskModalProps {
-  task: any | null;
+  task: any;
   isOpen: boolean;
   onClose: () => void;
   userCtx: InternalUserContext;
@@ -52,22 +52,20 @@ export default function TaskModal({
   clients,
   onTaskUpdated,
 }: TaskModalProps) {
-  if (!isOpen || !task) return null;
-
   // Estados locais para edição
-  const [title, setTitle] = useState(task.title || "");
-  const [description, setDescription] = useState(task.description || "");
-  const [status, setStatus] = useState<TaskStatus>(task.status || "TODO");
-  const [priority, setPriority] = useState<TaskPriority>(task.priority || "MEDIUM");
-  const [assigneeId, setAssigneeId] = useState(task.assigneeId || "");
-  const [reviewerId, setReviewerId] = useState(task.reviewerId || "");
+  const [title, setTitle] = useState(task?.title || "");
+  const [description, setDescription] = useState(task?.description || "");
+  const [status, setStatus] = useState<TaskStatus>(task?.status || "TODO");
+  const [priority, setPriority] = useState<TaskPriority>(task?.priority || "MEDIUM");
+  const [assigneeId, setAssigneeId] = useState(task?.assigneeId || "");
+  const [reviewerId, setReviewerId] = useState(task?.reviewerId || "");
   const [dueDate, setDueDate] = useState(
-    task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : ""
+    task?.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : ""
   );
 
   // Estados de bloqueio
-  const [isBlocked, setIsBlocked] = useState(task.isBlocked || false);
-  const [blockReason, setBlockReason] = useState(task.blockReason || "");
+  const [isBlocked, setIsBlocked] = useState(task?.isBlocked || false);
+  const [blockReason, setBlockReason] = useState(task?.blockReason || "");
   const [showBlockInput, setShowBlockInput] = useState(false);
 
   // Estados de cancelamento
@@ -75,15 +73,16 @@ export default function TaskModal({
   const [showCancelInput, setShowCancelInput] = useState(false);
 
   // Comentários
+  const [comments, setComments] = useState<any[]>(task?.comments || []);
   const [newComment, setNewComment] = useState("");
   const [loadingComment, setLoadingComment] = useState(false);
 
   // Checklist
-  const [checklists, setChecklists] = useState(task.checklists || []);
+  const [checklists, setChecklists] = useState(task?.checklists || []);
   const [newChecklistText, setNewChecklistText] = useState("");
 
   // Subtarefas
-  const [subtasks, setSubtasks] = useState(task.subtasks || []);
+  const [subtasks, setSubtasks] = useState(task?.subtasks || []);
 
   // Revisão
   const [reviewAction, setReviewAction] = useState<"APPROVED" | "CHANGES_REQUESTED">("APPROVED");
@@ -93,8 +92,32 @@ export default function TaskModal({
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Sincroniza estados caso a task selecionada mude
+  useEffect(() => {
+    if (task) {
+      setTitle(task.title || "");
+      setDescription(task.description || "");
+      setStatus(task.status || "TODO");
+      setPriority(task.priority || "MEDIUM");
+      setAssigneeId(task.assigneeId || "");
+      setReviewerId(task.reviewerId || "");
+      setDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split("T")[0] : "");
+      setIsBlocked(task.isBlocked || false);
+      setBlockReason(task.blockReason || "");
+      setShowBlockInput(false);
+      setCancellationReason("");
+      setShowCancelInput(false);
+      setChecklists(task.checklists || []);
+      setSubtasks(task.subtasks || []);
+      setComments(task.comments || []);
+      setFeedback(null);
+    }
+  }, [task]);
+
+  if (!isOpen || !task) return null;
+
   const isReviewerOrAdmin =
-    userCtx.isAdminMaster || (task.reviewerId && task.reviewerId === userCtx.userId);
+    userCtx?.isAdminMaster || (task?.reviewerId && task.reviewerId === userCtx?.userId);
 
   // Salva alterações gerais da tarefa
   const handleSaveGeneral = async () => {
@@ -134,7 +157,9 @@ export default function TaskModal({
     setLoadingComment(false);
 
     if (res.success) {
-      task.comments = [...(task.comments || []), res.comment];
+      if (res.comment) {
+        setComments((prev: any[]) => [...prev, res.comment]);
+      }
       setNewComment("");
       onTaskUpdated();
     }
@@ -466,16 +491,16 @@ export default function TaskModal({
             <div className="space-y-3 pt-2 border-t border-slate-800">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <MessageSquare size={14} />
-                Comentários e Alinhamentos ({task.comments?.length || 0})
+                Comentários e Alinhamentos ({comments.length})
               </span>
 
               <div className="space-y-2.5 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-                {task.comments?.length === 0 ? (
+                {comments.length === 0 ? (
                   <p className="text-slate-500 text-xs italic">
                     Nenhum comentário registrado ainda.
                   </p>
                 ) : (
-                  task.comments?.map((c: any) => (
+                  comments.map((c: any) => (
                     <div key={c.id} className="p-2.5 rounded-xl bg-slate-800/60 text-xs space-y-1">
                       <div className="flex items-center justify-between text-[10px] text-slate-400">
                         <span className="font-bold text-slate-300">{c.author?.name}</span>
