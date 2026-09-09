@@ -40,7 +40,11 @@ export const metadata = {
   description: "Visão consolidada e central de comando de todos os módulos da Suíte Maître Conecta",
 };
 
-export default async function DashboardHomePage() {
+export default async function DashboardHomePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ orgId?: string }>;
+}) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
@@ -60,6 +64,14 @@ export default async function DashboardHomePage() {
     redirect("/jobs");
   }
 
+  const resolvedParams = searchParams ? await searchParams : {};
+  const { getServerTenantScope } = await import("@/lib/security");
+  const scope = await getServerTenantScope(session, resolvedParams.orgId);
+
+  const orgFilter = scope.organizationId ? { organizationId: scope.organizationId } : {};
+  const jobFilter = scope.organizationId ? { job: { organizationId: scope.organizationId } } : {};
+  const appJobFilter = scope.organizationId ? { application: { job: { organizationId: scope.organizationId } } } : {};
+
   const userName = session.user.name || "Administrador";
 
   // Consultas agregadas em paralelo com fallback resiliente
@@ -76,6 +88,7 @@ export default async function DashboardHomePage() {
   try {
     const results = await Promise.all([
       prisma.job.findMany({
+        where: orgFilter,
         include: {
           applications: {
             include: { candidate: true, stage: true },
@@ -84,10 +97,12 @@ export default async function DashboardHomePage() {
         orderBy: { createdAt: "desc" },
       }),
       prisma.candidate.findMany({
+        where: orgFilter,
         orderBy: { createdAt: "desc" },
         take: 5,
       }),
       prisma.application.findMany({
+        where: jobFilter,
         include: {
           candidate: true,
           job: true,
@@ -97,6 +112,7 @@ export default async function DashboardHomePage() {
         orderBy: { createdAt: "desc" },
       }),
       prisma.hireConversion.findMany({
+        where: appJobFilter,
         include: {
           application: {
             include: { candidate: true, job: true, offers: true },
@@ -105,14 +121,17 @@ export default async function DashboardHomePage() {
         orderBy: { convertedAt: "desc" },
       }),
       prisma.document.findMany({
+        where: orgFilter,
         orderBy: { createdAt: "desc" },
       }),
       prisma.stage.findMany({
+        where: orgFilter,
         include: {
           _count: { select: { applications: true } },
         },
       }),
       prisma.employee.findMany({
+        where: orgFilter,
         include: {
           department: true,
           position: true,

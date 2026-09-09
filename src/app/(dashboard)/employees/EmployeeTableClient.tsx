@@ -32,50 +32,52 @@ import {
 } from "lucide-react";
 import { updateEmployeeOnboardingStatus, createDirectEmployee, importEmployeesBatch } from "./actions";
 import EmptyState from "@/components/ui/EmptyState";
+import EmployeeDetailsDrawer, { EmployeeData } from "@/components/employees/EmployeeDetailsDrawer";
 
 interface EmployeeTableClientProps {
-  conversions: any[];
+  conversions?: any[];
   formalEmployees?: any[];
   organizations?: Array<{ id: string; name: string; slug: string }>;
+  departments?: Array<{ id: string; name: string }>;
+  positions?: Array<{ id: string; title: string }>;
 }
 
 export default function EmployeeTableClient({
-  conversions,
+  conversions = [],
   formalEmployees = [],
   organizations = [],
+  departments = [],
+  positions = [],
 }: EmployeeTableClientProps) {
-  // Mescla unificada: conversions + formalEmployees sem duplicação por e-mail
-  const conversionEmails = new Set(
-    conversions.map((c) => c.application?.candidate?.email?.toLowerCase()).filter(Boolean)
-  );
-
-  const directEmployeesUnified = formalEmployees
-    .filter((emp) => emp.email && !conversionEmails.has(emp.email.toLowerCase()))
-    .map((emp) => ({
-      id: emp.id,
-      employeeCode: emp.registrationNumber || "SEM_MATRICULA",
-      status: emp.status,
-      convertedAt: emp.admissionDate || emp.createdAt,
-      isCoreHrDirect: true,
-      application: {
-        candidate: {
-          firstName: emp.fullName?.split(" ")[0] || "Colaborador",
-          lastName: emp.fullName?.split(" ").slice(1).join(" ") || "",
-          email: emp.email,
-          phone: emp.phone,
-        },
-        job: {
-          title: emp.position?.title || "Colaborador",
-          department: emp.department?.name || "Geral",
-          organization: emp.organization,
-        },
-        offers: [{ salaryOffered: emp.salary }],
+  // Se formalEmployees foi fornecido, ele é a base primária do Core HR
+  const directEmployeesUnified = formalEmployees.map((emp) => ({
+    id: emp.id,
+    employeeCode: emp.registrationNumber || "SEM_MATRICULA",
+    status: emp.status,
+    convertedAt: emp.admissionDate || emp.createdAt,
+    isCoreHrDirect: true,
+    rawEmployee: emp,
+    application: {
+      candidate: emp.candidate || {
+        id: emp.candidateId,
+        firstName: emp.fullName?.split(" ")[0] || "Colaborador",
+        lastName: emp.fullName?.split(" ").slice(1).join(" ") || "",
+        email: emp.email,
+        phone: emp.phone,
       },
-    }));
+      job: {
+        title: emp.position?.title || "Colaborador",
+        department: emp.department?.name || "Geral",
+        organization: emp.organization,
+      },
+      offers: [{ salaryOffered: emp.salary }],
+    },
+  }));
 
-  const initialMergedList = [...conversions, ...directEmployeesUnified];
+  const initialMergedList = directEmployeesUnified.length > 0 ? directEmployeesUnified : conversions;
 
   const [list, setList] = useState(initialMergedList);
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [departmentFilter, setDepartmentFilter] = useState("ALL");
@@ -109,7 +111,7 @@ export default function EmployeeTableClient({
       maximumFractionDigits: 0,
     }).format(val);
 
-  const departments = Array.from(
+  const uniqueDepartmentNames = Array.from(
     new Set(list.map((c) => c.application?.job?.department).filter(Boolean))
   );
 
@@ -268,14 +270,14 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
             <option value="CONVERTED">🔵 Recém-Convertido</option>
           </select>
 
-          {departments.length > 0 && (
+          {uniqueDepartmentNames.length > 0 && (
             <select
               value={departmentFilter}
               onChange={(e) => setDepartmentFilter(e.target.value)}
               className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
             >
               <option value="ALL">🏢 Todos os Departamentos</option>
-              {departments.map((d: any) => (
+              {uniqueDepartmentNames.map((d: any) => (
                 <option key={d} value={d}>
                   {d}
                 </option>
@@ -429,15 +431,27 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
                           <span>Admissão</span>
                         </Link>
 
-                        <Link
-                          href={`/candidates/${cand.id}`}
-                          target="_blank"
-                          className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 hover:underline p-1"
-                          title="Abrir Ficha do Colaborador"
-                        >
-                          <span>Ficha</span>
-                          <ExternalLink size={12} />
-                        </Link>
+                        {item.rawEmployee ? (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedEmployee(item.rawEmployee)}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline p-1 cursor-pointer"
+                            title="Abrir Ficha 360° do Colaborador (Férias, Salários, Afastamentos)"
+                          >
+                            <Sparkles size={13} />
+                            <span>Ficha 360°</span>
+                          </button>
+                        ) : (
+                          <Link
+                            href={`/candidates/${cand.id}`}
+                            target="_blank"
+                            className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 hover:underline p-1"
+                            title="Abrir Ficha do Candidato"
+                          >
+                            <span>Ficha</span>
+                            <ExternalLink size={12} />
+                          </Link>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -737,6 +751,14 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
           </div>
         </div>
       )}
+
+      {/* Drawer 360° de Gestão do Colaborador (Férias, Salários, Afastamentos) */}
+      <EmployeeDetailsDrawer
+        employee={selectedEmployee}
+        onClose={() => setSelectedEmployee(null)}
+        departments={departments}
+        positions={positions}
+      />
     </div>
   );
 }

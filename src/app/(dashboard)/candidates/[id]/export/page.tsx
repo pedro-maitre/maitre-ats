@@ -16,6 +16,9 @@ import {
   Award,
   Sparkles,
 } from "lucide-react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getServerTenantScope } from "@/lib/security";
 import PrintButton from "@/components/candidates/PrintButton";
 
 export default async function CandidateExportPage({
@@ -23,6 +26,8 @@ export default async function CandidateExportPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await getServerSession(authOptions);
+  const tenantScope = await getServerTenantScope(session);
   const { id } = await params;
 
   const candidate = await prisma.candidate.findUnique({
@@ -59,6 +64,10 @@ export default async function CandidateExportPage({
   });
 
   if (!candidate) notFound();
+
+  if (tenantScope.organizationId && candidate.organizationId !== tenantScope.organizationId) {
+    notFound();
+  }
 
   let tagsList: string[] = [];
   if (candidate.tags) {

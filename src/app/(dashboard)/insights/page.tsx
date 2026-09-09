@@ -6,6 +6,11 @@ import InsightsDashboardClient, {
   AnalyticsApplicationItem,
 } from "@/components/insights/InsightsDashboardClient";
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { getServerTenantScope } from "@/lib/security";
+
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -13,9 +18,30 @@ export const metadata = {
   description: "Indicadores estratégicos de R&S, People Analytics, Funil de Contratação e Fit 3D",
 };
 
-export default async function InsightsPage() {
-  const [jobs, applications, organizations] = await Promise.all([
+export default async function InsightsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ orgId?: string }>;
+}) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  const resolvedParams = searchParams ? await searchParams : {};
+  const scope = await getServerTenantScope(session, resolvedParams.orgId);
+
+  const jobWhere = scope.organizationId ? { organizationId: scope.organizationId } : {};
+  const appWhere = scope.organizationId ? { job: { organizationId: scope.organizationId } } : {};
+  const orgWhere = scope.isGlobalAccess ? {} : { id: scope.organizationId };
+
+  const empWhere = scope.organizationId ? { organizationId: scope.organizationId } : {};
+  const offWhere = scope.organizationId ? { organizationId: scope.organizationId } : {};
+  const leaveWhere = scope.organizationId ? { employee: { organizationId: scope.organizationId } } : {};
+
+  const [jobs, applications, organizations, employees, offboardings, leaves] = await Promise.all([
     prisma.job.findMany({
+      where: jobWhere,
       include: {
         organization: true,
         applications: true,
@@ -23,6 +49,7 @@ export default async function InsightsPage() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.application.findMany({
+      where: appWhere,
       include: {
         candidate: true,
         stage: true,
@@ -38,10 +65,66 @@ export default async function InsightsPage() {
       orderBy: { createdAt: "desc" },
     }),
     prisma.organization.findMany({
+      where: orgWhere,
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
+    prisma.employee.findMany({
+      where: empWhere,
+      include: {
+        department: { select: { id: true, name: true } },
+        position: { select: { title: true } },
+      },
+      orderBy: { admissionDate: "desc" },
+    }),
+    prisma.offboardingProcess.findMany({
+      where: offWhere,
+      orderBy: { lastWorkingDay: "desc" },
+    }),
+    prisma.employeeLeave.findMany({
+      where: leaveWhere,
+      orderBy: { startDate: "desc" },
+    }),
   ]);
+
+  const {
+    calculateTurnoverMetrics,
+    calculateAbsenteeismRate,
+    calculateTenureMetrics,
+  } = await import("@/lib/analytics");
+
+  const turnoverMetrics = calculateTurnoverMetrics(
+    employees.map((e) => ({
+      ...e,
+      admissionDate: e.admissionDate.toISOString(),
+      terminationDate: e.terminationDate ? e.terminationDate.toISOString() : null,
+    })),
+    offboardings.map((o) => ({
+      ...o,
+      lastWorkingDay: o.lastWorkingDay.toISOString(),
+    }))
+  );
+
+  const absenteeismMetrics = calculateAbsenteeismRate(
+    employees.map((e) => ({
+      ...e,
+      admissionDate: e.admissionDate.toISOString(),
+      terminationDate: e.terminationDate ? e.terminationDate.toISOString() : null,
+    })),
+    leaves.map((l) => ({
+      ...l,
+      startDate: l.startDate.toISOString(),
+      endDate: l.endDate ? l.endDate.toISOString() : null,
+    }))
+  );
+
+  const tenureMetrics = calculateTenureMetrics(
+    employees.map((e) => ({
+      ...e,
+      admissionDate: e.admissionDate.toISOString(),
+      terminationDate: e.terminationDate ? e.terminationDate.toISOString() : null,
+    }))
+  );
 
   // Formata os dados para o Client Component
   const formattedJobs: AnalyticsJobItem[] = jobs.map((job) => ({
@@ -84,6 +167,9 @@ export default async function InsightsPage() {
       jobs={formattedJobs}
       applications={formattedApplications}
       organizations={organizations}
+      turnoverMetrics={turnoverMetrics}
+      absenteeismMetrics={absenteeismMetrics}
+      tenureMetrics={tenureMetrics}
     />
   );
 }

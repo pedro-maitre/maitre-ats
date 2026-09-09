@@ -91,7 +91,12 @@ async function runFeedbackModuleTests() {
     if (org) {
       // Cria ou busca candidato de teste
       const candidate = await prisma.candidate.upsert({
-        where: { email: "teste.feedback@maitreconsultoria.com.br" },
+        where: {
+          organizationId_email: {
+            organizationId: org.id,
+            email: "teste.feedback@maitreconsultoria.com.br",
+          },
+        },
         update: { phone: "11988887777" },
         create: {
           firstName: "Candidato",

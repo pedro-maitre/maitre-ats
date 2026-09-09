@@ -282,3 +282,231 @@ export async function updateDeliverableStatus(
     return { success: false, error: error.message || "Erro ao atualizar entregável." };
   }
 }
+
+/**
+ * Registra horas trabalhadas por um consultor em um projeto (Timesheet).
+ */
+export async function logConsultingHours(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER"]);
+
+    const projectId = (formData.get("projectId") as string)?.trim();
+    const hoursStr = formData.get("hours") as string;
+    const hours = parseFloat(hoursStr || "0");
+    const activityDescription = (formData.get("activityDescription") as string)?.trim();
+    const consultantName = (formData.get("consultantName") as string)?.trim() || user.name || "Consultor Maître";
+    const consultantEmail = (formData.get("consultantEmail") as string)?.trim() || user.email;
+    const billable = formData.get("billable") !== "false";
+    const hourlyRateStr = formData.get("hourlyRate") as string;
+    const hourlyRate = hourlyRateStr ? parseFloat(hourlyRateStr) : null;
+    const workDateStr = formData.get("workDate") as string;
+    const workDate = workDateStr ? new Date(workDateStr) : new Date();
+
+    if (!projectId || hours <= 0 || !activityDescription) {
+      return { success: false, error: "Projeto, horas válidas (> 0) e descrição da atividade são obrigatórios." };
+    }
+
+    const project = await prisma.consultingProject.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      return { success: false, error: "Projeto não localizado." };
+    }
+
+    const timesheet = await prisma.consultingTimesheet.create({
+      data: {
+        projectId,
+        organizationId: project.organizationId,
+        consultantName,
+        consultantEmail,
+        workDate,
+        hours,
+        activityDescription,
+        billable,
+        hourlyRate,
+        status: "SUBMITTED",
+      },
+    });
+
+    await logAuditEvent({
+      organizationId: project.organizationId,
+      actorUserId: user.id,
+      action: "CONSULTING_HOURS_LOGGED",
+      resourceType: "ConsultingTimesheet",
+      resourceId: timesheet.id,
+      afterData: {
+        projectId,
+        consultantName,
+        hours,
+        billable,
+      },
+    });
+
+    revalidatePath("/consulting");
+    return { success: true, timesheet };
+  } catch (error: any) {
+    console.error("Erro ao registrar horas de consultoria:", error);
+    return { success: false, error: error.message || "Falha ao registrar apontamento de horas." };
+  }
+}
+
+/**
+ * Aprova formalmente um apontamento de horas (Timesheet).
+ */
+export async function approveTimesheetEntry(timesheetId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER"]);
+
+    const entry = await prisma.consultingTimesheet.findUnique({
+      where: { id: timesheetId },
+    });
+
+    if (!entry) {
+      return { success: false, error: "Apontamento não localizado." };
+    }
+
+    const updated = await prisma.consultingTimesheet.update({
+      where: { id: timesheetId },
+      data: {
+        status: "APPROVED",
+        approverName: user.name || user.email,
+        approvedAt: new Date(),
+      },
+    });
+
+    await logAuditEvent({
+      organizationId: entry.organizationId,
+      actorUserId: user.id,
+      action: "CONSULTING_TIMESHEET_APPROVED",
+      resourceType: "ConsultingTimesheet",
+      resourceId: timesheetId,
+      afterData: { approver: user.name },
+    });
+
+    revalidatePath("/consulting");
+    return { success: true, timesheet: updated };
+  } catch (error: any) {
+    console.error("Erro ao aprovar horas de consultoria:", error);
+    return { success: false, error: error.message || "Falha ao aprovar horas." };
+  }
+}
+
+/**
+ * Registra o aceite formal de um entregável pelo cliente corporativo.
+ */
+export async function approveDeliverableByClient(
+  deliverableId: string,
+  clientApproverEmail: string,
+  feedback?: string
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER", "CANDIDATE"]);
+
+    const deliverable = await prisma.projectDeliverable.findUnique({
+      where: { id: deliverableId },
+      include: {
+        project: {
+          include: { deliverables: true },
+        },
+      },
+    });
+
+    if (!deliverable) {
+      return { success: false, error: "Entregável não localizado." };
+    }
+
+    const updated = await prisma.projectDeliverable.update({
+      where: { id: deliverableId },
+      data: {
+        approvedByClient: true,
+        clientApprovedAt: new Date(),
+        clientApproverEmail: clientApproverEmail || user.email,
+        clientFeedback: feedback || "Aceite formal concedido sem ressalvas.",
+        status: "APPROVED",
+      },
+    });
+
+    // Recalcula progresso do projeto
+    const all = deliverable.project.deliverables.map((d) =>
+      d.id === deliverableId ? { ...d, status: "APPROVED" } : d
+    );
+    const completedCount = all.filter((d) => d.status === "APPROVED").length;
+    const total = all.length;
+    const newProgress = total > 0 ? Math.round((completedCount / total) * 100) : 100;
+
+    await prisma.consultingProject.update({
+      where: { id: deliverable.projectId },
+      data: {
+        progressPercent: newProgress,
+        status: newProgress === 100 ? "COMPLETED" : "IN_PROGRESS",
+        completedAt: newProgress === 100 ? new Date() : null,
+      },
+    });
+
+    await logAuditEvent({
+      organizationId: deliverable.project.organizationId,
+      actorUserId: user.id,
+      action: "PROJECT_DELIVERABLE_APPROVED_BY_CLIENT",
+      resourceType: "ProjectDeliverable",
+      resourceId: deliverableId,
+      afterData: {
+        clientApproverEmail,
+        feedback,
+      },
+    });
+
+    revalidatePath("/consulting");
+    return { success: true, deliverable: updated, progressPercent: newProgress };
+  } catch (error: any) {
+    console.error("Erro ao conceder aceite formal:", error);
+    return { success: false, error: error.message || "Falha ao registrar aceite formal." };
+  }
+}
+
+/**
+ * Registra solicitação de ajustes/revisão em um entregável pelo cliente corporativo.
+ */
+export async function rejectDeliverableByClient(
+  deliverableId: string,
+  clientApproverEmail: string,
+  feedback: string
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER", "CANDIDATE"]);
+
+    if (!feedback) {
+      return { success: false, error: "Parecer de revisão com os apontamentos necessários é obrigatório." };
+    }
+
+    const deliverable = await prisma.projectDeliverable.findUnique({
+      where: { id: deliverableId },
+    });
+
+    if (!deliverable) {
+      return { success: false, error: "Entregável não localizado." };
+    }
+
+    const updated = await prisma.projectDeliverable.update({
+      where: { id: deliverableId },
+      data: {
+        approvedByClient: false,
+        clientApprovedAt: null,
+        clientApproverEmail,
+        clientFeedback: feedback,
+        status: "IN_PROGRESS",
+      },
+    });
+
+    revalidatePath("/consulting");
+    return { success: true, deliverable: updated };
+  } catch (error: any) {
+    console.error("Erro ao solicitar revisão:", error);
+    return { success: false, error: error.message || "Falha ao solicitar revisão." };
+  }
+}
+

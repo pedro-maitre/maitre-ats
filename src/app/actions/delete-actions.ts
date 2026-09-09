@@ -68,6 +68,23 @@ export async function deleteCandidate(candidateId: string) {
     throw new Error("Não autorizado. Apenas Administradores podem excluir candidatos.");
   }
 
+  const existing = await prisma.candidate.findUnique({
+    where: { id: candidateId },
+    select: { id: true, organizationId: true },
+  });
+
+  if (!existing) {
+    return { success: false, error: "Candidato não localizado." };
+  }
+
+  if (
+    session?.user?.role !== "SUPER_ADMIN" &&
+    session?.user?.organizationId &&
+    existing.organizationId !== session.user.organizationId
+  ) {
+    throw new Error("Acesso negado: Você não tem permissão para excluir candidatos de outra organização.");
+  }
+
   try {
     await prisma.$transaction(async (tx) => {
       const apps = await tx.application.findMany({

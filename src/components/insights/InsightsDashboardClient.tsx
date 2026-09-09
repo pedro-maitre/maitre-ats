@@ -26,7 +26,11 @@ import {
   Activity,
   FileSpreadsheet,
   Printer,
+  UserMinus,
+  UserPlus,
+  HeartPulse,
 } from "lucide-react";
+import type { TurnoverResult, AbsenteeismResult, TenureResult } from "@/lib/analytics";
 
 export interface AnalyticsJobItem {
   id: string;
@@ -67,16 +71,22 @@ interface InsightsDashboardClientProps {
   jobs: AnalyticsJobItem[];
   applications: AnalyticsApplicationItem[];
   organizations: { id: string; name: string }[];
+  turnoverMetrics?: TurnoverResult;
+  absenteeismMetrics?: AbsenteeismResult;
+  tenureMetrics?: TenureResult;
 }
 
 export default function InsightsDashboardClient({
   jobs,
   applications,
   organizations,
+  turnoverMetrics,
+  absenteeismMetrics,
+  tenureMetrics,
 }: InsightsDashboardClientProps) {
   const [selectedOrgId, setSelectedOrgId] = useState<string>("ALL");
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>("ALL"); // "30D" | "90D" | "180D" | "ALL"
-  const [activeTab, setActiveTab] = useState<"overview" | "funnel" | "channels" | "budget">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "funnel" | "channels" | "budget" | "turnover">("overview");
   const [currentTimestamp] = useState(() => Date.now());
 
   // Filtragem dinâmica
@@ -380,6 +390,18 @@ export default function InsightsDashboardClient({
         >
           <DollarSign size={15} /> Projeção Orçamentária
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("turnover")}
+          className={`px-5 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 ${
+            activeTab === "turnover"
+              ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm"
+              : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+          }`}
+        >
+          <Activity size={15} /> Turnover & Absenteísmo (Core HR)
+        </button>
       </div>
 
       {/* TAB 1: Visão Geral & Fit 3D */}
@@ -635,6 +657,204 @@ export default function InsightsDashboardClient({
                 )}
               </p>
               <span className="text-[11px] text-slate-400">Teto das vagas abertas</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. ABA: TURNOVER & ABSENTEÍSMO (CORE HR PEOPLE ANALYTICS) */}
+      {activeTab === "turnover" && (
+        <div className="space-y-6 animate-in fade-in">
+          {/* Top KPI Cards de People Analytics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Turnover Geral */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-xs font-bold uppercase tracking-wider">Turnover Geral (12m)</span>
+                <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+                  <UserMinus size={18} />
+                </div>
+              </div>
+              <p className="text-3xl font-black text-rose-600 dark:text-rose-400">
+                {turnoverMetrics?.generalTurnoverRate ?? 0}%
+              </p>
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Efetivo Médio: {turnoverMetrics?.averageHeadcount ?? 0}</span>
+                <span>{turnoverMetrics?.totalTerminationsPeriod ?? 0} desligados</span>
+              </div>
+            </div>
+
+            {/* Turnover Voluntário vs Involuntário */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-xs font-bold uppercase tracking-wider">Turnover Voluntário</span>
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                  <TrendingUp size={18} />
+                </div>
+              </div>
+              <p className="text-3xl font-black text-amber-600 dark:text-amber-400">
+                {turnoverMetrics?.voluntaryTurnoverRate ?? 0}%
+              </p>
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Voluntário: {turnoverMetrics?.voluntaryTerminations ?? 0}</span>
+                <span>Involuntário: {turnoverMetrics?.involuntaryTerminations ?? 0}</span>
+              </div>
+            </div>
+
+            {/* Taxa de Absenteísmo */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-xs font-bold uppercase tracking-wider">Taxa de Absenteísmo</span>
+                <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                  <HeartPulse size={18} />
+                </div>
+              </div>
+              <p className="text-3xl font-black text-purple-600 dark:text-purple-400">
+                {absenteeismMetrics?.absenteeismRate ?? 0}%
+              </p>
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>{absenteeismMetrics?.totalLostDays ?? 0} dias úteis perdidos</span>
+                <span>{absenteeismMetrics?.leavesCount ?? 0} afastamentos</span>
+              </div>
+            </div>
+
+            {/* Tempo Médio de Casa (Tenure) */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-xs font-bold uppercase tracking-wider">Tenure Médio (Ativos)</span>
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                  <Clock size={18} />
+                </div>
+              </div>
+              <p className="text-3xl font-black text-blue-600 dark:text-blue-400">
+                {tenureMetrics?.averageActiveTenureMonths ?? 0} <span className="text-lg font-bold text-slate-400">meses</span>
+              </p>
+              <div className="flex items-center justify-between text-xs text-slate-400">
+                <span>Mediana: {tenureMetrics?.medianTenureMonths ?? 0} meses</span>
+                <span>Desligados: {tenureMetrics?.averageTerminatedTenureMonths ?? 0}m</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Grids de Diagnóstico e Departamentos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Tabela de Turnover por Departamento */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <Building2 size={16} className="text-blue-500" />
+                    Turnover por Departamento
+                  </h4>
+                  <p className="text-xs text-slate-400 mt-0.5">Taxa de desligamentos e efetivo ativo por setor</p>
+                </div>
+              </div>
+
+              {turnoverMetrics && turnoverMetrics.byDepartment.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-bold uppercase">
+                        <th className="pb-3">Departamento</th>
+                        <th className="pb-3 text-center">Ativos</th>
+                        <th className="pb-3 text-center">Desligamentos</th>
+                        <th className="pb-3 text-right">Taxa (%)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                      {turnoverMetrics.byDepartment.map((dept) => (
+                        <tr key={dept.departmentName} className="hover:bg-slate-50 dark:hover:bg-slate-850/50 transition-colors">
+                          <td className="py-3 font-semibold text-slate-800 dark:text-slate-200">{dept.departmentName}</td>
+                          <td className="py-3 text-center text-slate-600 dark:text-slate-400">{dept.activeCount}</td>
+                          <td className="py-3 text-center text-rose-500 font-bold">{dept.terminationsCount}</td>
+                          <td className="py-3 text-right">
+                            <span
+                              className={`px-2 py-0.5 rounded-md font-black ${
+                                dept.turnoverRate > 10
+                                  ? "bg-rose-500/15 text-rose-500"
+                                  : dept.turnoverRate > 5
+                                  ? "bg-amber-500/15 text-amber-500"
+                                  : "bg-emerald-500/15 text-emerald-500"
+                              }`}
+                            >
+                              {dept.turnoverRate}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic py-6 text-center">Nenhum dado departamental no período.</p>
+              )}
+            </div>
+
+            {/* Motivos de Afastamento & Absenteísmo */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+              <div>
+                <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <HeartPulse size={16} className="text-purple-500" />
+                  Diagnóstico de Absenteísmo & Afastamentos
+                </h4>
+                <p className="text-xs text-slate-400 mt-0.5">Top motivos de licença médica e atestados registrados</p>
+              </div>
+
+              {absenteeismMetrics && absenteeismMetrics.topReasons.length > 0 ? (
+                <div className="space-y-3">
+                  {absenteeismMetrics.topReasons.map((reason) => (
+                    <div
+                      key={reason.type}
+                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{reason.type}</p>
+                        <p className="text-[11px] text-slate-400">{reason.count} ocorrência(s)</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs font-black text-purple-600 dark:text-purple-400">
+                          {reason.lostDays} dias úteis
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 text-center text-xs text-slate-400 italic">
+                  Nenhum afastamento médico registrado no período. Efetivo 100% produtivo.
+                </div>
+              )}
+
+              {/* Distribuição de Permanência (Tenure) */}
+              {tenureMetrics && (
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                    Curva de Permanência dos Colaboradores Ativos
+                  </span>
+                  <div className="grid grid-cols-5 gap-2 text-center text-[11px]">
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-800">
+                      <span className="text-slate-400 block">&lt; 6m</span>
+                      <strong className="text-slate-900 dark:text-white font-black">{tenureMetrics.tenureDistribution.lessThan6Months}</strong>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-800">
+                      <span className="text-slate-400 block">6-12m</span>
+                      <strong className="text-slate-900 dark:text-white font-black">{tenureMetrics.tenureDistribution.sixTo12Months}</strong>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-800">
+                      <span className="text-slate-400 block">1-2a</span>
+                      <strong className="text-slate-900 dark:text-white font-black">{tenureMetrics.tenureDistribution.oneTo2Years}</strong>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-800">
+                      <span className="text-slate-400 block">2-5a</span>
+                      <strong className="text-slate-900 dark:text-white font-black">{tenureMetrics.tenureDistribution.twoTo5Years}</strong>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-800">
+                      <span className="text-slate-400 block">&gt; 5a</span>
+                      <strong className="text-slate-900 dark:text-white font-black">{tenureMetrics.tenureDistribution.moreThan5Years}</strong>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

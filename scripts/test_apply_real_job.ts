@@ -144,7 +144,7 @@ async function testRealJobApplication() {
     );
 
     // 5. Verificação na Área do Candidato (Stepper & Status)
-    const candidatePortal = await prisma.candidate.findUnique({
+    const candidatePortal = await prisma.candidate.findFirst({
       where: { email: testCandidateEmail },
       include: {
         applications: {

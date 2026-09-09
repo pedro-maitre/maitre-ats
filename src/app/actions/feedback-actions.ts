@@ -53,6 +53,14 @@ export async function logFeedbackSentAction(params: LogFeedbackSentParams) {
       return { success: false, error: "Candidato não localizado." };
     }
 
+    if (
+      session.user.role !== "SUPER_ADMIN" &&
+      session.user.organizationId &&
+      candidate.organizationId !== session.user.organizationId
+    ) {
+      return { success: false, error: "Acesso negado para o candidato especificado." };
+    }
+
     // Se houver applicationId, cria o registro de Activity na timeline
     let activityRecord = null;
     if (applicationId) {

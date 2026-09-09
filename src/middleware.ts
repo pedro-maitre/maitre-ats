@@ -1,20 +1,50 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { getOrCreateRequestId, CORRELATION_HEADER } from "@/lib/correlation";
+
+const PUBLIC_API_ROUTES = [
+  "/api/auth",
+  "/api/candidate/register",
+  "/api/cron",
+  "/api/documents",
+  "/api/feedback/consent",
+];
 
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const role = token?.role;
     const pathname = req.nextUrl.pathname;
+    const requestId = getOrCreateRequestId(req);
+
+    // Proteção de APIs internas com JSON 401
+    if (pathname.startsWith("/api/")) {
+      const isPublic = PUBLIC_API_ROUTES.some((p) => pathname.startsWith(p));
+      if (!isPublic && !token) {
+        const res = NextResponse.json(
+          { error: "Não autorizado: Sessão ausente ou inválida." },
+          { status: 401 }
+        );
+        res.headers.set(CORRELATION_HEADER, requestId);
+        return res;
+      }
+      const res = NextResponse.next();
+      res.headers.set(CORRELATION_HEADER, requestId);
+      return res;
+    }
 
     // 1. CANDIDATO: Bloqueia acesso a qualquer área interna corporativa
     if (role === "CANDIDATE") {
       if (!pathname.startsWith("/carreiras")) {
-        return NextResponse.redirect(
+        const res = NextResponse.redirect(
           new URL("/carreiras/maitre/candidato", req.url)
         );
+        res.headers.set(CORRELATION_HEADER, requestId);
+        return res;
       }
-      return;
+      const res = NextResponse.next();
+      res.headers.set(CORRELATION_HEADER, requestId);
+      return res;
     }
 
     // 2. HIRING_MANAGER: Acesso estrito a /portal-gestor e /jobs (suas vagas)
@@ -22,19 +52,23 @@ export default withAuth(
       const allowedPrefixes = ["/portal-gestor", "/jobs", "/settings/profile"];
       const isAllowed = allowedPrefixes.some((p) => pathname === p || pathname.startsWith(p + "/"));
       if (!isAllowed) {
-        return NextResponse.redirect(
+        const res = NextResponse.redirect(
           new URL("/portal-gestor", req.url)
         );
+        res.headers.set(CORRELATION_HEADER, requestId);
+        return res;
       }
-      return;
+      const res = NextResponse.next();
+      res.headers.set(CORRELATION_HEADER, requestId);
+      return res;
     }
 
     // 3. RECRUITER: Acesso operacional a R&S, candidatos, vagas e acompanhamento
-    // Bloqueia áreas estritamente administrativas/executivas: /users, /clients, /consulting, /settings/organization
     if (role === "RECRUITER") {
-      // Se acessar a raiz (Painel Executivo Geral com folha/auditorias), direciona para /jobs
       if (pathname === "/") {
-        return NextResponse.redirect(new URL("/jobs", req.url));
+        const res = NextResponse.redirect(new URL("/jobs", req.url));
+        res.headers.set(CORRELATION_HEADER, requestId);
+        return res;
       }
 
       const blockedForRecruiter = [
@@ -44,17 +78,31 @@ export default withAuth(
         "/settings/organization",
       ];
       if (blockedForRecruiter.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
-        return NextResponse.redirect(new URL("/jobs", req.url));
+        const res = NextResponse.redirect(new URL("/jobs", req.url));
+        res.headers.set(CORRELATION_HEADER, requestId);
+        return res;
       }
-      return;
+      const res = NextResponse.next();
+      res.headers.set(CORRELATION_HEADER, requestId);
+      return res;
     }
 
-    // 4. ADMIN e SUPER_ADMIN têm acesso às rotas internas corporativas
+    // 4. ADMIN e SUPER_ADMIN: Permite acesso
+    const res = NextResponse.next();
+    res.headers.set(CORRELATION_HEADER, requestId);
+    return res;
   },
   {
-    secret: process.env.NEXTAUTH_SECRET || "maitre-ats-production-secret-key-123",
+    secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ req, token }) => {
+        const pathname = req.nextUrl.pathname;
+        if (pathname.startsWith("/api/")) {
+          // Permite que o middleware avalie rotas de API para emitir JSON 401 em vez de redirect HTML
+          return true;
+        }
+        return !!token;
+      },
     },
   }
 );
@@ -78,5 +126,6 @@ export const config = {
     "/clients/:path*",
     "/settings/:path*",
     "/users/:path*",
+    "/api/:path*",
   ],
 };

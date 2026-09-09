@@ -72,8 +72,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Upsert Candidate profile linked to user
+    const targetOrgId = org?.id || (await prisma.organization.findFirst())?.id || "default";
     const candidate = await prisma.candidate.upsert({
-      where: { email: normalizedEmail },
+      where: {
+        organizationId_email: {
+          organizationId: targetOrgId,
+          email: normalizedEmail,
+        },
+      },
       update: {
         firstName: firstName.trim(),
         lastName: lastName?.trim() || "",
@@ -85,7 +91,7 @@ export async function POST(req: NextRequest) {
         lastName: lastName?.trim() || "",
         email: normalizedEmail,
         phone: phone || null,
-        organizationId: org?.id || "default",
+        organizationId: targetOrgId,
         userId: user.id,
         source: "Área do Candidato",
       },

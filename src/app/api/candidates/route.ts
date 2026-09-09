@@ -30,9 +30,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Organização não informada ou não vinculada ao usuário." }, { status: 400 });
     }
 
-    // Upsert Candidate (if email exists, update, otherwise create)
+    // Upsert Candidate estritamente escopado à organização autorizada
     const candidate = await prisma.candidate.upsert({
-      where: { email: cleanEmail },
+      where: {
+        organizationId_email: {
+          organizationId: orgId,
+          email: cleanEmail,
+        },
+      },
       update: {
         firstName,
         lastName,
@@ -44,7 +49,7 @@ export async function POST(req: NextRequest) {
       create: {
         firstName,
         lastName,
-        email,
+        email: cleanEmail,
         phone,
         profileSummary,
         resumeUrl,

@@ -1,5 +1,5 @@
 import { Session } from "next-auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "./prisma";
 
 export type Role = "SUPER_ADMIN" | "ADMIN" | "RECRUITER" | "HIRING_MANAGER" | "CANDIDATE";
 
@@ -105,3 +105,89 @@ export async function requireTenantAccess(
 
   return true;
 }
+
+export interface TenantScope {
+  organizationId?: string;
+  isGlobalAccess: boolean;
+  activeOrgId: string | null;
+}
+
+/**
+ * Determina o escopo de organização autorizado para o usuário na sessão atual.
+ * - SUPER_ADMIN ou ADMIN da Empresa Master (isMaster: true): tem acesso global;
+ *   se passar requestedOrgId (e não for "ALL"), valida e restringe ao requestedOrgId.
+ * - Usuários de organizações clientes: restritos estritamente ao seu organizationId / memberships.
+ */
+export async function getServerTenantScope(
+  session: Session | null,
+  requestedOrgId?: string | null
+): Promise<TenantScope> {
+  const user = requireAuth(session);
+  const userRole = user.role as Role;
+  const userEmail = user.email?.toLowerCase();
+
+  if (!userEmail) {
+    throw new UnauthorizedError("E-mail não associado à sessão.");
+  }
+
+  const dbUser = await prisma.user.findUnique({
+    where: { email: userEmail },
+    include: {
+      organization: true,
+      memberships: true,
+    },
+  });
+
+  if (!dbUser) {
+    throw new UnauthorizedError("Usuário não encontrado no banco de dados.");
+  }
+
+  const isMasterOrgAdmin = Boolean(dbUser.organization?.isMaster && (userRole === "SUPER_ADMIN" || userRole === "ADMIN"));
+  const isSuperAdminUser = userRole === "SUPER_ADMIN";
+  const hasGlobalManagement = isSuperAdminUser || isMasterOrgAdmin;
+
+  if (hasGlobalManagement) {
+    if (requestedOrgId && requestedOrgId !== "ALL") {
+      return {
+        organizationId: requestedOrgId,
+        isGlobalAccess: true,
+        activeOrgId: requestedOrgId,
+      };
+    }
+    return {
+      organizationId: undefined, // Sem restrição se for visão consolidada da Master
+      isGlobalAccess: true,
+      activeOrgId: null,
+    };
+  }
+
+  // Usuário de tenant comum / cliente parceiro:
+  const allowedOrgIds = new Set<string>();
+  if (dbUser.organizationId) {
+    allowedOrgIds.add(dbUser.organizationId);
+  }
+  dbUser.memberships.forEach((m) => allowedOrgIds.add(m.organizationId));
+
+  if (allowedOrgIds.size === 0) {
+    throw new ForbiddenError("Usuário não está vinculado a nenhuma organização autorizada.");
+  }
+
+  if (requestedOrgId && requestedOrgId !== "ALL") {
+    if (!allowedOrgIds.has(requestedOrgId)) {
+      throw new ForbiddenError("Acesso negado à organização solicitada.");
+    }
+    return {
+      organizationId: requestedOrgId,
+      isGlobalAccess: false,
+      activeOrgId: requestedOrgId,
+    };
+  }
+
+  const primaryOrgId = dbUser.organizationId || Array.from(allowedOrgIds)[0];
+  return {
+    organizationId: primaryOrgId,
+    isGlobalAccess: false,
+    activeOrgId: primaryOrgId,
+  };
+}
+

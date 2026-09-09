@@ -44,7 +44,12 @@ export async function submitApplication(formData: FormData) {
 
   // Upsert Candidate
   const candidate = await prisma.candidate.upsert({
-    where: { email },
+    where: {
+      organizationId_email: {
+        organizationId: org.id,
+        email,
+      },
+    },
     update: {
       firstName,
       lastName,

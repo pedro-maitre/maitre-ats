@@ -177,3 +177,193 @@ export async function updateSuccessorReadiness(
     return { success: false, error: error.message || "Falha ao atualizar prontidão." };
   }
 }
+
+/**
+ * Submete uma candidatura de recrutamento interno validando a elegibilidade do colaborador.
+ */
+export async function applyInternalJob(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER", "CANDIDATE"]);
+
+    const employeeId = (formData.get("employeeId") as string)?.trim();
+    const jobId = (formData.get("jobId") as string)?.trim();
+    const coverLetter = (formData.get("coverLetter") as string)?.trim() || null;
+
+    if (!employeeId || !jobId) {
+      return { success: false, error: "Colaborador e Vaga são obrigatórios." };
+    }
+
+    const [employee, job] = await Promise.all([
+      prisma.employee.findUnique({
+        where: { id: employeeId },
+        include: {
+          performanceEvaluations: {
+            orderBy: { createdAt: "desc" },
+            take: 3,
+          },
+        },
+      }),
+      prisma.job.findUnique({
+        where: { id: jobId },
+      }),
+    ]);
+
+    if (!employee || !job) {
+      return { success: false, error: "Colaborador ou Vaga não localizados." };
+    }
+
+    // Valida tenant
+    if (employee.organizationId !== job.organizationId) {
+      return { success: false, error: "Inconsistência de organização entre colaborador e vaga." };
+    }
+
+    // Verifica se já existe candidatura
+    const existing = await prisma.internalApplication.findFirst({
+      where: {
+        employeeId,
+        jobId,
+      },
+    });
+
+    if (existing) {
+      return { success: false, error: "Colaborador já possui uma candidatura registrada para esta vaga." };
+    }
+
+    const { checkInternalJobEligibility } = await import("@/lib/mobility");
+    const eligibility = checkInternalJobEligibility(employee);
+
+    const application = await prisma.internalApplication.create({
+      data: {
+        organizationId: employee.organizationId,
+        jobId,
+        employeeId,
+        coverLetter,
+        status: eligibility.isEligible ? "SUBMITTED" : "INELIGIBLE",
+        managerApprovalStatus: "PENDING",
+        eligibilitySnapshot: JSON.stringify(eligibility),
+      },
+    });
+
+    await logAuditEvent({
+      organizationId: employee.organizationId,
+      actorUserId: user.id,
+      action: "INTERNAL_JOB_APPLIED",
+      resourceType: "InternalApplication",
+      resourceId: application.id,
+      afterData: {
+        employeeId,
+        jobId,
+        isEligible: eligibility.isEligible,
+      },
+    });
+
+    revalidatePath("/careers-hub");
+    return {
+      success: true,
+      application,
+      eligibility,
+      warning: eligibility.isEligible ? null : eligibility.reasons.join(" "),
+    };
+  } catch (error: any) {
+    console.error("Erro ao aplicar para vaga interna:", error);
+    return { success: false, error: error.message || "Falha ao registrar candidatura interna." };
+  }
+}
+
+/**
+ * Atualiza o status de aprovação de uma candidatura interna.
+ */
+export async function reviewInternalApplication(
+  applicationId: string,
+  newStatus: string, // MANAGER_APPROVED, INTERVIEWING, TRANSFERRED, REJECTED
+  managerFeedback?: string
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER"]);
+
+    const application = await prisma.internalApplication.findUnique({
+      where: { id: applicationId },
+    });
+
+    if (!application) {
+      return { success: false, error: "Candidatura não encontrada." };
+    }
+
+    const updated = await prisma.internalApplication.update({
+      where: { id: applicationId },
+      data: {
+        status: newStatus,
+        managerApprovalStatus: newStatus === "REJECTED" ? "REJECTED" : "APPROVED",
+        managerFeedback: managerFeedback || application.managerFeedback,
+      },
+    });
+
+    await logAuditEvent({
+      organizationId: application.organizationId,
+      actorUserId: user.id,
+      action: "INTERNAL_JOB_REVIEWED",
+      resourceType: "InternalApplication",
+      resourceId: applicationId,
+      beforeData: { status: application.status },
+      afterData: { status: newStatus, managerFeedback },
+    });
+
+    revalidatePath("/careers-hub");
+    return { success: true, application: updated };
+  } catch (error: any) {
+    console.error("Erro ao revisar candidatura interna:", error);
+    return { success: false, error: error.message || "Falha ao revisar candidatura." };
+  }
+}
+
+/**
+ * Cadastra uma Trilha de Carreira em Y para a organização.
+ */
+export async function createCareerTrack(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER"]);
+
+    const organizationId = (formData.get("organizationId") as string)?.trim();
+    const title = (formData.get("title") as string)?.trim();
+    const trackType = (formData.get("trackType") as string)?.trim() || "Y_DUAL";
+    const description = (formData.get("description") as string)?.trim() || null;
+    const levelsJson = (formData.get("levels") as string)?.trim();
+
+    if (!organizationId || !title) {
+      return { success: false, error: "Organização e Título da Trilha são obrigatórios." };
+    }
+
+    const { getDefaultYCareerTrack } = await import("@/lib/mobility");
+    const defaultLevels = getDefaultYCareerTrack(title);
+    const levelsToStore = levelsJson ? levelsJson : JSON.stringify(defaultLevels);
+
+    const track = await prisma.careerTrack.create({
+      data: {
+        organizationId,
+        title,
+        trackType,
+        description,
+        levels: levelsToStore,
+      },
+    });
+
+    await logAuditEvent({
+      organizationId,
+      actorUserId: user.id,
+      action: "CAREER_TRACK_CREATED",
+      resourceType: "CareerTrack",
+      resourceId: track.id,
+      afterData: { title, trackType },
+    });
+
+    revalidatePath("/careers-hub");
+    return { success: true, track };
+  } catch (error: any) {
+    console.error("Erro ao criar trilha de carreira:", error);
+    return { success: false, error: error.message || "Falha ao criar trilha de carreira." };
+  }
+}
+

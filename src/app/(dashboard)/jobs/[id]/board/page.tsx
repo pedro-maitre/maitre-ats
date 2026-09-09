@@ -12,6 +12,7 @@ import {
   Edit,
   DollarSign,
 } from "lucide-react";
+import ManageStagesModal from "./ManageStagesModal";
 import { evaluateApplicationFit } from "@/lib/fit-evaluator";
 
 export default async function JobBoardPage({
@@ -136,6 +137,11 @@ export default async function JobBoardPage({
         </Link>
 
         <div className="flex items-center gap-2.5">
+          <ManageStagesModal
+            jobId={job.id}
+            stages={job.stages.map((s) => ({ id: s.id, name: s.name, order: s.order }))}
+          />
+
           <Link
             href={`/jobs/${job.id}/edit`}
             className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 transition-all"

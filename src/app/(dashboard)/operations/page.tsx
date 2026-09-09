@@ -14,21 +14,43 @@ export const metadata = {
   description: "Gestão de documentos, armazenamento seguro, termos de admissão e processos de DP",
 };
 
-export default async function OperationsPage() {
+export default async function OperationsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ orgId?: string }>;
+}) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     redirect("/login");
   }
 
+  const { getServerTenantScope } = await import("@/lib/security");
+  const resolvedParams = searchParams ? await searchParams : {};
+  const scope = await getServerTenantScope(session, resolvedParams.orgId);
+
+  const docWhere = scope.organizationId ? { organizationId: scope.organizationId } : {};
+  const convWhere = scope.organizationId
+    ? { application: { job: { organizationId: scope.organizationId } } }
+    : {};
+  const offboardingWhere = scope.organizationId ? { organizationId: scope.organizationId } : {};
+  const activeEmpWhere = {
+    ...(scope.organizationId ? { organizationId: scope.organizationId } : {}),
+    status: "ACTIVE",
+  };
+
   let documents: any[] = [];
   let conversions: any[] = [];
+  let offboardings: any[] = [];
+  let activeEmployees: any[] = [];
 
   try {
-    const [docsRes, convsRes] = await Promise.all([
+    const [docsRes, convsRes, offboardsRes, employeesRes] = await Promise.all([
       prisma.document.findMany({
+        where: docWhere,
         orderBy: { createdAt: "desc" },
       }),
       prisma.hireConversion.findMany({
+        where: convWhere,
         include: {
           application: {
             include: {
@@ -52,9 +74,36 @@ export default async function OperationsPage() {
         },
         orderBy: { convertedAt: "desc" },
       }),
+      prisma.offboardingProcess.findMany({
+        where: offboardingWhere,
+        include: {
+          employee: {
+            include: {
+              department: true,
+              position: true,
+            },
+          },
+          organization: true,
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.employee.findMany({
+        where: activeEmpWhere,
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          registrationNumber: true,
+          department: { select: { name: true } },
+          position: { select: { title: true } },
+        },
+        orderBy: { fullName: "asc" },
+      }),
     ]);
     documents = docsRes || [];
     conversions = convsRes || [];
+    offboardings = offboardsRes || [];
+    activeEmployees = employeesRes || [];
   } catch (err) {
     console.error("Erro ao carregar operações:", err);
   }
@@ -125,6 +174,8 @@ export default async function OperationsPage() {
     <OperationsDashboardClient
       dossiers={JSON.parse(JSON.stringify(dossiers))}
       canonicalDocsCount={documents.length}
+      offboardings={JSON.parse(JSON.stringify(offboardings))}
+      activeEmployees={JSON.parse(JSON.stringify(activeEmployees))}
     />
   );
 }

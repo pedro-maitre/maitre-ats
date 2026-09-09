@@ -10,7 +10,15 @@ export async function GET() {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
+    const { getServerTenantScope } = await import("@/lib/security");
+    const scope = await getServerTenantScope(session);
+
+    const whereClause = scope.isGlobalAccess
+      ? {}
+      : { id: scope.organizationId };
+
     const organizations = await prisma.organization.findMany({
+      where: whereClause,
       orderBy: { name: "asc" },
       select: {
         id: true,

@@ -724,3 +724,93 @@ export async function logWhatsAppActivity(params: {
   }
 }
 
+/**
+ * Cria uma nova etapa customizada na vaga diretamente do Kanban
+ */
+export async function createJobStage(jobId: string, stageName: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER"]);
+
+    if (!stageName || !stageName.trim()) {
+      return { success: false, error: "O nome da etapa é obrigatório." };
+    }
+
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: { stages: { orderBy: { order: "desc" }, take: 1 } },
+    });
+
+    if (!job) {
+      return { success: false, error: "Vaga não encontrada." };
+    }
+
+    const nextOrder = (job.stages[0]?.order ?? -1) + 1;
+
+    const newStage = await prisma.stage.create({
+      data: {
+        name: stageName.trim(),
+        order: nextOrder,
+        jobId: job.id,
+        organizationId: job.organizationId,
+      },
+    });
+
+    await logAuditEvent({
+      organizationId: job.organizationId,
+      actorUserId: user.id,
+      action: "STAGE_CREATED",
+      resourceType: "Stage",
+      resourceId: newStage.id,
+      afterData: { name: newStage.name, order: newStage.order, jobId: job.id },
+    });
+
+    revalidatePath(`/jobs/${jobId}/board`);
+    revalidatePath(`/jobs/${jobId}/edit`);
+
+    return { success: true, stage: newStage };
+  } catch (error: any) {
+    console.error("Erro ao criar etapa da vaga:", error);
+    return { success: false, error: error.message || "Falha ao criar etapa." };
+  }
+}
+
+/**
+ * Renomeia uma etapa da vaga diretamente do Kanban
+ */
+export async function renameJobStage(stageId: string, newName: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER"]);
+
+    if (!newName || !newName.trim()) {
+      return { success: false, error: "O novo nome da etapa é obrigatório." };
+    }
+
+    const stage = await prisma.stage.findUnique({
+      where: { id: stageId },
+      include: { job: true },
+    });
+
+    if (!stage) {
+      return { success: false, error: "Etapa não encontrada." };
+    }
+
+    const updated = await prisma.stage.update({
+      where: { id: stageId },
+      data: { name: newName.trim() },
+    });
+
+    if (stage.jobId) {
+      revalidatePath(`/jobs/${stage.jobId}/board`);
+      revalidatePath(`/jobs/${stage.jobId}/edit`);
+    }
+
+    return { success: true, stage: updated };
+  } catch (error: any) {
+    console.error("Erro ao renomear etapa:", error);
+    return { success: false, error: error.message || "Falha ao renomear etapa." };
+  }
+}
+
+

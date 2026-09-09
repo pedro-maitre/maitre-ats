@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getServerTenantScope } from "@/lib/security";
 import CandidateListTable from "@/components/candidates/CandidateListTable";
 
 export default async function CandidatesPage({
@@ -12,21 +13,26 @@ export default async function CandidatesPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const session = await getServerSession(authOptions);
+  const tenantScope = await getServerTenantScope(session);
   const { q } = await searchParams;
   const query = q || "";
 
+  const whereClause: any = {};
+  if (tenantScope.organizationId) {
+    whereClause.organizationId = tenantScope.organizationId;
+  }
+  if (query) {
+    whereClause.OR = [
+      { firstName: { contains: query, mode: "insensitive" } },
+      { lastName: { contains: query, mode: "insensitive" } },
+      { email: { contains: query, mode: "insensitive" } },
+      { profileSummary: { contains: query, mode: "insensitive" } },
+      { tags: { contains: query, mode: "insensitive" } },
+    ];
+  }
+
   const candidates = await prisma.candidate.findMany({
-    where: query
-      ? {
-          OR: [
-            { firstName: { contains: query, mode: "insensitive" } },
-            { lastName: { contains: query, mode: "insensitive" } },
-            { email: { contains: query, mode: "insensitive" } },
-            { profileSummary: { contains: query, mode: "insensitive" } },
-            { tags: { contains: query, mode: "insensitive" } },
-          ],
-        }
-      : undefined,
+    where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
     orderBy: { createdAt: "desc" },
   });
 

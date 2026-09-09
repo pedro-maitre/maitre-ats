@@ -3,11 +3,17 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getServerTenantScope } from "@/lib/security";
 
 export async function createCandidate(formData: FormData) {
+  const session = await getServerSession(authOptions);
+  const tenantScope = await getServerTenantScope(session);
+
   const firstName = formData.get("firstName") as string;
   const lastName = formData.get("lastName") as string;
-  const email = formData.get("email") as string;
+  const email = (formData.get("email") as string)?.trim().toLowerCase();
   const phone = formData.get("phone") as string;
   const linkedinUrl = formData.get("linkedinUrl") as string;
   const profileSummary = formData.get("profileSummary") as string;
@@ -26,16 +32,20 @@ export async function createCandidate(formData: FormData) {
     tagsJson = JSON.stringify(tagsArray);
   }
 
-  // Get Org
-  const org = await prisma.organization.findFirst();
-  if (!org) throw new Error("Organização não encontrada");
+  const orgId = tenantScope.organizationId || (await prisma.organization.findFirst())?.id;
+  if (!orgId) throw new Error("Organização não encontrada");
 
   const existing = await prisma.candidate.findUnique({
-    where: { email }
+    where: {
+      organizationId_email: {
+        organizationId: orgId,
+        email,
+      },
+    },
   });
 
   if (existing) {
-    throw new Error("Já existe um candidato com este e-mail no Banco de Talentos.");
+    throw new Error("Já existe um candidato com este e-mail no Banco de Talentos desta organização.");
   }
 
   const candidate = await prisma.candidate.create({
@@ -49,8 +59,8 @@ export async function createCandidate(formData: FormData) {
       resumeUrl: resumeUrl || undefined,
       tags: tagsJson,
       source: source || "Cadastro Manual",
-      organizationId: org.id
-    }
+      organizationId: orgId,
+    },
   });
 
   revalidatePath("/candidates");

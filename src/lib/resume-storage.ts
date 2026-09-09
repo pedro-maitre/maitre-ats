@@ -3,15 +3,16 @@ import { randomUUID, createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 
 function getServiceSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://yqnlcwglyxqsemqhjkmp.supabase.co";
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) return null;
+  if (!url || !key) return null;
   return createClient(url, key);
 }
 
 function getAnonSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://yqnlcwglyxqsemqhjkmp.supabase.co";
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_Gaj8GoRPDXpDZ0mGaVJU9Q_fXOEir_3";
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
   return createClient(url, key);
 }
 
@@ -64,6 +65,10 @@ export async function uploadSecureDocument(
   const serviceClient = getServiceSupabase();
   const storageClient = serviceClient || getAnonSupabase();
 
+  if (!storageClient) {
+    throw new Error("Cliente de armazenamento Supabase não configurado ou credenciais ausentes no ambiente.");
+  }
+
   if (serviceClient) {
     await ensureBucket(serviceClient, "resumes");
   }
@@ -80,9 +85,6 @@ export async function uploadSecureDocument(
     console.error("Supabase Storage Upload Error:", error.message);
     throw new Error(`Falha no upload do arquivo para o storage: ${error.message}`);
   }
-
-  // Gera URL canônica (ou URL assinada temporária)
-  const publicUrl = storageClient.storage.from("resumes").getPublicUrl(storageKey).data.publicUrl;
 
   // Se tivermos organizationId, persiste metadados em Document
   let documentRecord: any = null;
@@ -107,8 +109,24 @@ export async function uploadSecureDocument(
     }
   }
 
+  // Gera URL privada: se houver documentId, aponta para o endpoint autenticado /api/documents/[id]
+  // Caso contrário, gera uma URL assinada temporária (15 minutos)
+  let secureAccessUrl = "";
+  if (documentRecord?.id) {
+    secureAccessUrl = `/api/documents/${documentRecord.id}`;
+  } else {
+    try {
+      const { data: signedData } = await storageClient.storage
+        .from("resumes")
+        .createSignedUrl(storageKey, 900);
+      secureAccessUrl = signedData?.signedUrl || "";
+    } catch {
+      secureAccessUrl = "";
+    }
+  }
+
   return {
-    url: publicUrl,
+    url: secureAccessUrl,
     documentId: documentRecord?.id,
     storageKey,
     checksum,
@@ -126,13 +144,16 @@ export async function getSignedDocumentUrl(
   const serviceClient = getServiceSupabase();
   const storageClient = serviceClient || getAnonSupabase();
 
+  if (!storageClient) {
+    throw new Error("Cliente de armazenamento Supabase não configurado ou credenciais ausentes no ambiente.");
+  }
+
   const { data, error } = await storageClient.storage
     .from("resumes")
     .createSignedUrl(storageKey, expiresInSeconds);
 
   if (error || !data?.signedUrl) {
-    // Fallback para public URL caso o bucket seja público
-    return storageClient.storage.from("resumes").getPublicUrl(storageKey).data.publicUrl;
+    throw new Error(`Falha ao gerar URL assinada do documento: ${error?.message || "Chave de assinatura indisponível"}`);
   }
 
   return data.signedUrl;

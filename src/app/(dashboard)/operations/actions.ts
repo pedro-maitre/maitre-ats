@@ -300,3 +300,315 @@ export async function finalizeAdmission(
     return { success: false, error: error.message || "Erro ao finalizar admissão." };
   }
 }
+
+/**
+ * Checklist Padrão CLT / Compliance para Desligamento
+ */
+export const DEFAULT_OFFBOARDING_CHECKLIST = [
+  {
+    key: "EXAME_DEMISSIONAL_ASO",
+    label: "Exame Médico Demissional (ASO)",
+    description: "Obrigatório pela NR-7 antes da homologação da rescisão",
+    required: true,
+    completed: false,
+    completedAt: null,
+    notes: "",
+  },
+  {
+    key: "DEVOLUCAO_EQUIPAMENTOS",
+    label: "Devolução de Equipamentos e Ativos",
+    description: "Notebook, carregador, crachá, celular corporativo e token",
+    required: true,
+    completed: false,
+    completedAt: null,
+    notes: "",
+  },
+  {
+    key: "REVOGACAO_ACESSOS_TI",
+    label: "Revogação de Acessos de TI e Segurança",
+    description: "Bloqueio imediato de e-mail corporativo, VPN, Slack, Google Workspace e GitHub",
+    required: true,
+    completed: false,
+    completedAt: null,
+    notes: "",
+  },
+  {
+    key: "HOMOLOGACAO_TRCT",
+    label: "Assinatura do TRCT e Guias do FGTS",
+    description: "Termo de Rescisão de Contrato de Trabalho e Chave de Conectividade Social",
+    required: true,
+    completed: false,
+    completedAt: null,
+    notes: "",
+  },
+  {
+    key: "PAGAMENTO_VERBAS",
+    label: "Pagamento das Verbas Rescisórias",
+    description: "Prazo legal CLT: até 10 dias corridos do término do contrato",
+    required: true,
+    completed: false,
+    completedAt: null,
+    notes: "",
+  },
+  {
+    key: "ENTREVISTA_DESLIGAMENTO",
+    label: "Entrevista de Desligamento com DHO",
+    description: "Coleta de feedback estruturado para gestão de turnover e cultura",
+    required: false,
+    completed: false,
+    completedAt: null,
+    notes: "",
+  },
+];
+
+/**
+ * Inicia um processo formal de desligamento / offboarding
+ */
+export async function startOffboardingProcess(
+  employeeId: string,
+  data: {
+    terminationType: string;
+    noticeType: string;
+    noticeDate?: string;
+    lastWorkingDay: string;
+    severancePayEstimate?: number;
+    interviewNotes?: string;
+  }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER"]);
+
+    const employee = await prisma.employee.findUnique({
+      where: { id: employeeId },
+      include: { organization: true },
+    });
+
+    if (!employee) {
+      return { success: false, error: "Colaborador não encontrado." };
+    }
+
+    // Verifica se já existe um processo em andamento
+    const existing = await prisma.offboardingProcess.findFirst({
+      where: { employeeId, status: "IN_PROGRESS" },
+    });
+
+    if (existing) {
+      return { success: false, error: "Já existe um processo de desligamento em andamento para este colaborador." };
+    }
+
+    const process = await prisma.offboardingProcess.create({
+      data: {
+        employeeId: employee.id,
+        organizationId: employee.organizationId,
+        terminationType: data.terminationType,
+        noticeType: data.noticeType,
+        noticeDate: data.noticeDate ? new Date(data.noticeDate) : new Date(),
+        lastWorkingDay: new Date(data.lastWorkingDay),
+        severancePayEstimate: data.severancePayEstimate ? Number(data.severancePayEstimate) : null,
+        status: "IN_PROGRESS",
+        checklist: JSON.stringify(DEFAULT_OFFBOARDING_CHECKLIST),
+        interviewNotes: data.interviewNotes || null,
+      },
+    });
+
+    // Auditoria
+    await logAuditEvent({
+      organizationId: employee.organizationId,
+      actorUserId: user.id,
+      action: "EMPLOYEE_OFFBOARDING_STARTED",
+      resourceType: "OffboardingProcess",
+      resourceId: process.id,
+      afterData: {
+        employeeId: employee.id,
+        employeeName: employee.fullName,
+        terminationType: data.terminationType,
+        noticeType: data.noticeType,
+        lastWorkingDay: data.lastWorkingDay,
+      },
+    });
+
+    revalidatePath("/operations");
+    revalidatePath("/employees");
+    return { success: true, process };
+  } catch (error: any) {
+    console.error("Erro ao iniciar desligamento:", error);
+    return { success: false, error: error.message || "Erro ao iniciar processo de desligamento." };
+  }
+}
+
+/**
+ * Atualiza um item do checklist de offboarding
+ */
+export async function updateOffboardingChecklistItem(
+  processId: string,
+  itemKey: string,
+  completed: boolean,
+  notes?: string
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER"]);
+
+    const process = await prisma.offboardingProcess.findUnique({
+      where: { id: processId },
+      include: { employee: true },
+    });
+
+    if (!process) {
+      return { success: false, error: "Processo de desligamento não encontrado." };
+    }
+
+    let checklist: any[] = [];
+    try {
+      checklist = JSON.parse(process.checklist || "[]");
+    } catch {
+      checklist = [...DEFAULT_OFFBOARDING_CHECKLIST];
+    }
+
+    const itemIndex = checklist.findIndex((item: any) => item.key === itemKey);
+    if (itemIndex >= 0) {
+      checklist[itemIndex].completed = completed;
+      checklist[itemIndex].completedAt = completed ? new Date().toISOString() : null;
+      if (notes !== undefined) {
+        checklist[itemIndex].notes = notes;
+      }
+    } else {
+      checklist.push({
+        key: itemKey,
+        label: itemKey,
+        completed,
+        completedAt: completed ? new Date().toISOString() : null,
+        notes: notes || "",
+      });
+    }
+
+    const updated = await prisma.offboardingProcess.update({
+      where: { id: processId },
+      data: { checklist: JSON.stringify(checklist) },
+    });
+
+    // Auditoria
+    await logAuditEvent({
+      organizationId: process.organizationId,
+      actorUserId: user.id,
+      action: "EMPLOYEE_OFFBOARDING_CHECKLIST_UPDATE",
+      resourceType: "OffboardingProcess",
+      resourceId: process.id,
+      afterData: {
+        itemKey,
+        completed,
+        employeeName: process.employee.fullName,
+      },
+    });
+
+    revalidatePath("/operations");
+    return { success: true, checklist };
+  } catch (error: any) {
+    console.error("Erro ao atualizar checklist:", error);
+    return { success: false, error: error.message || "Erro ao atualizar checklist de desligamento." };
+  }
+}
+
+/**
+ * Conclui formalmente o processo de desligamento
+ */
+export async function completeOffboardingProcess(processId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER"]);
+
+    const process = await prisma.offboardingProcess.findUnique({
+      where: { id: processId },
+      include: { employee: true },
+    });
+
+    if (!process) {
+      return { success: false, error: "Processo de desligamento não encontrado." };
+    }
+
+    // Atualiza status do processo
+    await prisma.offboardingProcess.update({
+      where: { id: processId },
+      data: {
+        status: "COMPLETED",
+        completedAt: new Date(),
+      },
+    });
+
+    // Atualiza o colaborador para TERMINATED e fixa data de rescisão
+    await prisma.employee.update({
+      where: { id: process.employeeId },
+      data: {
+        status: "TERMINATED",
+        terminationDate: process.lastWorkingDay || new Date(),
+      },
+    });
+
+    // Auditoria
+    await logAuditEvent({
+      organizationId: process.organizationId,
+      actorUserId: user.id,
+      action: "EMPLOYEE_TERMINATED",
+      resourceType: "OffboardingProcess",
+      resourceId: process.id,
+      afterData: {
+        employeeId: process.employeeId,
+        employeeName: process.employee.fullName,
+        terminationDate: process.lastWorkingDay,
+      },
+    });
+
+    revalidatePath("/operations");
+    revalidatePath("/employees");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erro ao concluir desligamento:", error);
+    return { success: false, error: error.message || "Erro ao finalizar desligamento." };
+  }
+}
+
+/**
+ * Cancela um processo de desligamento
+ */
+export async function cancelOffboardingProcess(processId: string, reason?: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN", "RECRUITER"]);
+
+    const process = await prisma.offboardingProcess.findUnique({
+      where: { id: processId },
+      include: { employee: true },
+    });
+
+    if (!process) {
+      return { success: false, error: "Processo não encontrado." };
+    }
+
+    await prisma.offboardingProcess.update({
+      where: { id: processId },
+      data: {
+        status: "CANCELLED",
+        interviewNotes: reason ? `Cancelado: ${reason}` : process.interviewNotes,
+      },
+    });
+
+    // Garante que o status do colaborador volta a ACTIVE se não estava finalizado
+    if (process.employee.status === "TERMINATED") {
+      await prisma.employee.update({
+        where: { id: process.employeeId },
+        data: {
+          status: "ACTIVE",
+          terminationDate: null,
+        },
+      });
+    }
+
+    revalidatePath("/operations");
+    revalidatePath("/employees");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Erro ao cancelar desligamento:", error);
+    return { success: false, error: error.message || "Erro ao cancelar desligamento." };
+  }
+}

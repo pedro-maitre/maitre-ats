@@ -16,14 +16,19 @@ import {
   User,
   Sparkles,
 } from "lucide-react";
-import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getServerTenantScope } from "@/lib/security";
 import AssignJobModal from "@/components/candidates/AssignJobModal";
+import Link from "next/link";
 
 export default async function CandidateProfilePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await getServerSession(authOptions);
+  const tenantScope = await getServerTenantScope(session);
   const { id } = await params;
 
   const [candidate, activeJobs] = await Promise.all([
@@ -34,6 +39,30 @@ export default async function CandidateProfilePage({
           include: {
             job: true,
             stage: true,
+            transitions: {
+              include: { fromStage: true, toStage: true },
+              orderBy: { changedAt: "asc" },
+            },
+            interviews: {
+              include: {
+                scorecards: {
+                  include: {
+                    evaluator: { select: { name: true, email: true } },
+                  },
+                },
+              },
+              orderBy: { scheduledAt: "desc" },
+            },
+            evaluations: {
+              include: { evaluator: { select: { name: true } } },
+              orderBy: { createdAt: "desc" },
+            },
+            offers: {
+              orderBy: { createdAt: "desc" },
+            },
+            activities: {
+              orderBy: { createdAt: "desc" },
+            },
           },
           orderBy: {
             createdAt: "desc",
@@ -42,12 +71,20 @@ export default async function CandidateProfilePage({
       },
     }),
     prisma.job.findMany({
-      where: { status: "OPEN" },
+      where: {
+        status: "OPEN",
+        ...(tenantScope.organizationId ? { organizationId: tenantScope.organizationId } : {}),
+      },
       select: { id: true, title: true, department: true },
     }),
   ]);
 
   if (!candidate) {
+    redirect("/candidates");
+  }
+
+  // Defesa Anti-IDOR: Bloqueia acesso se pertencer a outro tenant
+  if (tenantScope.organizationId && candidate.organizationId !== tenantScope.organizationId) {
     redirect("/candidates");
   }
 
@@ -233,37 +270,105 @@ export default async function CandidateProfilePage({
                 <p className="text-xs">Utilize o botão acima para vinculá-lo a uma vaga aberta.</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {candidate.applications.map((app) => (
                   <div
                     key={app.id}
-                    className="p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-maitre-gold/50 transition-all"
+                    className="p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-4 hover:border-maitre-gold/50 transition-all"
                   >
-                    <div>
-                      <h3 className="font-black text-slate-900 dark:text-white text-base">
-                        {app.job.title}
-                      </h3>
-                      <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
-                        <span>{app.job.department || "Geral"}</span>
-                        <span>&bull;</span>
-                        <span>
-                          Inscrito em {new Date(app.createdAt).toLocaleDateString("pt-BR")}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div>
+                        <h3 className="font-black text-slate-900 dark:text-white text-base flex items-center gap-2">
+                          <span>{app.job.title}</span>
+                          {app.matchScore && (
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                              Fit {Math.round(app.matchScore)}%
+                            </span>
+                          )}
+                        </h3>
+                        <div className="flex items-center gap-3 text-xs text-slate-500 mt-1 flex-wrap">
+                          <span>{app.job.department || "Geral"}</span>
+                          <span>&bull;</span>
+                          <span>Inscrito em {new Date(app.createdAt).toLocaleDateString("pt-BR")}</span>
+                          {app.salaryExpectation && (
+                            <>
+                              <span>&bull;</span>
+                              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                Pretensão: R$ {app.salaryExpectation.toLocaleString("pt-BR")}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span className="px-3 py-1 rounded-full bg-maitre-gold/15 text-maitre-gold border border-maitre-gold/30 text-xs font-bold uppercase tracking-wider">
+                          {app.stage.name}
                         </span>
+                        <Link
+                          href={`/jobs/${app.job.id}/board`}
+                          className="text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-maitre-gold flex items-center gap-1 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+                        >
+                          <span>Ver no Kanban</span>
+                          <ExternalLink size={12} />
+                        </Link>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <span className="px-3 py-1 rounded-full bg-maitre-gold/15 text-maitre-gold border border-maitre-gold/30 text-xs font-bold uppercase tracking-wider">
-                        {app.stage.name}
-                      </span>
-                      <Link
-                        href={`/jobs/${app.job.id}/board`}
-                        className="text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-maitre-gold flex items-center gap-1"
-                      >
-                        <span>Ver no Kanban</span>
-                        <ExternalLink size={12} />
-                      </Link>
-                    </div>
+                    {/* Linha do Tempo de Transições (Rastreabilidade) */}
+                    {app.transitions.length > 0 && (
+                      <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                          Histórico de Progressão no Pipeline ({app.transitions.length} transições)
+                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {app.transitions.map((tr, trIdx) => (
+                            <div key={tr.id} className="flex items-center gap-2 text-xs">
+                              {trIdx > 0 && <span className="text-slate-300 dark:text-slate-700">➔</span>}
+                              <div className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs">
+                                <span className="font-bold">{tr.toStage.name}</span>
+                                <span className="text-[10px] text-slate-400 block">
+                                  {new Date(tr.changedAt).toLocaleDateString("pt-BR")}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Entrevistas e Ofertas */}
+                    {(app.interviews.length > 0 || app.offers.length > 0) && (
+                      <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        {app.interviews.length > 0 && (
+                          <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                            <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                              <Clock size={12} className="text-blue-500" />
+                              Entrevistas ({app.interviews.length})
+                            </span>
+                            {app.interviews.map((inv) => (
+                              <p key={inv.id} className="text-slate-500">
+                                {inv.title} &bull; {new Date(inv.scheduledAt).toLocaleDateString("pt-BR")} ({inv.status})
+                              </p>
+                            ))}
+                          </div>
+                        )}
+
+                        {app.offers.length > 0 && (
+                          <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                            <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                              <Star size={12} className="text-amber-500" />
+                              Proposta Salarial
+                            </span>
+                            {app.offers.map((off) => (
+                              <p key={off.id} className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                                R$ {off.salaryOffered.toLocaleString("pt-BR")} ({off.status})
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

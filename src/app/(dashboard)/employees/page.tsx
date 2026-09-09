@@ -29,78 +29,85 @@ export const metadata = {
   description: "Gestão Integrada de Colaboradores, Matrículas e Admissão Digital",
 };
 
-export default async function EmployeesPage() {
+export default async function EmployeesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ orgId?: string }>;
+}) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     redirect("/login");
   }
 
-  let conversions: any[] = [];
+  const resolvedParams = searchParams ? await searchParams : {};
+  const { getServerTenantScope } = await import("@/lib/security");
+  const scope = await getServerTenantScope(session, resolvedParams.orgId);
+
+  const empWhere = scope.organizationId ? { organizationId: scope.organizationId } : {};
+  const orgWhere = scope.isGlobalAccess ? {} : { id: scope.organizationId };
+
   let formalEmployees: any[] = [];
   let organizations: any[] = [];
+  let departments: any[] = [];
+  let positions: any[] = [];
 
   try {
-    const [convRes, formRes, orgsRes] = await Promise.all([
-      prisma.hireConversion.findMany({
-        include: {
-          application: {
-            include: {
-              candidate: true,
-              job: true,
-              offers: {
-                where: { status: "APPROVED" },
-                orderBy: { createdAt: "desc" },
-                take: 1,
-              },
-              interviews: {
-                include: {
-                  scorecards: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: { convertedAt: "desc" },
-      }),
+    const [formRes, orgsRes, deptsRes, posRes] = await Promise.all([
       prisma.employee.findMany({
+        where: empWhere,
         include: {
           department: true,
           position: true,
           organization: true,
+          candidate: {
+            select: {
+              id: true,
+              applications: {
+                select: { id: true, jobId: true, job: { select: { title: true } } },
+                take: 1,
+              },
+            },
+          },
+          positionHistories: { orderBy: { effectiveDate: "desc" } },
+          vacations: { orderBy: { vacationStart: "desc" } },
+          leaves: { orderBy: { startDate: "desc" } },
         },
         orderBy: { createdAt: "desc" },
       }),
       prisma.organization.findMany({
+        where: orgWhere,
         select: { id: true, name: true, slug: true },
         orderBy: { name: "asc" },
       }),
+      prisma.department.findMany({
+        where: empWhere.organizationId ? { organizationId: empWhere.organizationId } : {},
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      }),
+      prisma.position.findMany({
+        where: empWhere.organizationId ? { organizationId: empWhere.organizationId } : {},
+        select: { id: true, title: true },
+        orderBy: { title: "asc" },
+      }),
     ]);
 
-    conversions = convRes || [];
     formalEmployees = formRes || [];
     organizations = orgsRes || [];
+    departments = deptsRes || [];
+    positions = posRes || [];
   } catch (err) {
     console.error("Erro ao carregar dados de colaboradores:", err);
   }
 
-  // Métricas do Core HR com fallbacks seguros contra nulos
-  const totalEmployees = conversions.length + formalEmployees.length;
-  const activeCount =
-    conversions.filter((c) => c.status === "ACTIVE" || c.status === "CONVERTED").length +
-    formalEmployees.filter((e) => e.status === "ACTIVE").length;
-  const pendingOnboarding =
-    conversions.filter((c) => c.status === "PENDING_ONBOARDING").length +
-    formalEmployees.filter((e) => e.status === "PENDING_ONBOARDING").length;
+  // Métricas do Core HR Desacoplado
+  const totalEmployees = formalEmployees.length;
+  const activeCount = formalEmployees.filter((e) => e.status === "ACTIVE").length;
+  const onVacationCount = formalEmployees.filter((e) => e.status === "VACATION").length;
+  const onLeaveCount = formalEmployees.filter((e) => e.status === "ON_LEAVE").length;
 
-  const totalPayroll =
-    conversions.reduce((acc, c) => {
-      const app = c.application || {};
-      const salary = app.offers?.[0]?.salaryOffered || app.salaryExpectation || app.job?.salaryMax || 0;
-      return acc + (typeof salary === "number" ? salary : 0);
-    }, 0) +
-    formalEmployees.reduce((acc, e) => {
-      return acc + (typeof e.salary === "number" ? e.salary : 0);
-    }, 0);
+  const totalPayroll = formalEmployees.reduce((acc, e) => {
+    return acc + (typeof e.salary === "number" ? e.salary : 0);
+  }, 0);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat("pt-BR", {
@@ -121,10 +128,10 @@ export default async function EmployeesPage() {
             <span className="text-xs text-slate-400 font-semibold">• Fase P2 Conecta</span>
           </div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5">
-            Gestão de Colaboradores & Admissão
+            Gestão de Colaboradores & Pessoal
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-            Ficha cadastral unificada, matrículas, histórico de R&S herdado e pré-admissão digital.
+            Ficha cadastral unificada, histórico de cargos/salários, férias CLT e controle de afastamentos.
           </p>
         </div>
       </div>
@@ -140,13 +147,13 @@ export default async function EmployeesPage() {
           </div>
           <p className="text-3xl font-black text-slate-900 dark:text-white">{totalEmployees}</p>
           <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-            ✓ Core HR & ATS Unificados
+            ✓ Base Core HR Desacoplada
           </span>
         </div>
 
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Ativos (Efetivados)</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Ativos em Operação</span>
             <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
               <UserCheck size={18} />
             </div>
@@ -157,13 +164,15 @@ export default async function EmployeesPage() {
 
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Em Onboarding / DHO</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Férias & Afastamentos</span>
             <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
               <Clock size={18} />
             </div>
           </div>
-          <p className="text-3xl font-black text-slate-900 dark:text-white">{pendingOnboarding}</p>
-          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Documentação / Treinamento</span>
+          <p className="text-3xl font-black text-slate-900 dark:text-white">{onVacationCount + onLeaveCount}</p>
+          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+            {onVacationCount} férias &bull; {onLeaveCount} afastamentos
+          </span>
         </div>
 
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
@@ -180,9 +189,11 @@ export default async function EmployeesPage() {
 
       {/* Tabela Interativa de Colaboradores */}
       <EmployeeTableClient
-        conversions={JSON.parse(JSON.stringify(conversions))}
+        conversions={[]}
         formalEmployees={JSON.parse(JSON.stringify(formalEmployees))}
         organizations={JSON.parse(JSON.stringify(organizations))}
+        departments={JSON.parse(JSON.stringify(departments))}
+        positions={JSON.parse(JSON.stringify(positions))}
       />
     </div>
   );

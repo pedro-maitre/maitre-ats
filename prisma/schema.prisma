@@ -64,8 +64,14 @@ model Organization {
   departments            Department[]
   positions              Position[]
   employees              Employee[]
+  offboardings           OffboardingProcess[]
   consultingProjects     ConsultingProject[]
   successionPlans        SuccessionPlan[]
+  trainingClasses        TrainingClass[]
+  cultureActionPlans     CultureActionPlan[]
+  internalApplications   InternalApplication[]
+  careerTracks           CareerTrack[]
+  consultingTimesheets   ConsultingTimesheet[]
 }
 
 model User {
@@ -140,7 +146,9 @@ model Job {
   recruiterId             String?
   recruiter               User?        @relation("Recruiter", fields: [recruiterId], references: [id])
 
+  isInternalPosting       Boolean      @default(true) // Disponível para recrutamento interno
   applications            Application[]
+  internalApplications    InternalApplication[]
   stages                  Stage[]      // Custom stages per job
 
   createdAt               DateTime     @default(now())
@@ -153,7 +161,7 @@ model Candidate {
   id               String       @id @default(cuid())
   firstName        String
   lastName         String
-  email            String       @unique
+  email            String
   phone            String?
   resumeUrl        String?      // Link do PDF
   documentId       String?      // Referência ao registro de Documento Privado
@@ -173,10 +181,12 @@ model Candidate {
   consents         CandidateConsent[]
   performanceEvaluations PerformanceEvaluation[]
   developmentPlans       DevelopmentPlan[]
+  employees        Employee[]
 
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
+  @@unique([organizationId, email])
   @@index([organizationId, createdAt])
 }
 
@@ -458,9 +468,12 @@ model PasswordResetToken {
 model PerformanceEvaluation {
   id               String       @id @default(cuid())
   organizationId   String
-  candidateId      String
+  candidateId      String?
+  employeeId       String?
   evaluatorId      String?
   cycleName        String       @default("Ciclo Anual 2026")
+  evaluationType   String       @default("MANAGER") // SELF, MANAGER, CALIBRATION
+  evaluatorRole    String?      // COLABORADOR, GESTOR_DIRETO, COMITE_RH
   performanceScore Float        @default(3.0) // 1.0 a 5.0
   potentialScore   Float        @default(3.0) // 1.0 a 5.0
   boxPosition      String       @default("KEY_PROFESSIONAL") // TOP_TALENT, FUTURE_LEADER, ENIGMA, HIGH_PERFORMER, KEY_PROFESSIONAL, DILEMMA, TECHNICAL_EXPERT, EFFECTIVE, RISK
@@ -472,15 +485,19 @@ model PerformanceEvaluation {
   updatedAt        DateTime     @updatedAt
 
   organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  candidate        Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  candidate        Candidate?   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  employee         Employee?    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, candidateId])
+  @@index([organizationId, employeeId])
+  @@index([cycleName, evaluationType])
 }
 
 model DevelopmentPlan {
   id              String       @id @default(cuid())
   organizationId  String
-  candidateId     String
+  candidateId     String?
+  employeeId      String?
   title           String
   description     String?
   status          String       @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, DELAYED
@@ -488,31 +505,57 @@ model DevelopmentPlan {
   targetDate      DateTime?
   completedAt     DateTime?
   actionItems     String?      // JSON string of items
+  goals           String?      // JSON string of structured measurable goals
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  candidate       Candidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  candidate       Candidate?   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  employee        Employee?    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, candidateId])
+  @@index([organizationId, employeeId])
 }
 
 model ClimateSurvey {
-  id             String           @id @default(cuid())
+  id             String              @id @default(cuid())
   organizationId String
   title          String
   description    String?
-  status         String           @default("ACTIVE") // ACTIVE, CLOSED
-  startDate      DateTime         @default(now())
+  status         String              @default("ACTIVE") // ACTIVE, CLOSED
+  startDate      DateTime            @default(now())
   endDate        DateTime?
-  targetAudience String           @default("ALL") // ALL, LEADERSHIP, TECH, SALES
-  questions      String?          // JSON array of questions
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  targetAudience String              @default("ALL") // ALL, LEADERSHIP, TECH, SALES
+  questions      String?             // JSON array of questions
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   responses      SurveyResponse[]
+  actionPlans    CultureActionPlan[]
 
+  @@index([organizationId, status])
+}
+
+model CultureActionPlan {
+  id                  String        @id @default(cuid())
+  organizationId      String
+  surveyId            String
+  title               String
+  dimension           String        // LIDERANCA, COMUNICACAO, RECONHECIMENTO, CARGA_TRABALHO, ESTRATEGIA, DIVERSIDADE
+  ownerName           String
+  ownerEmail          String?
+  targetDate          DateTime?
+  status              String        @default("PLANNED") // PLANNED, IN_PROGRESS, DONE, CANCELLED
+  description         String?
+  kpiSuccessIndicator String?       // ex: "+15 pontos no eNPS da dimensão Comunicação no próximo ciclo"
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  organization        Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  survey              ClimateSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, surveyId])
   @@index([organizationId, status])
 }
 
@@ -560,35 +603,63 @@ model Course {
   durationMinutes     Int                @default(60)
   status              String             @default("PUBLISHED") // DRAFT, PUBLISHED, ARCHIVED
   modules             String             // JSON string de módulos e aulas
+  quizQuestions       String?            // JSON string de questões de fixação e gabarito
+  minPassingScore     Float              @default(70.0) // 0 a 100
+  minAttendancePercent Int              @default(75)   // % mínimo de presença para certificação
   isOnboardingDefault Boolean            @default(false)
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
 
   organization        Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   enrollments         CourseEnrollment[]
+  trainingClasses     TrainingClass[]
 
   @@index([organizationId, category])
 }
 
-model CourseEnrollment {
-  id              String       @id @default(cuid())
-  organizationId  String
-  courseId        String
-  userId          String?
-  candidateId     String?
-  employeeName    String
-  employeeEmail   String
-  progressPercent Int          @default(0) // 0 a 100
-  status          String       @default("IN_PROGRESS") // ENROLLED, IN_PROGRESS, COMPLETED
-  startedAt       DateTime     @default(now())
-  completedAt     DateTime?
-  certificateCode String?      @unique
-  score           Float?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+model TrainingClass {
+  id                String       @id @default(cuid())
+  organizationId    String
+  courseId          String
+  name              String       // ex: "Turma Líderes do Amanhã - Ciclo 2026.1"
+  startDate         DateTime
+  endDate           DateTime?
+  instructorName    String?
+  locationOrUrl     String?      // Link do Zoom/Meet ou Sala presencial
+  attendanceRecords String?      // JSON string com lista de chamada por aula
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
-  course          Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  course            Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, courseId])
+  @@index([startDate])
+}
+
+model CourseEnrollment {
+  id                  String       @id @default(cuid())
+  organizationId      String
+  courseId            String
+  userId              String?
+  candidateId         String?
+  employeeName        String
+  employeeEmail       String
+  progressPercent     Int          @default(0) // 0 a 100
+  attendancePercent   Int          @default(100) // % de presença nas aulas da turma
+  quizScore           Float?       // Nota obtida no quiz final
+  quizCompletedAt     DateTime?
+  isCertified         Boolean      @default(false)
+  status              String       @default("IN_PROGRESS") // ENROLLED, IN_PROGRESS, COMPLETED
+  startedAt           DateTime     @default(now())
+  completedAt         DateTime?
+  certificateCode     String?      @unique
+  score               Float?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  course              Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, courseId])
   @@index([employeeEmail])
@@ -635,6 +706,7 @@ model Employee {
   organizationId     String
   userId             String?      @unique
   candidateId        String?
+  candidate          Candidate?   @relation(fields: [candidateId], references: [id], onDelete: SetNull)
   registrationNumber String?      // Matrícula funcional
   fullName           String
   email              String
@@ -664,8 +736,88 @@ model Employee {
   manager            Employee?    @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
   subordinates       Employee[]   @relation("EmployeeManager")
 
+  positionHistories  EmployeePositionHistory[]
+  vacations          EmployeeVacation[]
+  leaves             EmployeeLeave[]
+  offboardings       OffboardingProcess[]
+  performanceEvaluations PerformanceEvaluation[]
+  developmentPlans       DevelopmentPlan[]
+  internalApplications   InternalApplication[]
+
   @@index([organizationId, status])
   @@index([email])
+}
+
+model EmployeePositionHistory {
+  id             String       @id @default(cuid())
+  employeeId     String
+  employee       Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  positionId     String?
+  departmentId   String?
+  previousSalary Float?
+  newSalary      Float
+  changeReason   String       // PROMOCAO, MERITO, DISSIDIO, TRANSFERENCIA, AJUSTE_MERCADO
+  effectiveDate  DateTime     @default(now())
+  notes          String?
+  createdAt      DateTime     @default(now())
+
+  @@index([employeeId, effectiveDate])
+}
+
+model EmployeeVacation {
+  id                String       @id @default(cuid())
+  employeeId        String
+  employee          Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  acquisitionStart  DateTime
+  acquisitionEnd    DateTime
+  vacationStart     DateTime
+  vacationEnd       DateTime
+  daysCount         Int          @default(30)
+  soldDays          Int          @default(0) // Abono pecuniário (máx 10 dias)
+  advance13thSalary Boolean      @default(false)
+  status            String       @default("SCHEDULED") // SCHEDULED, TAKEN, CANCELLED
+  notes             String?
+  createdAt         DateTime     @default(now())
+
+  @@index([employeeId, vacationStart])
+}
+
+model EmployeeLeave {
+  id             String       @id @default(cuid())
+  employeeId     String
+  employee       Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  type           String       // DOENCA_INSS, ACIDENTE_TRABALHO, MATERNIDADE, PATERNIDADE, LUTO, CASAMENTO, LICENCA_NAO_REMUNERADA, OUTRO
+  cidCode        String?
+  startDate      DateTime
+  endDate        DateTime?
+  status         String       @default("ACTIVE") // ACTIVE, FINISHED, CANCELLED
+  documentUrl    String?
+  notes          String?
+  createdAt      DateTime     @default(now())
+
+  @@index([employeeId, startDate])
+}
+
+model OffboardingProcess {
+  id                   String       @id @default(cuid())
+  employeeId           String
+  employee             Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  organizationId       String
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  terminationType      String       // SEM_JUSTA_CAUSA, COM_JUSTA_CAUSA, PEDIDO_DEMISSAO, ACORDO_MUTUO, TERMINO_CONTRATO
+  noticeType           String       @default("TRABALHADO") // TRABALHADO, INDENIZADO, DISPENSADO
+  noticeDate           DateTime     @default(now())
+  lastWorkingDay       DateTime
+  severancePayEstimate Float?
+  status               String       @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, CANCELLED
+  checklist            String?      // JSON string de itens do checklist
+  interviewNotes       String?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  completedAt          DateTime?
+
+  @@index([organizationId, status])
+  @@index([employeeId])
 }
 
 model ConsultingProject {
@@ -687,6 +839,7 @@ model ConsultingProject {
 
   organization    Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   deliverables    ProjectDeliverable[]
+  timesheets      ConsultingTimesheet[]
 
   @@index([organizationId, status])
   @@index([category])
@@ -699,11 +852,15 @@ model ProjectDeliverable {
   description String?
   status      String            @default("PENDING") // PENDING, IN_PROGRESS, SUBMITTED, APPROVED
   dueDate     DateTime?
-  documentUrl String?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  documentUrl         String?
+  clientFeedback      String?
+  approvedByClient    Boolean           @default(false)
+  clientApprovedAt    DateTime?
+  clientApproverEmail String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
-  project     ConsultingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project             ConsultingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId, status])
 }
@@ -743,6 +900,69 @@ model SuccessionCandidate {
 
   @@index([planId, readiness])
 }
+
+model InternalApplication {
+  id                    String       @id @default(cuid())
+  organizationId        String
+  jobId                 String
+  employeeId            String
+  status                String       @default("SUBMITTED") // SUBMITTED, ELIGIBLE, INELIGIBLE, MANAGER_APPROVED, INTERVIEWING, TRANSFERRED, REJECTED
+  coverLetter           String?
+  managerApprovalStatus String       @default("PENDING") // PENDING, APPROVED, REJECTED
+  managerFeedback       String?
+  eligibilitySnapshot   String?      // JSON string de validações de elegibilidade (tempo de casa, avaliações, etc)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  job                   Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  employee              Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, jobId])
+  @@index([employeeId])
+  @@index([organizationId, status])
+}
+
+model CareerTrack {
+  id             String       @id @default(cuid())
+  organizationId String
+  title          String       // ex: "Tecnologia & Engenharia", "Recursos Humanos & DHO", "Consultoria Estratégica"
+  trackType      String       @default("Y_DUAL") // Y_DUAL, SPECIALIST, MANAGEMENT
+  description    String?
+  levels         String       // JSON string de níveis da trilha (degraus, competências exigidas, bandas salariais)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+model ConsultingTimesheet {
+  id                  String            @id @default(cuid())
+  projectId           String
+  organizationId      String
+  consultantName      String
+  consultantEmail     String?
+  workDate            DateTime          @default(now())
+  hours               Float
+  activityDescription String
+  billable            Boolean           @default(true)
+  hourlyRate          Float?
+  status              String            @default("SUBMITTED") // SUBMITTED, APPROVED, REJECTED
+  approverName        String?
+  approvedAt          DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  project             ConsultingProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organization        Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, workDate])
+  @@index([organizationId])
+  @@index([organizationId, status])
+}
+
 
 
 

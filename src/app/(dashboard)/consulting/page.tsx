@@ -12,7 +12,11 @@ export const metadata = {
   description: "Projetos Estratégicos, Entregáveis e Acompanhamento Consultivo da Maître",
 };
 
-export default async function ConsultingPage() {
+export default async function ConsultingPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ orgId?: string }>;
+}) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
@@ -22,12 +26,20 @@ export default async function ConsultingPage() {
   const role = session.user.role || "RECRUITER";
   const isAdmin = role === "SUPER_ADMIN" || role === "ADMIN";
 
+  const resolvedParams = searchParams ? await searchParams : {};
+  const { getServerTenantScope } = await import("@/lib/security");
+  const scope = await getServerTenantScope(session, resolvedParams.orgId);
+
+  const projectWhere = scope.organizationId ? { organizationId: scope.organizationId } : {};
+  const orgWhere = scope.isGlobalAccess ? {} : { id: scope.organizationId };
+
   let projects: any[] = [];
   let organizations: any[] = [];
 
   try {
     const [projectsRes, orgsRes] = await Promise.all([
       prisma.consultingProject.findMany({
+        where: projectWhere,
         include: {
           organization: {
             select: {
@@ -41,10 +53,14 @@ export default async function ConsultingPage() {
           deliverables: {
             orderBy: { createdAt: "asc" },
           },
+          timesheets: {
+            orderBy: { workDate: "desc" },
+          },
         },
         orderBy: { createdAt: "desc" },
       }),
       prisma.organization.findMany({
+        where: orgWhere,
         select: { id: true, name: true, slug: true, isMaster: true },
         orderBy: [{ isMaster: "asc" }, { name: "asc" }],
       }),

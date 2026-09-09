@@ -199,7 +199,12 @@ export async function createDirectEmployee(formData: FormData) {
     }
 
     const candidate = await prisma.candidate.upsert({
-      where: { email },
+      where: {
+        organizationId_email: {
+          organizationId: org.id,
+          email,
+        },
+      },
       update: {
         firstName,
         lastName,
@@ -397,7 +402,7 @@ export async function importEmployeesBatch(formData: FormData) {
 
         // 2.5 Garante Candidate para integridade total com Avaliações 9-Box e PDI
         let cand = await prisma.candidate.findFirst({
-          where: { email },
+          where: { organizationId, email },
         });
         const nameParts = fullName.split(" ");
         const fName = nameParts[0] || "Colaborador";
@@ -482,4 +487,207 @@ export async function importEmployeesBatch(formData: FormData) {
     return { success: false, error: err.message || "Erro durante o processamento do lote." };
   }
 }
+
+/**
+ * Registra alteração de cargo/salário no histórico funcional do colaborador
+ */
+export async function addPositionHistory(
+  employeeId: string,
+  data: {
+    positionId?: string;
+    departmentId?: string;
+    newSalary: number;
+    changeReason: string;
+    effectiveDate: string;
+    notes?: string;
+  }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN"]);
+
+    const employee = await prisma.employee.findUnique({
+      where: { id: employeeId },
+      include: { organization: true },
+    });
+
+    if (!employee) {
+      return { success: false, error: "Colaborador não encontrado." };
+    }
+
+    if (user.role !== "SUPER_ADMIN" && user.organizationId && employee.organizationId !== user.organizationId) {
+      return { success: false, error: "Acesso negado para este colaborador." };
+    }
+
+    const previousSalary = employee.salary;
+
+    const history = await prisma.$transaction(async (tx) => {
+      const created = await tx.employeePositionHistory.create({
+        data: {
+          employeeId,
+          positionId: data.positionId || employee.positionId,
+          departmentId: data.departmentId || employee.departmentId,
+          previousSalary,
+          newSalary: Number(data.newSalary),
+          changeReason: data.changeReason,
+          effectiveDate: new Date(data.effectiveDate),
+          notes: data.notes || undefined,
+        },
+      });
+
+      await tx.employee.update({
+        where: { id: employeeId },
+        data: {
+          salary: Number(data.newSalary),
+          positionId: data.positionId || employee.positionId,
+          departmentId: data.departmentId || employee.departmentId,
+        },
+      });
+
+      return created;
+    });
+
+    await logAuditEvent({
+      organizationId: employee.organizationId,
+      actorUserId: user.id,
+      action: "PROFILE_UPDATED",
+      resourceType: "Employee",
+      resourceId: employee.id,
+      beforeData: { salary: previousSalary, positionId: employee.positionId },
+      afterData: { salary: Number(data.newSalary), positionId: data.positionId },
+      reason: `Alteração funcional registrada: ${data.changeReason}.`,
+    });
+
+    revalidatePath("/employees");
+    return { success: true, history };
+  } catch (error: any) {
+    console.error("Erro ao registrar alteração funcional:", error);
+    return { success: false, error: error.message || "Falha ao registrar histórico." };
+  }
+}
+
+/**
+ * Registra período de férias CLT do colaborador
+ */
+export async function addVacationPeriod(
+  employeeId: string,
+  data: {
+    acquisitionStart: string;
+    acquisitionEnd: string;
+    vacationStart: string;
+    vacationEnd: string;
+    daysCount: number;
+    soldDays?: number;
+    advance13thSalary?: boolean;
+    notes?: string;
+  }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN"]);
+
+    const employee = await prisma.employee.findUnique({
+      where: { id: employeeId },
+    });
+
+    if (!employee) {
+      return { success: false, error: "Colaborador não encontrado." };
+    }
+
+    if (user.role !== "SUPER_ADMIN" && user.organizationId && employee.organizationId !== user.organizationId) {
+      return { success: false, error: "Acesso negado para este colaborador." };
+    }
+
+    const vacation = await prisma.employeeVacation.create({
+      data: {
+        employeeId,
+        acquisitionStart: new Date(data.acquisitionStart),
+        acquisitionEnd: new Date(data.acquisitionEnd),
+        vacationStart: new Date(data.vacationStart),
+        vacationEnd: new Date(data.vacationEnd),
+        daysCount: Number(data.daysCount) || 30,
+        soldDays: Number(data.soldDays) || 0,
+        advance13thSalary: Boolean(data.advance13thSalary),
+        notes: data.notes || undefined,
+        status: "SCHEDULED",
+      },
+    });
+
+    // Se as férias iniciam hoje ou estão em andamento, atualiza status do colaborador
+    const now = new Date();
+    const start = new Date(data.vacationStart);
+    const end = new Date(data.vacationEnd);
+    if (now >= start && now <= end) {
+      await prisma.employee.update({
+        where: { id: employeeId },
+        data: { status: "VACATION" },
+      });
+    }
+
+    revalidatePath("/employees");
+    return { success: true, vacation };
+  } catch (error: any) {
+    console.error("Erro ao agendar férias:", error);
+    return { success: false, error: error.message || "Falha ao agendar férias." };
+  }
+}
+
+/**
+ * Registra afastamento ou licença médica do colaborador
+ */
+export async function addMedicalLeave(
+  employeeId: string,
+  data: {
+    type: string;
+    cidCode?: string;
+    startDate: string;
+    endDate?: string;
+    notes?: string;
+  }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const user = requireAuth(session, ["SUPER_ADMIN", "ADMIN"]);
+
+    const employee = await prisma.employee.findUnique({
+      where: { id: employeeId },
+    });
+
+    if (!employee) {
+      return { success: false, error: "Colaborador não encontrado." };
+    }
+
+    if (user.role !== "SUPER_ADMIN" && user.organizationId && employee.organizationId !== user.organizationId) {
+      return { success: false, error: "Acesso negado para este colaborador." };
+    }
+
+    const leave = await prisma.$transaction(async (tx) => {
+      const created = await tx.employeeLeave.create({
+        data: {
+          employeeId,
+          type: data.type,
+          cidCode: data.cidCode?.trim() || undefined,
+          startDate: new Date(data.startDate),
+          endDate: data.endDate ? new Date(data.endDate) : undefined,
+          notes: data.notes || undefined,
+          status: "ACTIVE",
+        },
+      });
+
+      await tx.employee.update({
+        where: { id: employeeId },
+        data: { status: "ON_LEAVE" },
+      });
+
+      return created;
+    });
+
+    revalidatePath("/employees");
+    return { success: true, leave };
+  } catch (error: any) {
+    console.error("Erro ao registrar afastamento:", error);
+    return { success: false, error: error.message || "Falha ao registrar afastamento." };
+  }
+}
+
 

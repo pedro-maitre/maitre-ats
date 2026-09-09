@@ -141,6 +141,7 @@ export default function EvaluateEmployeeModal({
   employee,
   onSuccess,
 }: EvaluateEmployeeModalProps) {
+  const [evaluationType, setEvaluationType] = useState<"MANAGER" | "SELF">("MANAGER");
   const [performance, setPerformance] = useState(
     employee?.currentEvaluation?.performanceScore || 3.5
   );
@@ -163,11 +164,14 @@ export default function EvaluateEmployeeModal({
     employee?.currentEvaluation?.improvements || "Desenvolver visão holística de negócio e liderança de projetos transversais."
   );
 
-  // PDI rápido
+  // PDI com metas mensuráveis
   const [createPdi, setCreatePdi] = useState(false);
   const [pdiTitle, setPdiTitle] = useState("");
   const [pdiCategory, setPdiCategory] = useState("LEADERSHIP");
   const [pdiDate, setPdiDate] = useState("");
+  const [goalMetric, setGoalMetric] = useState("");
+  const [goalTarget, setGoalTarget] = useState("100");
+  const [goalWeight, setGoalWeight] = useState("50");
 
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [feedbackSuccess, setFeedbackSuccess] = useState<string | null>(null);
@@ -187,7 +191,7 @@ export default function EvaluateEmployeeModal({
       setFeedbackError(null);
       setFeedbackSuccess(null);
 
-      // 1. Salva a Avaliação 9-Box
+      // 1. Salva a Avaliação 9-Box (90° ou 180°)
       const res = await savePerformanceEvaluation({
         candidateId: employee.candidateId,
         organizationId: employee.organizationId,
@@ -196,6 +200,8 @@ export default function EvaluateEmployeeModal({
         competencies,
         strengths,
         improvements,
+        evaluationType,
+        evaluatorRole: evaluationType === "SELF" ? "COLABORADOR" : "GESTOR_DIRETO",
       });
 
       if (!res.success) {
@@ -205,16 +211,31 @@ export default function EvaluateEmployeeModal({
 
       // 2. Se optou por criar meta de PDI
       if (createPdi && pdiTitle.trim()) {
+        const goals = goalMetric.trim()
+          ? [
+              {
+                title: pdiTitle,
+                metricIndicator: goalMetric,
+                baselineValue: 0,
+                targetValue: parseFloat(goalTarget) || 100,
+                currentValue: 0,
+                weightPercent: parseFloat(goalWeight) || 100,
+                status: "IN_PROGRESS" as const,
+              },
+            ]
+          : [];
+
         await saveDevelopmentPlan({
           candidateId: employee.candidateId,
           organizationId: employee.organizationId,
           title: pdiTitle,
           category: pdiCategory,
           targetDate: pdiDate || undefined,
+          goals,
         });
       }
 
-      setFeedbackSuccess("Avaliação 9-Box e competências salvas com sucesso!");
+      setFeedbackSuccess(`Avaliação (${evaluationType === "SELF" ? "90° Autoavaliação" : "180° Gestor"}) salva com sucesso!`);
       if (onSuccess) onSuccess();
       setTimeout(() => {
         onClose();
@@ -266,6 +287,32 @@ export default function EvaluateEmployeeModal({
 
         {/* Body Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Seletor de Tipo de Avaliação (180° Gestor vs 90° Autoavaliação) */}
+          <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={() => setEvaluationType("MANAGER")}
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                evaluationType === "MANAGER"
+                  ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 dark:hover:text-white"
+              }`}
+            >
+              👔 Avaliação da Liderança (180°)
+            </button>
+            <button
+              type="button"
+              onClick={() => setEvaluationType("SELF")}
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                evaluationType === "SELF"
+                  ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800 dark:hover:text-white"
+              }`}
+            >
+              🙋 Autoavaliação do Colaborador (90°)
+            </button>
+          </div>
+
           {/* Card do Quadrante Dinâmico Resultante */}
           <div className={`p-5 rounded-2xl border ${boxInfo.bg} ${boxInfo.border} space-y-2 transition-all`}>
             <div className="flex items-center justify-between">
@@ -417,24 +464,59 @@ export default function EvaluateEmployeeModal({
             </div>
 
             {createPdi && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 animate-in fade-in">
-                <div className="sm:col-span-2">
-                  <input
-                    type="text"
-                    value={pdiTitle}
-                    onChange={(e) => setPdiTitle(e.target.value)}
-                    placeholder="Título da Meta (ex: Concluir certificação em Liderança Estratégica)"
-                    className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
-                  />
+              <div className="space-y-3 pt-2 animate-in fade-in">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <input
+                      type="text"
+                      value={pdiTitle}
+                      onChange={(e) => setPdiTitle(e.target.value)}
+                      placeholder="Título da Meta (ex: Concluir certificação em Liderança Estratégica)"
+                      className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <input
+                      type="date"
+                      value={pdiDate}
+                      onChange={(e) => setPdiDate(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <input
-                    type="date"
-                    value={pdiDate}
-                    onChange={(e) => setPdiDate(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Indicador / Métrica</label>
+                    <input
+                      type="text"
+                      value={goalMetric}
+                      onChange={(e) => setGoalMetric(e.target.value)}
+                      placeholder="ex: NPS de Liderança, Horas de Curso"
+                      className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Meta Numérica (Alvo)</label>
+                    <input
+                      type="number"
+                      value={goalTarget}
+                      onChange={(e) => setGoalTarget(e.target.value)}
+                      placeholder="ex: 100"
+                      className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Peso da Meta (%)</label>
+                    <input
+                      type="number"
+                      value={goalWeight}
+                      onChange={(e) => setGoalWeight(e.target.value)}
+                      placeholder="ex: 50"
+                      className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
             )}

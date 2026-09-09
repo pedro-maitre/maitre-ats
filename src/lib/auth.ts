@@ -8,7 +8,10 @@ const nextAuthUrl = process.env.NEXTAUTH_URL || "";
 // Evita erro de cookie __Secure- em ambientes de teste local ou hosts sem SSL
 const useSecureCookies = isProduction && nextAuthUrl.startsWith("https://") && !nextAuthUrl.includes("localhost");
 
-const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "maitre-ats-production-secret-key-123";
+const AUTH_SECRET = process.env.NEXTAUTH_SECRET;
+if (!AUTH_SECRET && isProduction) {
+  throw new Error("Erro Crítico de Segurança: Variável de ambiente NEXTAUTH_SECRET obrigatória não configurada.");
+}
 
 export const authOptions: NextAuthOptions = {
   secret: AUTH_SECRET,

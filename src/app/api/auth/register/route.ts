@@ -50,7 +50,12 @@ export async function POST(req: NextRequest) {
 
     // Auto-create/link Candidate profile
     await prisma.candidate.upsert({
-      where: { email: cleanEmail },
+      where: {
+        organizationId_email: {
+          organizationId: orgId,
+          email: cleanEmail,
+        },
+      },
       update: {
         firstName: name.split(" ")[0] || name,
         lastName: name.split(" ").slice(1).join(" ") || "",

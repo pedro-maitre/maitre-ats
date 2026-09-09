@@ -34,8 +34,9 @@ export async function submitApplication(formData: FormData) {
   let loggedInCandidate: any = null;
   if (session?.user?.email) {
     email = session.user.email.toLowerCase();
-    loggedInCandidate = await prisma.candidate.findUnique({
+    loggedInCandidate = await prisma.candidate.findFirst({
       where: { email },
+      orderBy: { updatedAt: "desc" },
     });
 
     if (loggedInCandidate) {
@@ -134,7 +135,12 @@ export async function submitApplication(formData: FormData) {
 
   // Upsert Candidate
   const candidate = await prisma.candidate.upsert({
-    where: { email },
+    where: {
+      organizationId_email: {
+        organizationId: org.id,
+        email,
+      },
+    },
     update: {
       firstName: firstName.trim(),
       lastName: lastName?.trim() || "",

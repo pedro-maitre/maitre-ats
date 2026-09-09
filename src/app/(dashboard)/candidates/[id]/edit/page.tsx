@@ -3,6 +3,9 @@ import { updateCandidate } from "./actions";
 import { User, Mail, Phone, Globe, Tag, AlignLeft, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getServerTenantScope } from "@/lib/security";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default async function EditCandidatePage({
@@ -10,6 +13,8 @@ export default async function EditCandidatePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await getServerSession(authOptions);
+  const tenantScope = await getServerTenantScope(session);
   const { id } = await params;
 
   const candidate = await prisma.candidate.findUnique({
@@ -17,6 +22,10 @@ export default async function EditCandidatePage({
   });
 
   if (!candidate) {
+    redirect("/candidates");
+  }
+
+  if (tenantScope.organizationId && candidate.organizationId !== tenantScope.organizationId) {
     redirect("/candidates");
   }
 

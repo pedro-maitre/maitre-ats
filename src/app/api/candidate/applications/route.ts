@@ -13,9 +13,16 @@ export async function GET(req: NextRequest) {
 
     const email = session.user.email.toLowerCase();
 
-    // Find candidate by email
-    const candidate = await prisma.candidate.findUnique({
-      where: { email },
+    // Find candidate by userId or email
+    const candidate = await prisma.candidate.findFirst({
+      where: (session.user as any)?.id
+        ? {
+            OR: [
+              { userId: (session.user as any).id },
+              { email },
+            ],
+          }
+        : { email },
       include: {
         applications: {
           include: {
@@ -115,8 +122,24 @@ export async function PUT(req: NextRequest) {
       formattedTags = Array.isArray(tags) ? JSON.stringify(tags) : String(tags);
     }
 
+    const candidateRecord = await prisma.candidate.findFirst({
+      where: (session.user as any)?.id
+        ? {
+            OR: [
+              { userId: (session.user as any).id },
+              { email },
+            ],
+          }
+        : { email },
+      orderBy: { updatedAt: "desc" },
+    });
+
+    if (!candidateRecord) {
+      return NextResponse.json({ error: "Perfil de candidato não localizado." }, { status: 404 });
+    }
+
     const updated = await prisma.candidate.update({
-      where: { email },
+      where: { id: candidateRecord.id },
       data: {
         firstName: firstName || undefined,
         lastName: lastName !== undefined ? lastName : undefined,

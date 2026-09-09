@@ -1,0 +1,59 @@
+name: CI Pipeline - Maître Conecta
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: Lint, Test & Build Gate
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/maitre_test?schema=public"
+      DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/maitre_test?schema=public"
+      NEXTAUTH_SECRET: "ci-test-secret-key-minimum-32-chars-length"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co"
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "ey-test-anon-key"
+      SUPABASE_SERVICE_ROLE_KEY: "ey-test-service-role-key"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Type Check (TypeScript)
+        run: npx tsc --noEmit
+
+      - name: Automated Tests (Vitest)
+        run: npm test
+
+      - name: Code Quality & Linter (ESLint)
+        run: npm run lint
+
+      - name: Verify Build Integrity (Next.js)
+        run: npm run build
