@@ -19,6 +19,7 @@ import {
   Settings,
   ShieldCheck,
   UserCog,
+  Sparkles,
 } from "lucide-react";
 import LogoutButton from "./LogoutButton";
 import { useSession } from "next-auth/react";
@@ -222,6 +223,27 @@ export default function MobileSidebarDrawer({
                   >
                     <HeartHandshake size={15} className="text-rose-400" />
                     <span>Conecta Cultura</span>
+                  </Link>
+                  <Link
+                    href="/careers-hub"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
+                  >
+                    <Compass size={15} className="text-violet-400" />
+                    <span>Conecta Carreiras</span>
+                  </Link>
+                  <Link
+                    href="/consulting"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
+                  >
+                    <Sparkles size={15} className="text-maitre-gold" />
+                    <div className="flex items-center justify-between flex-1">
+                      <span>Conecta Consultoria</span>
+                      <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 bg-maitre-gold/20 text-maitre-gold rounded">
+                        Central
+                      </span>
+                    </div>
                   </Link>
                 </div>
               )}

@@ -4,18 +4,19 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ConsultingDashboardClient from "@/components/consulting/ConsultingDashboardClient";
+import { getInternalHubData } from "@/app/(dashboard)/consulting/internal-actions";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Conecta Consultoria | Maître Conecta",
-  description: "Projetos Estratégicos, Entregáveis e Acompanhamento Consultivo da Maître",
+  title: "Central de Gestão Interna & Consultoria | Maître Conecta",
+  description: "Gestão Interna da Maître Consultoria, Demandas, Reuniões e Projetos Estratégicos",
 };
 
 export default async function ConsultingPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ orgId?: string }>;
+  searchParams?: Promise<{ orgId?: string; tab?: string }>;
 }) {
   const session = await getServerSession(authOptions);
 
@@ -35,9 +36,10 @@ export default async function ConsultingPage({
 
   let projects: any[] = [];
   let organizations: any[] = [];
+  let internalData: any = null;
 
   try {
-    const [projectsRes, orgsRes] = await Promise.all([
+    const [projectsRes, orgsRes, internalRes] = await Promise.all([
       prisma.consultingProject.findMany({
         where: projectWhere,
         include: {
@@ -64,10 +66,12 @@ export default async function ConsultingPage({
         select: { id: true, name: true, slug: true, isMaster: true },
         orderBy: [{ isMaster: "asc" }, { name: "asc" }],
       }),
+      getInternalHubData(),
     ]);
 
     projects = projectsRes || [];
     organizations = orgsRes || [];
+    internalData = internalRes || null;
   } catch (err) {
     console.error("Erro ao carregar projetos de consultoria:", err);
   }
@@ -77,6 +81,8 @@ export default async function ConsultingPage({
       initialProjects={JSON.parse(JSON.stringify(projects))}
       organizations={JSON.parse(JSON.stringify(organizations))}
       isAdmin={isAdmin}
+      initialInternalData={internalData ? JSON.parse(JSON.stringify(internalData)) : null}
+      initialTab={(resolvedParams.tab as any) || "overview"}
     />
   );
 }

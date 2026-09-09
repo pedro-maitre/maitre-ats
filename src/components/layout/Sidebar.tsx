@@ -274,7 +274,7 @@ export default async function Sidebar() {
                 </div>
               </Link>
 
-              {isAdmin && (
+              {role !== "CANDIDATE" && (
                 <Link
                   href="/consulting"
                   className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800/80 hover:text-white transition-colors text-xs font-semibold"
@@ -282,6 +282,9 @@ export default async function Sidebar() {
                   <Sparkles size={16} className="text-maitre-gold shrink-0" />
                   <div className="flex items-center justify-between flex-1">
                     <span>Conecta Consultoria</span>
+                    <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 bg-maitre-gold/20 text-maitre-gold rounded">
+                      Central
+                    </span>
                   </div>
                 </Link>
               )}

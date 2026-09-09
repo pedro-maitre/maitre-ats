@@ -72,6 +72,12 @@ model Organization {
   internalApplications   InternalApplication[]
   careerTracks           CareerTrack[]
   consultingTimesheets   ConsultingTimesheet[]
+  internalConfig         InternalConsultingConfig?
+  internalTasks          InternalTask[]        @relation("OrgInternalTasks")
+  clientInternalTasks    InternalTask[]        @relation("ClientInternalTasks")
+  clientConsultingProjects ConsultingProject[] @relation("ClientConsultingProjects")
+  weeklyMeetings         WeeklyMeeting[]
+  internalNotifications  InternalNotification[]
 }
 
 model User {
@@ -104,6 +110,17 @@ model User {
   activities     Activity[]
 
   candidate      Candidate?   // Link user to candidate profile
+  
+  tasksCreated           InternalTask[]        @relation("TaskCreator")
+  tasksAssigned          InternalTask[]        @relation("TaskAssignee")
+  tasksReviewed          InternalTask[]        @relation("TaskReviewer")
+  taskMemberships        TaskMember[]
+  subtasksAssigned       InternalSubtask[]     @relation("SubtaskAssignee")
+  taskComments           TaskComment[]
+  taskAttachments        TaskAttachment[]
+  taskReviews            TaskReviewDecision[]
+  meetingsFacilitated    WeeklyMeeting[]       @relation("MeetingFacilitator")
+  internalNotifications  InternalNotification[]
   
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -147,6 +164,9 @@ model Job {
   recruiter               User?        @relation("Recruiter", fields: [recruiterId], references: [id])
 
   isInternalPosting       Boolean      @default(true) // Disponível para recrutamento interno
+  allowExternal           Boolean      @default(true)
+  minPerformanceScore     Float?
+  minTenureMonths         Int?
   applications            Application[]
   internalApplications    InternalApplication[]
   stages                  Stage[]      // Custom stages per job
@@ -547,6 +567,7 @@ model CultureActionPlan {
   ownerEmail          String?
   targetDate          DateTime?
   status              String        @default("PLANNED") // PLANNED, IN_PROGRESS, DONE, CANCELLED
+  progress            Int           @default(0)
   description         String?
   kpiSuccessIndicator String?       // ex: "+15 pontos no eNPS da dimensão Comunicação no próximo ciclo"
   createdAt           DateTime      @default(now())
@@ -626,6 +647,8 @@ model TrainingClass {
   endDate           DateTime?
   instructorName    String?
   locationOrUrl     String?      // Link do Zoom/Meet ou Sala presencial
+  maxCapacity       Int          @default(30)
+  status            String       @default("SCHEDULED")
   attendanceRecords String?      // JSON string com lista de chamada por aula
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
@@ -834,15 +857,20 @@ model ConsultingProject {
   consultantName  String?              // Nome do consultor responsável (ex: "Adriana", "Erika", "Pedro")
   consultantEmail String?
   budget          Float?
+  projectType     String               @default("PROJECT") // PROJECT, RECURRING_SERVICE, INTERNAL_ACTIVITY
+  clientOrganizationId String?
+  clientOrganization   Organization?   @relation("ClientConsultingProjects", fields: [clientOrganizationId], references: [id], onDelete: SetNull)
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
 
   organization    Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   deliverables    ProjectDeliverable[]
   timesheets      ConsultingTimesheet[]
+  internalTasks   InternalTask[]
 
   @@index([organizationId, status])
   @@index([category])
+  @@index([clientOrganizationId])
 }
 
 model ProjectDeliverable {
@@ -962,6 +990,202 @@ model ConsultingTimesheet {
   @@index([organizationId])
   @@index([organizationId, status])
 }
+
+// =========================================================================
+// CENTRAL DE GESTÃO INTERNA DA MAÎTRE CONSULTORIA
+// =========================================================================
+
+model InternalConsultingConfig {
+  id                    String    @id @default(cuid())
+  organizationId        String    @unique
+  adminMasterUserId     String    // ID exclusivo da Adriana Pinheiro
+  defaultTimezone       String    @default("America/Fortaleza")
+  weeklyMeetingDay      Int       @default(1) // Segunda-feira (1)
+  weeklyMeetingTime     String    @default("15:30") // 15h30
+  weeklyMeetingDuration Int       @default(60) // 60 minutos
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model InternalTask {
+  id                    String              @id @default(cuid())
+  organizationId        String
+  projectId             String?
+  clientOrganizationId  String?
+  title                 String
+  description           String?
+  status                String              @default("TODO") // TODO, IN_PROGRESS, IN_REVIEW, COMPLETED, CANCELLED
+  priority              String              @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  dueDate               DateTime?
+  startDate             DateTime?
+  completedAt           DateTime?
+
+  creatorId             String
+  assigneeId            String?
+  reviewerId            String?
+  requiresApproval      Boolean             @default(false)
+
+  isBlocked             Boolean             @default(false)
+  blockReason           String?
+  blockedAt             DateTime?
+
+  originType            String              @default("DIRECT") // DIRECT, WEEKLY_MEETING, CLIENT_REQUEST
+  originMeetingId       String?
+
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  organization          Organization        @relation("OrgInternalTasks", fields: [organizationId], references: [id], onDelete: Cascade)
+  clientOrganization    Organization?       @relation("ClientInternalTasks", fields: [clientOrganizationId], references: [id], onDelete: SetNull)
+  project               ConsultingProject?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  creator               User                @relation("TaskCreator", fields: [creatorId], references: [id])
+  assignee              User?               @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  reviewer              User?               @relation("TaskReviewer", fields: [reviewerId], references: [id])
+  originMeeting         WeeklyMeeting?      @relation(fields: [originMeetingId], references: [id], onDelete: SetNull)
+
+  subtasks              InternalSubtask[]
+  checklists            TaskChecklistItem[]
+  comments              TaskComment[]
+  attachments           TaskAttachment[]
+  reviews               TaskReviewDecision[]
+  members               TaskMember[]
+
+  @@index([organizationId, status])
+  @@index([assigneeId, status])
+  @@index([projectId])
+  @@index([dueDate])
+  @@index([clientOrganizationId])
+}
+
+model TaskMember {
+  id          String       @id @default(cuid())
+  taskId      String
+  userId      String
+  role        String       @default("COLLABORATOR") // COLLABORATOR, OBSERVER
+  createdAt   DateTime     @default(now())
+
+  task        InternalTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+}
+
+model InternalSubtask {
+  id          String       @id @default(cuid())
+  taskId      String
+  title       String
+  isCompleted Boolean      @default(false)
+  assigneeId  String?
+  dueDate     DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  task        InternalTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  assignee    User?        @relation("SubtaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@index([taskId])
+}
+
+model TaskChecklistItem {
+  id          String       @id @default(cuid())
+  taskId      String
+  text        String
+  isCompleted Boolean      @default(false)
+  order       Int          @default(0)
+  createdAt   DateTime     @default(now())
+
+  task        InternalTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model TaskComment {
+  id          String       @id @default(cuid())
+  taskId      String
+  authorId    String
+  content     String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  task        InternalTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model TaskAttachment {
+  id           String       @id @default(cuid())
+  taskId       String
+  uploadedById String
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  mimeType     String
+  createdAt    DateTime     @default(now())
+
+  task         InternalTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model TaskReviewDecision {
+  id                 String       @id @default(cuid())
+  taskId             String
+  reviewerId         String
+  decision           String       // APPROVED, CHANGES_REQUESTED
+  comments           String?
+  deliverableVersion String?      @default("1.0")
+  decidedAt          DateTime     @default(now())
+
+  task               InternalTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  reviewer           User         @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model WeeklyMeeting {
+  id               String         @id @default(cuid())
+  organizationId   String
+  title            String
+  scheduledAt      DateTime
+  endedAt          DateTime?
+  status           String         @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, CONCLUDED, CANCELLED
+  facilitatorId    String
+  participantsJson String?
+  agendaTopicsJson String?
+  notesMarkdown    String?
+  decisionsJson    String?
+  concludedSummary String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  organization     Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  facilitator      User           @relation("MeetingFacilitator", fields: [facilitatorId], references: [id])
+  tasksGenerated   InternalTask[]
+
+  @@index([organizationId, scheduledAt])
+}
+
+model InternalNotification {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  title          String
+  message        String
+  type           String       // TASK_ASSIGNED, DUE_DATE_CHANGED, REVIEW_REQUESTED, REVIEW_DECISION, TASK_BLOCKED, MEETING_SUMMARY
+  linkUrl        String?
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+}
+
 
 
 
