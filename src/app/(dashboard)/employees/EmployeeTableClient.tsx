@@ -174,7 +174,7 @@ export default function EmployeeTableClient({
       const res = await createDirectEmployee(data);
       if (!res.success) throw new Error(res.error);
 
-      setFeedback({ type: "success", text: "Colaborador admitido com sucesso no Core HR!" });
+      setFeedback({ type: "success", text: "Colaborador admitido com sucesso na Gestão de Pessoas!" });
       setIsModalOpen(false);
       window.location.reload();
     } catch (err: any) {
@@ -206,7 +206,7 @@ export default function EmployeeTableClient({
 
       setFeedback({
         type: "success",
-        text: `Sucesso! ${res.count} colaboradores importados/atualizados no Core HR.`,
+        text: `Sucesso! ${res.count} colaboradores importados/atualizados na Gestão de Pessoas.`,
       });
 
       setTimeout(() => {
@@ -499,7 +499,7 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                    Admissão Direta no Core HR
+                    Admissão Direta na Gestão de Pessoas
                   </h3>
                   <span className="text-xs text-slate-400">Cadastro de colaborador sem processo seletivo</span>
                 </div>
@@ -626,7 +626,7 @@ Camila Alves Lima,camila.lima@empresa.com,Consultora de DHO,Consultoria,MC-2026-
                 className="w-full bg-purple-600 hover:bg-purple-500 text-white p-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md"
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <UserCheck size={16} />}
-                <span>Concluir Admissão no Core HR</span>
+                <span>Concluir Admissão na Gestão de Pessoas</span>
               </button>
             </form>
           </div>

@@ -219,7 +219,7 @@ export default async function DashboardHomePage({
       title: `${pendingOnboarding.length} colaboradores em processo de onboarding`,
       description: "Novos contratados em fase de envio de documentação e formalização.",
       link: "/employees",
-      linkText: "Ver Core HR",
+      linkText: "Ver Gestão de Pessoas",
       badge: "Conecta Pessoas",
     });
   }
@@ -242,7 +242,7 @@ export default async function DashboardHomePage({
       title: "Operação estável e sincronizada",
       description: "Todos os processos seletivos e admissões estão em dia.",
       link: "/insights",
-      linkText: "Ver Analytics",
+      linkText: "Ver Indicadores",
       badge: "Status Geral",
     });
   }
@@ -264,7 +264,7 @@ export default async function DashboardHomePage({
             Olá, {userName}
           </h1>
           <p className="text-slate-400 text-sm max-w-xl leading-relaxed">
-            Visão unificada em tempo real dos 9 módulos de R&S, Core HR, Operações e DHO da sua organização.
+            Visão unificada em tempo real dos 9 módulos de R&S, Gestão de Pessoas, Operações e DHO da sua organização.
           </p>
         </div>
 
@@ -282,7 +282,7 @@ export default async function DashboardHomePage({
             className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 border border-slate-700 transition-all"
           >
             <UserCheck size={16} className="text-purple-400" />
-            <span>Admissão Core HR</span>
+            <span>Admissão de Colaboradores</span>
           </Link>
         </div>
 
@@ -392,7 +392,7 @@ export default async function DashboardHomePage({
                 <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-maitre-gold transition-colors">
                   Conecta Talentos
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">ATS, Vagas, Pipeline Kanban e Fit 3D</p>
+                <p className="text-xs text-slate-400 mt-0.5">R&S, Vagas, Quadro de Etapas e Fit 3D</p>
               </div>
             </div>
             <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
@@ -421,7 +421,7 @@ export default async function DashboardHomePage({
                 <h3 className="font-extrabold text-slate-900 dark:text-white text-sm group-hover:text-maitre-gold transition-colors">
                   Conecta Pessoas
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">Core HR, Matrículas e Vínculos</p>
+                <p className="text-xs text-slate-400 mt-0.5">Gestão Funcional, Matrículas e Vínculos</p>
               </div>
             </div>
             <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
@@ -634,7 +634,7 @@ export default async function DashboardHomePage({
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
               <Briefcase size={16} className="text-maitre-gold" />
-              Posições em Andamento no ATS
+              Posições em Andamento no Sistema
             </h3>
             <Link href="/jobs" className="text-xs font-bold text-maitre-gold hover:underline">
               Ver todas ({totalJobs})

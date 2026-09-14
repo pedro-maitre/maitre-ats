@@ -140,7 +140,7 @@ export default function ClientDetailView({
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-maitre-gold border border-slate-700 shadow-sm transition-all cursor-pointer"
                 >
                   <Palette size={14} />
-                  <span>Branding White-Label</span>
+                  <span>Identidade Visual da Marca</span>
                 </button>
 
                 <button
@@ -158,7 +158,7 @@ export default function ClientDetailView({
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 hover:brightness-105 shadow-md transition-all cursor-pointer"
             >
               <Briefcase size={14} />
-              <span>Gerenciar Vagas no ATS</span>
+              <span>Gerenciar Vagas no Sistema</span>
             </button>
           </div>
         </div>
@@ -200,7 +200,7 @@ export default function ClientDetailView({
           </div>
           <div>
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Gestores (Hiring Managers)
+              Gestores Solicitantes
             </span>
             <span className="text-2xl font-black text-slate-900 dark:text-white">
               {(client.users?.length || 0) + (client.memberships?.length || 0)}
@@ -270,7 +270,7 @@ export default function ClientDetailView({
           }`}
         >
           <Building2 size={16} />
-          <span>Dados Institucionais & White-Label</span>
+          <span>Dados Institucionais & Identidade Visual</span>
         </button>
       </div>
 
@@ -348,7 +348,7 @@ export default function ClientDetailView({
                       href={`/jobs/${job.id}/board`}
                       className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 dark:bg-slate-800 hover:bg-maitre-gold hover:text-slate-950 text-white border border-slate-700 hover:border-maitre-gold transition-all flex items-center gap-1.5"
                     >
-                      <span>Acessar Kanban</span>
+                      <span>Acessar Funil de Seleção</span>
                       <ArrowUpRight size={13} />
                     </Link>
                   </div>
@@ -467,7 +467,7 @@ export default function ClientDetailView({
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-sm cursor-pointer"
             >
               <Users size={14} />
-              <span>Convidar Gestor (Hiring Manager)</span>
+              <span>Convidar Gestor Solicitante</span>
             </button>
           </div>
 
@@ -478,7 +478,7 @@ export default function ClientDetailView({
                 Nenhum gestor vinculado diretamente a este cliente
               </h4>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Convide o Hiring Manager da empresa cliente para que ele possa acompanhar o pipeline de seleção.
+                Convide o gestor da empresa cliente para que ele possa acompanhar o funil de seleção.
               </p>
             </div>
           ) : (
@@ -499,7 +499,7 @@ export default function ClientDetailView({
                       {u.email}
                     </span>
                     <span className="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                      {u.role === "HIRING_MANAGER" ? "Hiring Manager" : u.role}
+                      {u.role === "HIRING_MANAGER" ? "Gestor Solicitante" : u.role}
                     </span>
                   </div>
                 </div>
@@ -514,7 +514,7 @@ export default function ClientDetailView({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">
-              Identidade White-Label do Portal
+              Identidade Visual do Portal
             </h3>
 
             <div className="space-y-3 text-xs">

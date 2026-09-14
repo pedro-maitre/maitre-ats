@@ -48,7 +48,7 @@ export default async function Sidebar() {
       : role === "RECRUITER"
       ? "Recrutador Maître"
       : role === "HIRING_MANAGER"
-      ? "Hiring Manager"
+      ? "Gestor Solicitante"
       : "Candidato";
 
   const roleBadgeStyle =
@@ -127,7 +127,7 @@ export default async function Sidebar() {
                 <div className="flex items-center justify-between flex-1">
                   <span>Visão do Gestor</span>
                   <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded">
-                    Preview
+                    Prévia
                   </span>
                 </div>
               </Link>
@@ -149,7 +149,7 @@ export default async function Sidebar() {
             <div className="flex items-center justify-between flex-1">
               <span>{isHiringManager ? "Minhas Vagas" : "Conecta Talentos"}</span>
               <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 bg-maitre-gold/20 text-maitre-gold rounded">
-                ATS
+                R&S
               </span>
             </div>
           </Link>
@@ -185,7 +185,7 @@ export default async function Sidebar() {
                 <div className="flex items-center justify-between flex-1">
                   <span>Conecta Pessoas</span>
                   <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded">
-                    Core HR
+                    RH Central
                   </span>
                 </div>
               </Link>
@@ -209,7 +209,7 @@ export default async function Sidebar() {
                 <div className="flex items-center justify-between flex-1">
                   <span>Conecta Operações</span>
                   <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded">
-                    DP / Docs
+                    DP / Documentos
                   </span>
                 </div>
               </Link>
@@ -222,7 +222,7 @@ export default async function Sidebar() {
                 <div className="flex items-center justify-between flex-1">
                   <span>Conecta Insights</span>
                   <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded">
-                    Analytics
+                    Indicadores
                   </span>
                 </div>
               </Link>

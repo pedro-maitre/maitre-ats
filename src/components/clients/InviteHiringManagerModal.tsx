@@ -75,7 +75,7 @@ export default function InviteHiringManagerModal({
                 Convidar Gestor do Cliente
               </h2>
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Acesso Restrito Hiring Manager (B2B)
+                Acesso Restrito ao Gestor Solicitante (B2B)
               </span>
             </div>
           </div>

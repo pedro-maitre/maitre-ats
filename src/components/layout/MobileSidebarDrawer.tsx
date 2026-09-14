@@ -62,7 +62,7 @@ export default function MobileSidebarDrawer({
       : role === "RECRUITER"
       ? "Recrutador Maître"
       : role === "HIRING_MANAGER"
-      ? "Hiring Manager"
+      ? "Gestor Solicitante"
       : "Candidato";
 
   return (
@@ -154,7 +154,7 @@ export default function MobileSidebarDrawer({
                   className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
                 >
                   <Briefcase size={15} className="text-maitre-gold" />
-                  <span>{isHiringManager ? "Minhas Vagas" : "Conecta Talentos (ATS)"}</span>
+                  <span>{isHiringManager ? "Minhas Vagas" : "Conecta Talentos (R&S)"}</span>
                 </Link>
 
                 {!isHiringManager && (
@@ -181,7 +181,7 @@ export default function MobileSidebarDrawer({
                       className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-semibold"
                     >
                       <UserCheck size={15} className="text-purple-400" />
-                      <span>Conecta Pessoas (Core HR)</span>
+                      <span>Conecta Pessoas (RH Central)</span>
                     </Link>
                   </>
                 )}

@@ -215,7 +215,7 @@ export default function DevelopmentDashboardClient({
             <Users size={18} />
           </div>
           <p className="text-3xl font-black text-slate-900 dark:text-white">{totalEmployees}</p>
-          <span className="text-xs text-slate-400 font-medium">Cadastrados no Core HR / ATS</span>
+          <span className="text-xs text-slate-400 font-medium">Cadastrados no Sistema / Recrutamento</span>
         </div>
 
         <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
@@ -698,7 +698,7 @@ export default function DevelopmentDashboardClient({
           <div>
             <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
               <Sparkles size={18} className="text-amber-500" />
-              Pipeline de Sucessão & Liderança
+              Linha de Sucessão & Liderança
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
               Mapeamento de talentos de alto impacto elegíveis para assunção de posições críticas e cadeiras executivas.
@@ -743,7 +743,7 @@ export default function DevelopmentDashboardClient({
                   Nenhum sucessor imediato classificado como Top Talent
                 </p>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
-                  Avalie colaboradores com alto desempenho e potencial na Matriz 9-Box para estruturar o pipeline de liderança.
+                  Avalie colaboradores com alto desempenho e potencial na Matriz 9-Box para estruturar a sucessão de liderança.
                 </p>
               </div>
             )}

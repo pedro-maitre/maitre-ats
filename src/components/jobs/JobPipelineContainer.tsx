@@ -66,7 +66,7 @@ export default function JobPipelineContainer({
             }`}
           >
             <Kanban size={15} className="text-maitre-gold" />
-            <span>Pipeline Kanban</span>
+            <span>Quadro de Seleção</span>
           </button>
 
           <button

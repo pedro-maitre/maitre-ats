@@ -135,7 +135,7 @@ export default function OperationsDashboardClient({
             <span className="text-xs text-slate-400 font-semibold">• Departamento Pessoal & DP</span>
           </div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5">
-            {activeTab === "ONBOARDING" ? "Admissão Digital & Gestão Documental" : "Desligamentos & Offboarding CLT"}
+            {activeTab === "ONBOARDING" ? "Admissão Digital & Gestão Documental" : "Desligamentos & Rescisões CLT"}
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
             {activeTab === "ONBOARDING"
@@ -162,7 +162,7 @@ export default function OperationsDashboardClient({
             href="/employees"
             className="px-5 py-2.5 rounded-2xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-600 dark:text-purple-400 border border-purple-500/30 text-xs font-bold transition-all flex items-center gap-2 shrink-0 self-start sm:self-auto"
           >
-            <Users size={15} /> Ver Core HR (Colaboradores)
+            <Users size={15} /> Ver Colaboradores (Gestão de Pessoas)
           </Link>
         </div>
       </div>
@@ -192,7 +192,7 @@ export default function OperationsDashboardClient({
           }`}
         >
           <UserX size={15} />
-          <span>Desligamentos & Offboarding ({offboardingTotal})</span>
+          <span>Desligamentos & Rescisões ({offboardingTotal})</span>
         </button>
       </div>
 
@@ -211,7 +211,7 @@ export default function OperationsDashboardClient({
                 </div>
               </div>
               <p className="text-3xl font-black text-slate-900 dark:text-white">{totalCount}</p>
-              <span className="text-xs font-medium text-slate-400">Contratações iniciadas no ATS</span>
+              <span className="text-xs font-medium text-slate-400">Contratações iniciadas no R&S</span>
             </div>
 
             <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">

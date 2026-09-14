@@ -25,7 +25,7 @@ import EmployeeTableClient from "./EmployeeTableClient";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Core HR (Colaboradores) | Maître Conecta",
+  title: "Gestão de Pessoas (Colaboradores) | Maître Conecta",
   description: "Gestão Integrada de Colaboradores, Matrículas e Admissão Digital",
 };
 
@@ -123,7 +123,7 @@ export default async function EmployeesPage({
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 text-xs font-bold uppercase tracking-wider border border-purple-500/30">
-              <ShieldCheck size={13} /> Módulo Core HR
+              <ShieldCheck size={13} /> Módulo de Gestão de Pessoas
             </span>
             <span className="text-xs text-slate-400 font-semibold">• Fase P2 Conecta</span>
           </div>
@@ -147,7 +147,7 @@ export default async function EmployeesPage({
           </div>
           <p className="text-3xl font-black text-slate-900 dark:text-white">{totalEmployees}</p>
           <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-            ✓ Base Core HR Desacoplada
+            ✓ Base de Colaboradores Estruturada
           </span>
         </div>
 

@@ -273,10 +273,10 @@ export default function CreateUserModal({
                 onChange={(e) => setRole(e.target.value as any)}
                 className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-sm font-semibold outline-none focus:ring-2 focus:ring-maitre-gold transition-all cursor-pointer"
               >
-                <option value="RECRUITER">💼 Recrutador (Triagem, Kanban, Vagas e Candidatos)</option>
+                <option value="RECRUITER">💼 Recrutador (Triagem, Quadro de Etapas, Vagas e Candidatos)</option>
                 <option value="ADMIN">🛡️ Administrador (Gestão da equipe, dados e vagas)</option>
                 <option value="SUPER_ADMIN">👑 Admin Master (Acesso total)</option>
-                <option value="HIRING_MANAGER">🎯 Gestor de Vaga (Apenas suas vagas)</option>
+                <option value="HIRING_MANAGER">🎯 Gestor Solicitante (Apenas suas vagas)</option>
               </select>
             </div>
 

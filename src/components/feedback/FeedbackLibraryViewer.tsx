@@ -123,7 +123,7 @@ export default function FeedbackLibraryViewer() {
           <div>
             <h4 className="font-bold text-slate-900 dark:text-white">Disparo com 1 Clique</h4>
             <p className="text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-              Gere mensagens instantâneas para WhatsApp Web ou copie diretamente para a área de transferência no ATS.
+              Gere mensagens instantâneas para WhatsApp Web ou copie diretamente para a área de transferência no sistema de R&S.
             </p>
           </div>
         </div>

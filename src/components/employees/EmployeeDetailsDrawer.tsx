@@ -320,7 +320,7 @@ export default function EmployeeDetailsDrawer({
                 <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
                   <div>
                     <span className="text-xs font-black uppercase text-amber-600 dark:text-amber-400 block">
-                      ✓ Contratado via Processo Seletivo (ATS)
+                      ✓ Contratado via Recrutamento & Seleção (R&S)
                     </span>
                     <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                       Vaga de origem: {employee.candidate.applications?.[0]?.job?.title || "Vaga interna"}

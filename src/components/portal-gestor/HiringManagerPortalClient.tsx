@@ -215,7 +215,7 @@ export default function HiringManagerPortalClient({
           }`}
         >
           <Briefcase size={16} className={activeTab === "JOBS" ? "text-maitre-gold" : "text-slate-400"} />
-          <span>Vagas em Hunting ({jobs.length})</span>
+          <span>Vagas em Recrutamento ({jobs.length})</span>
         </button>
 
         <button
@@ -243,7 +243,7 @@ export default function HiringManagerPortalClient({
                 Nenhum finalista apresentado no momento
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-                Nossa equipe de consultores Maître está executando a triagem de hunting. Assim que os perfis de alto fit forem validados, eles aparecerão aqui.
+                Nossa equipe de consultores Maître está executando a triagem especializada de talentos. Assim que os perfis de alto fit forem validados, eles aparecerão aqui.
               </p>
             </div>
           ) : (
@@ -395,7 +395,7 @@ export default function HiringManagerPortalClient({
                   href={`/jobs/${job.id}/board`}
                   className="flex items-center gap-1.5 text-xs font-bold bg-slate-800 text-white py-1.5 px-3 rounded-xl hover:bg-slate-700 transition-colors"
                 >
-                  <span>Ver Pipeline</span>
+                  <span>Ver Funil de Etapas</span>
                   <ChevronRight size={13} />
                 </Link>
               </div>
@@ -472,7 +472,7 @@ export default function HiringManagerPortalClient({
                 </div>
                 <div>
                   <h3 className="text-base font-black text-white">
-                    Scorecard de Avaliação
+                    Ficha de Avaliação
                   </h3>
                   <span className="text-xs text-slate-400">
                     Candidato: {selectedAppForScorecard.candidate.firstName} {selectedAppForScorecard.candidate.lastName}

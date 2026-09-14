@@ -214,10 +214,10 @@ export default function EditUserModal({ user, onClose, onUserUpdated }: EditUser
                 onChange={(e) => setRole(e.target.value)}
                 className="w-full p-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-maitre-gold outline-none transition-all text-slate-900 dark:text-white text-sm font-semibold cursor-pointer"
               >
-                <option value="RECRUITER">💼 Recrutador (Triagem, Kanban, Vagas e Candidatos)</option>
+                <option value="RECRUITER">💼 Recrutador (Triagem, Quadro de Etapas, Vagas e Candidatos)</option>
                 <option value="ADMIN">🛡️ Administrador (Gestão da equipe e dados)</option>
                 <option value="SUPER_ADMIN">👑 Admin Master (Acesso total)</option>
-                <option value="HIRING_MANAGER">🎯 Gestor de Vaga</option>
+                <option value="HIRING_MANAGER">🎯 Gestor Solicitante</option>
                 <option value="CANDIDATE">👤 Candidato</option>
               </select>
             </div>

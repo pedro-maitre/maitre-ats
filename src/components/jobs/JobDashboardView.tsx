@@ -405,7 +405,7 @@ export default function JobDashboardView({
                   href={`/jobs/${job.id}/board`}
                   className="inline-flex items-center gap-1 text-sm font-bold text-maitre-gold hover:text-maitre-gold-hover transition-colors"
                 >
-                  <span>Ver Pipeline Kanban</span>
+                  <span>Ver Funil de Seleção</span>
                   <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>

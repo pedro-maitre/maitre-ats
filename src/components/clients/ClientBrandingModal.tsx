@@ -97,7 +97,7 @@ export default function ClientBrandingModal({
       const res = await updateClientBranding(client.id, formData);
       if (!res.success) throw new Error(res.error);
 
-      setSuccess("Personalização White-Label salva com sucesso!");
+      setSuccess("Personalização visual salva com sucesso!");
       setTimeout(() => {
         if (onSuccess) onSuccess();
         onClose();
@@ -123,7 +123,7 @@ export default function ClientBrandingModal({
             </div>
             <div>
               <h2 className="text-lg font-black text-slate-900 dark:text-white leading-tight">
-                Branding White-Label • {client.name}
+                Identidade Visual e Marca • {client.name}
               </h2>
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Personalize cores, logo e mensagens do portal /carreiras/{client.slug}
@@ -134,7 +134,7 @@ export default function ClientBrandingModal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fechar modal de personalização white-label"
+            aria-label="Fechar modal de personalização de identidade visual"
             className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X size={20} />
@@ -228,7 +228,7 @@ export default function ClientBrandingModal({
             <div className="space-y-1.5">
               <label className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                 <Type size={14} className="text-maitre-gold" />
-                <span>Título Principal do Portal (Hero Headline)</span>
+                <span>Título Principal do Portal (Destaque)</span>
               </label>
               <input
                 type="text"
@@ -288,7 +288,7 @@ export default function ClientBrandingModal({
           <div className="space-y-2 pt-2 border-t border-slate-800">
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-wider">
               <Eye size={14} />
-              <span>Prévia do Hero Banner White-Label</span>
+              <span>Prévia do Banner Principal do Portal</span>
             </div>
 
             <div className="rounded-2xl bg-gradient-to-br from-[#1d1e20] via-slate-900 to-[#121316] text-white p-6 border border-slate-800 shadow-inner relative overflow-hidden text-center">

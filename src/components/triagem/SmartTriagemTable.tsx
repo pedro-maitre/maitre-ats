@@ -601,7 +601,7 @@ export default function SmartTriagemTable({
                         <div
                           className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-xs font-black shrink-0 cursor-pointer hover:border-maitre-gold transition-colors"
                           onClick={() => setSplitCandidate(c)}
-                          title="Abrir Currículo (Split View)"
+                          title="Abrir Currículo (Visualização Lateral)"
                         >
                           {isBlindRecruitment ? <Shield size={16} className="text-purple-500" /> : initials}
                         </div>
@@ -768,13 +768,13 @@ export default function SmartTriagemTable({
                     {/* Ações Rápidas */}
                     <td className="p-4 text-right pr-6">
                       <div className="flex items-center justify-end gap-1.5">
-                        {/* Botão Split View (Leitor) */}
+                        {/* Botão de Visualização Lateral (Leitor) */}
                         <button
                           type="button"
                           onClick={() => setSplitCandidate(c)}
                           aria-label={`Visualizar currículo de ${c.name}`}
                           className="p-2 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-xl text-slate-500 hover:text-maitre-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                          title="Visualizar Currículo (Split View)"
+                          title="Visualizar Currículo (Visualização Lateral)"
                         >
                           <FileText size={16} />
                         </button>

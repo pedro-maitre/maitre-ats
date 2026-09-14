@@ -46,7 +46,7 @@ export default function Topbar() {
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-maitre-gold bg-maitre-gold/10 hover:bg-maitre-gold/20 border border-maitre-gold/30 transition-colors"
           >
             <ExternalLink size={13} />
-            <span>Portal White-Label ({selectedTenant.slug})</span>
+            <span>Portal de Carreiras ({selectedTenant.slug})</span>
           </Link>
         )}
 

@@ -191,7 +191,7 @@ export default function TaskBoardView({
               }`}
             >
               <Columns3 size={13} />
-              <span className="hidden sm:inline">Kanban</span>
+              <span className="hidden sm:inline">Quadro</span>
             </button>
             <button
               onClick={() => setViewMode("list")}

@@ -92,7 +92,7 @@ export default function ManageStagesModal({ jobId, stages }: ManageStagesModalPr
                   <h2 className="text-base font-black text-slate-900 dark:text-white">
                     Etapas do Processo Seletivo
                   </h2>
-                  <p className="text-xs text-slate-500">Pipeline customizado desta vaga</p>
+                  <p className="text-xs text-slate-500">Funil de etapas customizado desta vaga</p>
                 </div>
               </div>
               <button

@@ -162,7 +162,7 @@ export default function KanbanBoard({
             title="Oculta nomes e dados pessoais para avaliação 100% focada em competências"
           >
             {isBlindRecruitment ? <EyeOff size={14} /> : <Eye size={14} />}
-            <span>Triagem Cega (Blind Recruitment)</span>
+            <span>Triagem Cega por Competências</span>
             {isBlindRecruitment && (
               <span className="px-1.5 py-0.2 rounded bg-purple-800 text-[10px] uppercase font-black">
                 Ativo
@@ -285,7 +285,7 @@ export default function KanbanBoard({
                                         onClick={() => setWhatsAppCandidate(candidate)}
                                         aria-label={`Enviar feedback via WhatsApp para ${candidate.name}`}
                                         className="p-2 min-w-[32px] min-h-[32px] flex items-center justify-center rounded-xl text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors"
-                                        title="Enviar WhatsApp Rápido (1-Click)"
+                                        title="Enviar Mensagem Rápida no WhatsApp"
                                       >
                                         <MessageCircle size={15} />
                                       </button>
@@ -422,7 +422,7 @@ export default function KanbanBoard({
             title: jobTitle,
             organizationName: companyName,
           }}
-          stageName="Pipeline Kanban"
+          stageName="Funil de Seleção"
         />
       )}
 

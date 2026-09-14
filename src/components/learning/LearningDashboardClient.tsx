@@ -511,7 +511,7 @@ export default function LearningDashboardClient({
             Academia Corporativa & Desenvolvimento
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-            Capacitação contínua, gestão de turmas, controle de frequência e certificações com aprovação em Quiz e nota de corte.
+            Capacitação contínua, gestão de turmas, controle de frequência e certificações com aprovação em Avaliação de Fixação e nota de corte.
           </p>
         </div>
 
@@ -713,7 +713,7 @@ export default function LearningDashboardClient({
                         {enr.quizScore !== null && enr.quizScore !== undefined && (
                           <div className="flex items-center justify-between text-[11px]">
                             <span className="text-slate-400 flex items-center gap-1">
-                              <HelpCircle size={12} className="text-amber-400" /> Nota no Quiz:
+                              <HelpCircle size={12} className="text-amber-400" /> Nota na Avaliação:
                             </span>
                             <span className={`font-bold ${
                               enr.quizScore >= (enr.minPassingScore ?? 70)
@@ -749,10 +749,10 @@ export default function LearningDashboardClient({
                             onClick={() => {
                               if (course) handleOpenQuiz(course, enr);
                             }}
-                            title="Realizar Quiz de Fixação para desbloquear certificado"
+                            title="Realizar Avaliação de Fixação para desbloquear certificado"
                             className="px-3.5 py-2.5 rounded-xl bg-maitre-gold hover:bg-amber-500 text-slate-950 font-black text-xs flex items-center gap-1 shadow-md"
                           >
-                            <CheckSquare size={14} /> Quiz
+                            <CheckSquare size={14} /> Avaliação
                           </button>
                         </div>
                       )}
@@ -841,7 +841,7 @@ export default function LearningDashboardClient({
 
                     <div className="pt-2 flex flex-wrap gap-2 text-[10px]">
                       <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">
-                        Corte Quiz: {c.minPassingScore ?? 70}%
+                        Nota de Corte: {c.minPassingScore ?? 70}%
                       </span>
                       <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">
                         Frequência Mín.: {c.minAttendancePercent ?? 75}%
@@ -999,7 +999,7 @@ export default function LearningDashboardClient({
                 Nenhum certificado emitido ainda
               </h3>
               <p className="text-xs text-slate-400 max-w-md mx-auto">
-                Conclua os módulos de treinamento, mantenha presença ≥75% e atinja no mínimo 70% no Quiz de Fixação para emitir seu certificado verificado.
+                Conclua os módulos de treinamento, mantenha presença ≥75% e atinja no mínimo 70% na Avaliação de Fixação para emitir seu certificado verificado.
               </p>
             </div>
           ) : (
@@ -1033,7 +1033,7 @@ export default function LearningDashboardClient({
                           <strong className="text-slate-700 dark:text-slate-300">Código Oficial:</strong> {enr.certificateCode}
                         </p>
                         <p>
-                          <strong className="text-slate-700 dark:text-slate-300">Nota no Quiz:</strong> {enr.quizScore ?? 95}%
+                          <strong className="text-slate-700 dark:text-slate-300">Nota na Avaliação:</strong> {enr.quizScore ?? 95}%
                         </p>
                         <p>
                           <strong className="text-slate-700 dark:text-slate-300">Frequência:</strong> {enr.attendancePercent ?? 100}%
@@ -1174,7 +1174,7 @@ export default function LearningDashboardClient({
                     }}
                     className="px-5 py-2 rounded-xl bg-gradient-to-r from-maitre-gold to-amber-600 text-slate-950 font-black text-xs shadow-md flex items-center gap-1.5 hover:opacity-95"
                   >
-                    <CheckSquare size={14} /> Fazer Avaliação Final (Quiz)
+                    <CheckSquare size={14} /> Fazer Avaliação Final
                   </button>
                 )}
               </div>
@@ -1191,7 +1191,7 @@ export default function LearningDashboardClient({
               <div>
                 <div className="flex items-center gap-2">
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-wider">
-                    Avaliação de Fixação (Quiz)
+                    Avaliação de Fixação
                   </span>
                   <span className="text-xs text-slate-400 font-semibold">
                     Corte: {quizCourse.minPassingScore ?? 70}% • Frequência mín: {quizCourse.minAttendancePercent ?? 75}%

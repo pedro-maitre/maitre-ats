@@ -309,7 +309,7 @@ export default async function CandidateProfilePage({
                           href={`/jobs/${app.job.id}/board`}
                           className="text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-maitre-gold flex items-center gap-1 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
                         >
-                          <span>Ver no Kanban</span>
+                          <span>Ver no Quadro de Etapas</span>
                           <ExternalLink size={12} />
                         </Link>
                       </div>
@@ -319,7 +319,7 @@ export default async function CandidateProfilePage({
                     {app.transitions.length > 0 && (
                       <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800">
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-                          Histórico de Progressão no Pipeline ({app.transitions.length} transições)
+                          Histórico de Progressão nas Etapas ({app.transitions.length} transições)
                         </span>
                         <div className="flex flex-wrap items-center gap-2">
                           {app.transitions.map((tr, trIdx) => (

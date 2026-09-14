@@ -416,7 +416,7 @@ export default function CareersHubDashboardClient({
 
         <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Sucessores no Pipeline</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Sucessores Mapeados</span>
             <div className="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold">
               <Users size={18} />
             </div>

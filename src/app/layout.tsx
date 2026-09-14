@@ -9,7 +9,7 @@ const outfit = Outfit({ subsets: ["latin"] });
 export const metadata: Metadata = {
   metadataBase: new URL("https://maitreconecta.vercel.app"),
   title: "Maître Conecta — Suíte Integrada de RH & Talentos",
-  description: "Plataforma Inteligente de Recrutamento, Core HR e Conexão de Talentos da Maître Consultoria",
+  description: "Plataforma Inteligente de Recrutamento, Gestão de Pessoas e Conexão de Talentos da Maître Consultoria",
 };
 
 export const dynamic = "force-dynamic";

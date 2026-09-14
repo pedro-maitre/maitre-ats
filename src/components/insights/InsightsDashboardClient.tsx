@@ -283,7 +283,7 @@ export default function InsightsDashboardClient({
         {/* 1. Time to Hire */}
         <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2 relative overflow-hidden">
           <div className="flex items-center justify-between text-slate-400">
-            <span className="text-xs font-bold uppercase tracking-wider">Tempo Médio (Time-to-Hire)</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Tempo Médio de Contratação</span>
             <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
               <Clock size={18} />
             </div>
@@ -400,7 +400,7 @@ export default function InsightsDashboardClient({
               : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
           }`}
         >
-          <Activity size={15} /> Turnover & Absenteísmo (Core HR)
+          <Activity size={15} /> Rotatividade & Absenteísmo (Gestão de Pessoas)
         </button>
       </div>
 
@@ -490,7 +490,7 @@ export default function InsightsDashboardClient({
             <div>
               <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Briefcase size={16} className="text-purple-500" />
-                Vagas em Destaque & Pipeline
+                Vagas em Destaque & Funil de Seleção
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
                 Volume de candidaturas e eficiência por posição.
@@ -623,7 +623,7 @@ export default function InsightsDashboardClient({
           <div>
             <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
               <DollarSign size={18} className="text-emerald-500" />
-              Projeção Orçamentária & Headcount
+              Projeção Orçamentária & Quadro de Pessoal
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
               Análise de impacto na folha salarial das contratações recentes e posições em recrutamento.
@@ -670,7 +670,7 @@ export default function InsightsDashboardClient({
             {/* Turnover Geral */}
             <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
               <div className="flex items-center justify-between text-slate-400">
-                <span className="text-xs font-bold uppercase tracking-wider">Turnover Geral (12m)</span>
+                <span className="text-xs font-bold uppercase tracking-wider">Rotatividade Geral (12m)</span>
                 <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
                   <UserMinus size={18} />
                 </div>
@@ -687,7 +687,7 @@ export default function InsightsDashboardClient({
             {/* Turnover Voluntário vs Involuntário */}
             <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2">
               <div className="flex items-center justify-between text-slate-400">
-                <span className="text-xs font-bold uppercase tracking-wider">Turnover Voluntário</span>
+                <span className="text-xs font-bold uppercase tracking-wider">Rotatividade Voluntária</span>
                 <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
                   <TrendingUp size={18} />
                 </div>
@@ -744,7 +744,7 @@ export default function InsightsDashboardClient({
                 <div>
                   <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <Building2 size={16} className="text-blue-500" />
-                    Turnover por Departamento
+                    Rotatividade por Departamento
                   </h4>
                   <p className="text-xs text-slate-400 mt-0.5">Taxa de desligamentos e efetivo ativo por setor</p>
                 </div>

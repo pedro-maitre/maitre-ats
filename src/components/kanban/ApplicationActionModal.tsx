@@ -231,7 +231,7 @@ export default function ApplicationActionModal({
       if (res.admissionUrl) {
         setAdmissionUrl(res.admissionUrl);
       }
-      setSuccessMsg("🚀 Contratação autorizada! E-mail com o Portal de Admissão Digital enviado ao candidato e registro integrado ao Core HR.");
+      setSuccessMsg("🚀 Contratação autorizada! E-mail com o Portal de Admissão Digital enviado ao candidato e registro integrado à Gestão de Pessoas.");
       if (onRefresh) onRefresh();
     } catch (err: any) {
       setErrorMsg(err.message || "Erro ao autorizar contratação.");
@@ -318,7 +318,7 @@ export default function ApplicationActionModal({
                 : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}
           >
-            <Calendar size={14} /> Entrevistas & Scorecards
+            <Calendar size={14} /> Entrevistas & Fichas de Avaliação
           </button>
 
           <button
@@ -351,7 +351,7 @@ export default function ApplicationActionModal({
                 : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}
           >
-            <Sparkles size={14} className="text-purple-500" /> Feedback com IA
+            <Sparkles size={14} className="text-purple-500" /> Parecer com IA
           </button>
 
           <button
@@ -362,7 +362,7 @@ export default function ApplicationActionModal({
                 : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}
           >
-            <Award size={14} /> Contratar & Core HR
+            <Award size={14} /> Contratar & Efetivar Admissão
           </button>
         </div>
 
@@ -463,7 +463,7 @@ export default function ApplicationActionModal({
               <form onSubmit={handleSubmitScorecard} className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                   <Award size={14} className="text-purple-500" />
-                  Preencher Scorecard de Avaliação
+                  Preencher Ficha de Avaliação
                 </h3>
 
                 <div className="grid grid-cols-3 gap-3">
@@ -519,7 +519,7 @@ export default function ApplicationActionModal({
                     {[
                       { id: "STRONG_HIRE", label: "🟢 Forte Contratação" },
                       { id: "HIRE", label: "🔵 Recomendado" },
-                      { id: "HOLD", label: "🟡 Em Dúvida / Standby" },
+                      { id: "HOLD", label: "🟡 Em Análise / Em Espera" },
                       { id: "NO_HIRE", label: "🔴 Não Recomendado" },
                     ].map((opt) => (
                       <button
@@ -557,7 +557,7 @@ export default function ApplicationActionModal({
                   className="w-full bg-gradient-to-r from-maitre-gold to-[#e5c07b] text-slate-950 hover:brightness-105 p-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md"
                 >
                   {loading ? <Loader2 size={14} className="animate-spin" /> : <Award size={14} />}
-                  <span>Salvar Avaliação do Scorecard</span>
+                  <span>Salvar Ficha de Avaliação</span>
                 </button>
               </form>
             </div>
@@ -821,7 +821,7 @@ export default function ApplicationActionModal({
                     Autorizar Contratação de {candidateName}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Gera a conversão em colaborador e despacha o evento transacional <code>candidate.hire_authorized.v1</code> para o Core HR.
+                    Gera a conversão em colaborador e despacha o evento transacional <code>candidate.hire_authorized.v1</code> para a Gestão de Pessoas.
                   </p>
                 </div>
               </div>

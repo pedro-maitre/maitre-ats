@@ -538,7 +538,7 @@ export default function AdmissionDetailsModal({
             <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-6 animate-in fade-in">
               <div className="space-y-2">
                 <h3 className="text-base font-black text-slate-900 dark:text-white">
-                  Efetivação de Matrícula no Core HR
+                  Efetivação de Matrícula no Conecta Pessoas
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xl">
                   Ao concluir a admissão, o colaborador receberá o número oficial de matrícula e será ativado no módulo <strong>Conecta Pessoas</strong> para controle funcional e folha.

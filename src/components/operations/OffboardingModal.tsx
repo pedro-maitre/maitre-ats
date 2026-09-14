@@ -184,7 +184,7 @@ export default function OffboardingModal({
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                {isManageMode ? "Gestão de Desligamento & Offboarding" : "Iniciar Processo de Desligamento"}
+                {isManageMode ? "Gestão de Desligamento & Rescisão" : "Iniciar Processo de Desligamento"}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {isManageMode
