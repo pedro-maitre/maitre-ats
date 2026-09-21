@@ -72,6 +72,9 @@ export async function POST(req: NextRequest) {
         tags: parsedData.tags,
         profileSummary: parsedData.profileSummary,
         salaryExpectation: parsedData.salaryExpectation,
+        seniority: parsedData.seniority,
+        seniorityConfidence: parsedData.seniorityConfidence,
+        primaryDomain: parsedData.primaryDomain,
         rawText: parsedData.rawText,
       },
       { status: 200 }

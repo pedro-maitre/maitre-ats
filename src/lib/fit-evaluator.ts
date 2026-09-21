@@ -2,6 +2,7 @@
  * Motor de Avaliação Heurística e Fit 3D - Maître Conecta
  * Calcula Salary Fit, Skills Match e Fit Geral com base nos dados estruturados da vaga e candidato.
  */
+import { getTypeSafeClient, score, choice, noul } from "./typesafe";
 
 export type SalaryFitStatus = "WITHIN_BUDGET" | "SLIGHTLY_ABOVE" | "OUT_OF_BUDGET" | "NOT_SPECIFIED";
 
@@ -21,6 +22,18 @@ export type SkillsMatchResult = {
 };
 
 export type OverallFitCategory = "ALTO_FIT" | "MEDIO_FIT" | "BAIXO_FIT";
+
+export type SemanticFitDetails = {
+  model: string;
+  experienceScoreRaw: number; // 0 a 3
+  experienceScoreNormalized: number; // 0 a 100
+  experienceConfidence: number;
+  experienceProbabilities: Record<string, number>;
+  seniorityDecision: "below" | "aligned" | "above" | "unclear";
+  seniorityConfidence: number;
+  knockoutProbability: number;
+  isSemanticEvaluated: boolean;
+};
 
 export type ApplicationEvaluation = {
   overallScore: number;
@@ -46,7 +59,10 @@ export type ApplicationEvaluation = {
     text: string;
     label: string;
   };
+  semanticDetails?: SemanticFitDetails;
 };
+
+export type SemanticFitEvaluation = ApplicationEvaluation;
 
 /**
  * 1. Calcula o Salary Fit comparando a pretensão com a faixa salarial da vaga.
@@ -391,4 +407,203 @@ export function getFitBadgeStyle(
     text: "text-red-700 dark:text-red-400",
     label: salaryStatus === "OUT_OF_BUDGET" ? "Fora do Orçamento" : "Baixo Fit",
   };
+}
+
+/**
+ * 4. Avalia o Fit Semântico com IA via TypeSafe AI (System One / Jev)
+ * Utiliza primitivas tipadas:
+ * - Score: Grau de aderência da experiência profissional aos requisitos (escala de 4 níveis descritivos)
+ * - Choice: Compatibilidade de senioridade
+ * - Noul: Probabilidade de impedimento crítico / knockout
+ * Combina os julgamentos semânticos ao Salary Fit determinístico.
+ * Em caso de indisponibilidade da API ou ausência de chave, recorre com segurança ao evaluateApplicationFit heurístico.
+ */
+export async function evaluateApplicationFitSemantic(
+  job: {
+    title: string;
+    description: string;
+    department?: string | null;
+    salaryMin?: number | null;
+    salaryMax?: number | null;
+    requiredSkills?: string | null;
+  },
+  candidate: {
+    name?: string | null;
+    tags?: string | null;
+    profileSummary?: string | null;
+    rawText?: string | null;
+  },
+  application: {
+    salaryExpectation?: number | null;
+  }
+): Promise<SemanticFitEvaluation> {
+  // 1. Executa avaliação heurística base como baseline garantido
+  const baseEvaluation = evaluateApplicationFit(job, candidate, application);
+
+  const client = getTypeSafeClient();
+  if (!client) {
+    return {
+      ...baseEvaluation,
+      semanticDetails: undefined,
+    };
+  }
+
+  try {
+    const salaryFit = baseEvaluation.salaryFit;
+
+    const state = {
+      job: {
+        title: job.title,
+        department: job.department || "Geral",
+        description: (job.description || "").substring(0, 1500),
+        requiredSkills: job.requiredSkills || "",
+      },
+      candidate: {
+        name: candidate.name || "Candidato",
+        profileSummary: (candidate.profileSummary || "").substring(0, 1000),
+        skills: candidate.tags || "",
+        resumeExcerpt: (candidate.rawText || "").substring(0, 2000),
+      },
+    };
+
+    const response = await client.systemOne({
+      state,
+      questions: {
+        experienceFit: score(
+          "Qual o nível de aderência e profundidade da experiência profissional do candidato aos requisitos e responsabilidades descritos na vaga?",
+          [
+            "Experiência não aderente ou sem relação com os requisitos da vaga",
+            "Área correlata ou conhecimentos superficiais dos requisitos exigidos",
+            "Experiência prática direta em parte substancial dos requisitos",
+            "Experiência profunda, direta e alinhada aos requisitos essenciais da vaga",
+          ]
+        ),
+        seniorityMatch: choice(
+          "A senioridade evidenciada pelo candidato atende ao nível demandado pela posição?",
+          {
+            below: "Abaixo da senioridade exigida",
+            aligned: "Alinhado à senioridade exigida",
+            above: "Acima da senioridade exigida (overqualified)",
+            unclear: "Não há informação suficiente no perfil para determinar",
+          }
+        ),
+        knockoutRisk: noul(
+          "O perfil do candidato apresenta algum impedimento explícito ou incompatibilidade crítica com os pré-requisitos essenciais da vaga?"
+        ),
+      },
+    });
+
+    const expScoreRaw = response.answers.experienceFit.score; // de 0 a 3
+    const expConfidence = response.answers.experienceFit.confidence;
+    const expNormalized = Math.round((expScoreRaw / 3) * 100);
+
+    const seniorityChoice = response.answers.seniorityMatch.choice as "below" | "aligned" | "above" | "unclear";
+    const seniorityConfidence = response.answers.seniorityMatch.confidence;
+    const knockoutProb = response.answers.knockoutRisk.noul;
+
+    // Seniority score & label ajustado por IA
+    let seniorityScore = 70;
+    let seniorityLabel = "Compatível";
+    if (seniorityChoice === "aligned") {
+      seniorityScore = 95;
+      seniorityLabel = "Alinhado à Posição";
+    } else if (seniorityChoice === "above") {
+      seniorityScore = 85;
+      seniorityLabel = "Sênior / Qualificado";
+    } else if (seniorityChoice === "below") {
+      seniorityScore = 45;
+      seniorityLabel = "Abaixo do Esperado";
+    } else {
+      seniorityScore = 65;
+      seniorityLabel = "A Avaliar em Entrevista";
+    }
+
+    // Determinação combinada de Fit
+    let fitCategory: OverallFitCategory = "MEDIO_FIT";
+    let prioritySuggestion: "PRIORIZADO" | "NORMAL" | "DUVIDA" = "NORMAL";
+
+    if (salaryFit.status === "OUT_OF_BUDGET" || knockoutProb >= 0.70) {
+      fitCategory = "BAIXO_FIT";
+      prioritySuggestion = "DUVIDA";
+    } else if (salaryFit.status === "WITHIN_BUDGET" && expNormalized >= 65 && seniorityChoice !== "below") {
+      fitCategory = "ALTO_FIT";
+      prioritySuggestion = "PRIORIZADO";
+    } else if (expNormalized >= 80) {
+      fitCategory = "ALTO_FIT";
+      prioritySuggestion = "PRIORIZADO";
+    } else if (expNormalized < 35 || (seniorityChoice === "below" && expNormalized < 50)) {
+      fitCategory = "BAIXO_FIT";
+      prioritySuggestion = "DUVIDA";
+    } else {
+      fitCategory = "MEDIO_FIT";
+      prioritySuggestion = "NORMAL";
+    }
+
+    // Score ponderado final (60% experiência semântica, 25% salário, 15% senioridade)
+    const salaryWeight =
+      salaryFit.status === "WITHIN_BUDGET" ? 100 : salaryFit.status === "SLIGHTLY_ABOVE" ? 70 : 25;
+    const overallScore = Math.round(
+      expNormalized * 0.60 + salaryWeight * 0.25 + seniorityScore * 0.15
+    );
+
+    // Explicação rica baseada nos julgamentos tipados
+    const seniorityTexts: Record<string, string> = {
+      aligned: "senioridade alinhada ao cargo",
+      above: "perfil com senioridade avançada",
+      below: "senioridade abaixo do patamar da vaga",
+      unclear: "senioridade a confirmar",
+    };
+
+    let explanation = `Julgamento TypeSafe AI: aderência técnica e de experiência avaliada em ${expNormalized}% (nível: ${expScoreRaw.toFixed(1)}/3, confiança: ${Math.round(expConfidence * 100)}%), com ${seniorityTexts[seniorityChoice]}.`;
+    if (knockoutProb >= 0.5) {
+      explanation += ` Atenção: detectado risco semântico (${Math.round(knockoutProb * 100)}%) de incompatibilidade com requisitos essenciais.`;
+    }
+    if (salaryFit.status === "SLIGHTLY_ABOVE") {
+      explanation += ` Pretensão salarial está na margem de tolerância (+${salaryFit.diffPercentage}%).`;
+    } else if (salaryFit.status === "OUT_OF_BUDGET") {
+      explanation += ` Pretensão salarial excede o teto orçamentário (+${salaryFit.diffPercentage}%).`;
+    }
+
+    const summaryBadge = getFitBadgeStyle(fitCategory, salaryFit.status);
+
+    return {
+      overallScore,
+      overallCategory: fitCategory,
+      explanation,
+      salaryFit,
+      skillsMatch: {
+        ...baseEvaluation.skillsMatch,
+        score: Math.round((baseEvaluation.skillsMatch.score + expNormalized) / 2),
+      },
+      techFit: {
+        score: expNormalized,
+        matchedSkills: baseEvaluation.techFit.matchedSkills,
+        missingSkills: baseEvaluation.techFit.missingSkills,
+      },
+      seniorityFit: {
+        score: seniorityScore,
+        label: seniorityLabel,
+      },
+      fitCategory,
+      prioritySuggestion,
+      summaryBadge,
+      semanticDetails: {
+        model: response.model,
+        experienceScoreRaw: expScoreRaw,
+        experienceScoreNormalized: expNormalized,
+        experienceConfidence: expConfidence,
+        experienceProbabilities: response.answers.experienceFit.probabilities as any,
+        seniorityDecision: seniorityChoice,
+        seniorityConfidence: seniorityConfidence,
+        knockoutProbability: knockoutProb,
+        isSemanticEvaluated: true,
+      },
+    };
+  } catch (err: any) {
+    console.warn("TypeSafe semantic fit fallback acionado:", err.message);
+    return {
+      ...baseEvaluation,
+      semanticDetails: undefined,
+    };
+  }
 }

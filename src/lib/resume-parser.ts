@@ -1,6 +1,7 @@
 // @ts-ignore
 import pdf from "pdf-parse/lib/pdf-parse.js";
 import OpenAI from "openai";
+import { getTypeSafeClient, choice, noul } from "./typesafe";
 
 export interface ParsedResumeData {
   name: string;
@@ -14,6 +15,10 @@ export interface ParsedResumeData {
   profileSummary: string;
   salaryExpectation?: number | null;
   rawText: string;
+  // Campos tipados enriquecidos via TypeSafe AI
+  seniority?: "estagiario" | "junior" | "pleno" | "senior" | "especialista_lider" | "nao_especificado";
+  seniorityConfidence?: number;
+  primaryDomain?: string;
 }
 
 // Lista de habilidades conhecidas para matching heurístico automático
@@ -206,12 +211,134 @@ export function extractHeuristicResumeData(rawText: string): ParsedResumeData {
 }
 
 /**
- * Tenta enriquecer com IA da OpenAI se houver chave e créditos,
- * caindo com segurança para a extração heurística sem travar.
+ * Enriquecimento e Seleção com TypeSafe AI (System One / Jev)
+ * Utiliza o padrão Pre-Parsed Value Extraction (Find & Pick)
+ */
+export async function parseResumeWithTypeSafe(
+  rawText: string,
+  heuristicData: ParsedResumeData
+): Promise<ParsedResumeData | null> {
+  const client = getTypeSafeClient();
+  if (!client) {
+    return null;
+  }
+
+  try {
+    const lines = rawText
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+
+    // Candidatos para nome (top 5 linhas válidas do início do CV)
+    const nameCandidates: string[] = [];
+    if (heuristicData.name) {
+      nameCandidates.push(heuristicData.name);
+    }
+    for (let i = 0; i < Math.min(lines.length, 10); i++) {
+      const line = lines[i];
+      if (
+        line.length >= 3 &&
+        line.length <= 50 &&
+        !line.includes("@") &&
+        !line.includes("http") &&
+        !nameCandidates.includes(line)
+      ) {
+        nameCandidates.push(line);
+        if (nameCandidates.length >= 4) break;
+      }
+    }
+
+    // Monta opções para Choice de Nome
+    const nameOptions: Record<string, string> = {};
+    nameCandidates.forEach((cand, idx) => {
+      nameOptions[`candidate_${idx}`] = cand;
+    });
+    nameOptions["none"] = "Nenhuma das opções acima";
+
+    const state = {
+      candidateHeader: lines.slice(0, 15).join("\n"),
+      heuristicName: heuristicData.name,
+      skillsIdentified: heuristicData.skills.slice(0, 10),
+      rawExcerpt: rawText.substring(0, 3000),
+    };
+
+    const response = await client.systemOne({
+      state,
+      questions: {
+        candidateName: choice(
+          "Qual das opções abaixo corresponde com exatidão ao nome completo do candidato no currículo?",
+          nameOptions
+        ),
+        seniority: choice(
+          "Qual o nível de senioridade principal evidenciado na trajetória profissional do candidato?",
+          {
+            estagiario: "Estudante ou estagiário",
+            junior: "Iniciante (até 2 anos de experiência profissional)",
+            pleno: "Profissional pleno (2 a 5 anos de experiência comprovada)",
+            senior: "Profissional sênior (5+ anos, forte autonomia técnica)",
+            especialista_lider: "Especialista, tech lead, coordenador ou gestor",
+            nao_especificado: "Não foi possível identificar com clareza",
+          }
+        ),
+        primaryDomain: choice(
+          "Qual é a principal área funcional de atuação do candidato?",
+          {
+            tecnologia: "Tecnologia, Engenharia de Software, TI ou Dados",
+            recursos_humanos: "Recursos Humanos, Recrutamento e Seleção ou DHO",
+            comercial_vendas: "Comercial, Vendas, SDR ou Atendimento B2B/B2C",
+            financeiro_admin: "Financeiro, Contábil, Controladoria ou Administrativo",
+            marketing_design: "Marketing, Design, UI/UX ou Comunicação",
+            operacoes: "Operações, Logística ou Suprimentos",
+            outro: "Outra área não listada",
+          }
+        ),
+        validResume: noul(
+          "O documento analisado é de fato um currículo profissional válido?"
+        ),
+      },
+    });
+
+    let finalName = heuristicData.name;
+    const pickedKey = response.answers.candidateName.choice;
+    if (pickedKey && pickedKey !== "none" && nameOptions[pickedKey]) {
+      finalName = nameOptions[pickedKey];
+    }
+
+    const nameParts = finalName.split(/\s+/);
+    const firstName = nameParts[0] || heuristicData.firstName;
+    const lastName = nameParts.slice(1).join(" ") || heuristicData.lastName;
+
+    return {
+      ...heuristicData,
+      name: finalName,
+      firstName,
+      lastName,
+      seniority: response.answers.seniority.choice as any,
+      seniorityConfidence: response.answers.seniority.confidence,
+      primaryDomain: response.answers.primaryDomain.choice,
+    };
+  } catch (err: any) {
+    console.warn("TypeSafe AI parsing fallback acionado:", err.message);
+    return null;
+  }
+}
+
+/**
+ * Analisador inteligente de currículo:
+ * 1. Prioriza TypeSafe AI (System One / Jev) com seleção tipada.
+ * 2. Fallback secundário para OpenAI (gpt-4o-mini) se configurada.
+ * 3. Fallback garantido 0ms para extração heurística nativa offline.
  */
 export async function parseResumeWithAi(rawText: string): Promise<ParsedResumeData> {
   const heuristicData = extractHeuristicResumeData(rawText);
 
+  // 1. Tenta enriquecimento via TypeSafe AI (System One)
+  const typeSafeData = await parseResumeWithTypeSafe(rawText, heuristicData);
+  if (typeSafeData) {
+    return typeSafeData;
+  }
+
+  // 2. Fallback secundário: OpenAI
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return heuristicData;
@@ -277,6 +404,6 @@ export async function parseResumeWithAi(rawText: string): Promise<ParsedResumeDa
     console.warn("OpenAI parsing fallback acionado:", err.message);
   }
 
-  // Retorna os dados heurísticos garantidos
+  // 3. Retorna os dados heurísticos garantidos
   return heuristicData;
 }
